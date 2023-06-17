@@ -5,8 +5,9 @@ export default createBoard({
     name: 'Header',
     Board: () => <Header />,
     environmentProps: {
-        canvasWidth: 1749,
+        canvasWidth: 1086,
         windowBackgroundColor: '#ffffff',
-        windowWidth: 1022,
+        windowWidth: 1920,
+        windowHeight: 1080,
     },
 });

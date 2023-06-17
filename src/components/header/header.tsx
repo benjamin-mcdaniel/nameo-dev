@@ -15,8 +15,14 @@ export const Header = ({ className }: HeaderProps) => {
             <header className={styles.header}>
                 <span className={classNames(styles.headername, styles.header)}>
                     <nav className={styles.header}>
-                        nameo.dev<p>This is a paragraph.</p>
-                        <p className={styles.header}>This is a paragraph.</p>
+                        <p className={styles.header}>
+                            nameo.dev
+                            <div className={styles['head-descr']}>
+                                <p className={classNames(styles.header, styles.center)}>
+                                    domains, brands, trademarks
+                                </p>
+                            </div>
+                        </p>
                     </nav>
                 </span>
             </header>
