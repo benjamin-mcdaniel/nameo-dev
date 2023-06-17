@@ -14,6 +14,7 @@ export const Header = ({ className }: HeaderProps) => {
         <div className={classNames(styles.root, className)}>
             <header className={styles.header}>
                 <span className={classNames(styles.headername, styles.header)}>nameo.dev</span>
+                <span className={styles.center}>text</span>
             </header>
         </div>
     );
