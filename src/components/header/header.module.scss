@@ -41,3 +41,9 @@
 }
 .title {
 }
+.title {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  gap: 25px;
+}

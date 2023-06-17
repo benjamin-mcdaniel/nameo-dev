@@ -9,5 +9,8 @@ export default createBoard({
         windowBackgroundColor: '#ffffff',
         windowWidth: 1920,
         windowHeight: 1080,
+        canvasMargin: {
+            top: 1,
+        },
     },
 });

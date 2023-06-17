@@ -11,21 +11,17 @@ export interface HeaderProps {
  */
 export const Header = ({ className }: HeaderProps) => {
     return (
-        <div className={classNames(styles.root, className)}>
-            <header className={styles.header}>
-                <nav className={styles.leftContent}>
-                    <a
-                        href="https://nameo.dev"
-                        className={classNames(styles.homeLink, styles.title)}
-                    >
-                        nameo.dev
-                    </a>
-                    <div className={styles.headDescr}></div>
-                </nav>
-                <div className={styles.rightContent}>
-                    <span className={styles.inDev}>in dev</span>
-                </div>
-            </header>
-        </div>
+        <header className={classNames(styles.root, className)}>
+            <div className={styles.title}>
+                <span>
+                    <h1>nameo.dev</h1>
+                </span>
+            </div>
+            <div className={styles['head-descr']}>
+                <span>
+                    <h5>in development</h5>
+                </span>
+            </div>
+        </header>
     );
 };
