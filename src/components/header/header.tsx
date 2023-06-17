@@ -13,18 +13,18 @@ export const Header = ({ className }: HeaderProps) => {
     return (
         <div className={classNames(styles.root, className)}>
             <header className={styles.header}>
-                <span className={classNames(styles.headername, styles.header)}>
-                    <nav className={styles.header}>
-                        <p className={styles.header}>
-                            nameo.dev
-                            <div className={styles['head-descr']}>
-                                <p className={classNames(styles.header, styles.center)}>
-                                    domains, brands, trademarks
-                                </p>
-                            </div>
-                        </p>
-                    </nav>
-                </span>
+                <nav className={styles.leftContent}>
+                    <a
+                        href="https://nameo.dev"
+                        className={classNames(styles.homeLink, styles.title)}
+                    >
+                        nameo.dev
+                    </a>
+                    <div className={styles.headDescr}></div>
+                </nav>
+                <div className={styles.rightContent}>
+                    <span className={styles.inDev}>in dev</span>
+                </div>
             </header>
         </div>
     );
