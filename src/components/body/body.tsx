@@ -15,6 +15,8 @@ export const Body = ({ className }: BodyProps) => {
             <div className={styles.center}>
                 <span className={styles.center}>
                     <input className={styles.center} />
+                </span>
+                <span className={styles.input}>
                     <button className={styles.center}>Search</button>
                 </span>
             </div>
