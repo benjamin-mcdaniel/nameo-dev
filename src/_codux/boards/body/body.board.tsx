@@ -8,5 +8,8 @@ export default createBoard({
         canvasWidth: 1178,
         canvasHeight: 663,
         windowHeight: 659,
+        canvasMargin: {
+            top: 1,
+        },
     },
 });
