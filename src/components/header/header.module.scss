@@ -3,10 +3,16 @@
 .header {
 }
 .header {
-  display: block;
+  display: inline;
   flex-direction: row;
   min-width: 100%;
   height: 75px;
+  font-weight: 500;
+  line-height: auto;
+  font-size: 34px;
+  text-align: center;
 }
 .headername {
+}
+.menu {
 }

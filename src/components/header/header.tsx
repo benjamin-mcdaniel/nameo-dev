@@ -13,15 +13,13 @@ export const Header = ({ className }: HeaderProps) => {
     return (
         <div className={classNames(styles.root, className)}>
             <header className={styles.header}>
-                <span className={styles.headername}>
-                    nameo.dev
-                    <span>
-                        <select>
-                            <option>Apple</option>
-                            <option>Banana</option>
-                            <option>Watermelon</option>
-                        </select>
-                    </span>
+                <span className={classNames(styles.headername, styles.header)}>nameo.dev</span>
+                <span className={styles.menu}>
+                    <select>
+                        <option>Apple</option>
+                        <option>Banana</option>
+                        <option>Watermelon</option>
+                    </select>
                 </span>
             </header>
         </div>
