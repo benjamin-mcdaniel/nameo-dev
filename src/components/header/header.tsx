@@ -13,8 +13,12 @@ export const Header = ({ className }: HeaderProps) => {
     return (
         <div className={classNames(styles.root, className)}>
             <header className={styles.header}>
-                <span className={classNames(styles.headername, styles.header)}>nameo.dev</span>
-                <span className={classNames(styles.center, styles.center)}>text</span>
+                <span className={classNames(styles.headername, styles.header)}>
+                    <nav className={styles.header}>
+                        nameo.dev<p>This is a paragraph.</p>
+                        <p className={styles.header}>This is a paragraph.</p>
+                    </nav>
+                </span>
             </header>
         </div>
     );
