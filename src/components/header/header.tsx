@@ -17,7 +17,7 @@ export const Header = ({ className }: HeaderProps) => {
                     <h1>nameo.dev</h1>
                 </span>
             </div>
-            <div className={styles['head-descr']}>
+            <div className={styles.punchline}>
                 <span>
                     <h5>in development</h5>
                 </span>
