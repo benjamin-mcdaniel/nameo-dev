@@ -12,17 +12,24 @@ export interface BodyProps {
 export const Body = ({ className }: BodyProps) => {
     return (
         <div style={{ height: '85vh' }} className={classNames(styles.root, className, styles.body)}>
-            <div className={styles.sidebar} />
-            <div className={styles.center}>
-                <div className={styles.input}>
-                    <span className={styles.input}>
-                        <input />
-                    </span>
+            <div className={styles.sidebar}>
+                <h5 className={styles.center}>sidebar section</h5>
+            </div>
+            <div>
+                <div className={styles.center}>
+                    <div className={styles.input}>
+                        <span className={styles.input}>
+                            <input />
+                        </span>
+                    </div>
+                    <div>
+                        <span className={styles.input}>
+                            <button>Search</button>
+                        </span>
+                    </div>
                 </div>
-                <div>
-                    <span className={styles.input}>
-                        <button>Search</button>
-                    </span>
+                <div className={styles.center}>
+                    <h6>api results go here</h6>
                 </div>
             </div>
         </div>
