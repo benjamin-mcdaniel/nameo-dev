@@ -22,11 +22,13 @@
   justify-items: start;
   justify-content: space-around;
   align-items: start;
+  background-color: rgba(217, 217, 217, 0.08);
 }
 .sidebar {
   display: flex;
   flex-direction: row;
   justify-items: start;
   justify-content: start;
-  width: 150px;
+  width: 248px;
+  background-color: rgba(231, 231, 231, 0.08);
 }
