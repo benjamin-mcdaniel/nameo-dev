@@ -11,14 +11,19 @@ export interface BodyProps {
  */
 export const Body = ({ className }: BodyProps) => {
     return (
-        <div style={{height: '85vh'}} className={classNames(styles.root, className, styles.body)}>
+        <div style={{ height: '85vh' }} className={classNames(styles.root, className, styles.body)}>
+            <div className={styles.sidebar} />
             <div className={styles.center}>
-                <span className={styles.center}>
-                    <input className={styles.center} />
-                </span>
-                <span className={styles.input}>
-                    <button className={styles.center}>Search</button>
-                </span>
+                <div className={styles.input}>
+                    <span className={styles.input}>
+                        <input />
+                    </span>
+                </div>
+                <div>
+                    <span className={styles.input}>
+                        <button>Search</button>
+                    </span>
+                </div>
             </div>
         </div>
     );

@@ -5,16 +5,28 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  justify-items: center;
-  justify-content: space-around;
+  justify-items: start;
+  justify-content: start;
   align-content: space-around;
   height: 500px;
 }
 .input {
 }
 .center {
-  display: inline;
+  display: flex;
   text-align: center;
   padding-right: 10px;
   padding-left: 0px;
+  width: 60vw;
+  flex-direction: row;
+  justify-items: start;
+  justify-content: space-around;
+  align-items: start;
+}
+.sidebar {
+  display: flex;
+  flex-direction: row;
+  justify-items: start;
+  justify-content: start;
+  width: 150px;
 }
