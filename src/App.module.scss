@@ -1,6 +1,10 @@
 .App {
   text-align: start;
   position: static;
+  display: grid;
+  align-items: center;
+  justify-items: start;
+  justify-content: space-around;
 }
 
 .App-logo {
