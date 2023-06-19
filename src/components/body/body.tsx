@@ -11,7 +11,7 @@ export interface BodyProps {
  */
 export const Body = ({ className }: BodyProps) => {
     return (
-        <div className={classNames(styles.root, className, styles.body)}>
+        <div style={{height: '85vh'}} className={classNames(styles.root, className, styles.body)}>
             <div className={styles.center}>
                 <span className={styles.center}>
                     <input className={styles.center} />
