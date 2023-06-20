@@ -2,6 +2,10 @@ import styles from './body.module.scss';
 import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import { saveAs } from 'file-saver';
+declare module 'file-saver';
+declare module 'classnames';
+
+
 
 interface ToggleUIProps {
   apiType: string;
