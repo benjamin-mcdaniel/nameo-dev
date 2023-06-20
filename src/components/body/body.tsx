@@ -1,6 +1,7 @@
 import styles from './body.module.scss';
 import classNames from 'classnames';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { saveAs } from 'file-saver';
 
 interface ToggleUIProps {
   apiType: string;
@@ -42,6 +43,7 @@ export interface BodyProps {
 export const Body: React.FC<BodyProps> = ({ className }) => {
   const [apiType, setApiType] = useState<string>('fuzz');
   const [apiData, setApiData] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Load stored API data from localStorage on component mount
@@ -63,7 +65,7 @@ export const Body: React.FC<BodyProps> = ({ className }) => {
   const handleSearchClick = () => {
     // Perform the search with the selected api_type
     console.log('Search clicked. API type:', apiType);
-  
+
     // Make the API call
     fetch('https://jsonplaceholder.typicode.com/todos/1')
       .then(response => response.json())
@@ -71,13 +73,29 @@ export const Body: React.FC<BodyProps> = ({ className }) => {
         // Update the API data state
         const newApiData = [`API response for ${apiType}: ${JSON.stringify(json)}`, ...apiData];
         setApiData(newApiData);
+
+        // Clear the input field
+        if (inputRef.current) {
+          inputRef.current.value = '';
+        }
       });
   };
-  
+
   const handleDeleteLine = (index: number) => {
     const updatedApiData = [...apiData];
     updatedApiData.splice(index, 1);
     setApiData(updatedApiData);
+  };
+
+  const handleExportClick = () => {
+    // Create a text string from the API data
+    const txtContent = apiData.join('\n');
+
+    // Create a Blob object for the text data
+    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+
+    // Save the TXT file
+    saveAs(blob, 'api_data.txt');
   };
 
   return (
@@ -94,12 +112,17 @@ export const Body: React.FC<BodyProps> = ({ className }) => {
             onSearchClick={handleSearchClick}
           />
         </div>
+        <div className={styles.exportButtonContainer}>
+          <button className={styles.exportButton} onClick={handleExportClick}>
+            Export TXT
+          </button>
+        </div>
       </div>
       <div className={classNames(styles['top-pad'], styles.contentvert)}>
         <div className={styles.center}>
           <div>
             <span>
-              <input className={styles.input} />
+              <input className={styles.input} ref={inputRef} />
             </span>
           </div>
           <div>
@@ -110,21 +133,23 @@ export const Body: React.FC<BodyProps> = ({ className }) => {
         </div>
 
         <div className={classNames(styles.center, styles.fiftytop)}>
-    {apiData.length > 0 ? (
-      apiData.map((line, index) => (
-        <div key={index} className={styles.lineContainer}>
-          <button className={styles.deleteButton} onClick={() => handleDeleteLine(index)}>
-            X
-          </button>
-          <div className={styles.lineContent}>{line}</div>
-          
+          {apiData.length > 0 ? (
+            apiData.map((line, index) => (
+              <div key={index} className={styles.lineContainer}>
+                <div className={styles.deleteButtonContainer}>
+                  <button className={styles.deleteButton} onClick={() => handleDeleteLine(index)}>
+                    X
+                  </button>
+                </div>
+                <div className={styles.lineContent}>{line}</div>
+              </div>
+            ))
+          ) : (
+            <div>No API data available</div>
+          )}
         </div>
-      ))
-    ) : (
-      <div>No API data available</div>
-    )}
-  </div>
-      
+        
+       
       </div>
     </div>
   );
