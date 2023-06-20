@@ -13,13 +13,13 @@
 .input {
   display: flex;
   justify-content: center;
-  justify-items: stretch;
-  padding-left: 50px;
+  justify-items: start;
+ // padding-left: 50px;
   width: 400px;
 }
 .center {
   display: flex;
-  text-align: center;
+  text-align: start;
   padding-right: 10px;
   padding-left: 0px;
   width: 60vw;
@@ -28,6 +28,8 @@
   justify-content: start;
   align-items: start;
   background-color: rgba(217, 217, 217, 0);
+  align-content: start;
+  align-self: start;
 }
 .sidebar {
   display: flex;
@@ -52,7 +54,8 @@
   text-align: start;
 }
 .fiftytop {
-  padding-top: 50px;
+  padding-top: 10px;
+  flex-direction: column;
 }
 .lefttop {
 }
@@ -61,4 +64,25 @@
   text-align: start;
   align-self: start;
   display: flex;
+}
+.contentvert {
+  display: flex;
+  flex-direction: column;
+}
+.topalign {
+}
+
+.lineContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.lineContent {
+  flex-grow: 1;
+}
+
+.deleteButton {
+  margin-right: 10px;
+  /* Add your styles for the delete button here */
 }
