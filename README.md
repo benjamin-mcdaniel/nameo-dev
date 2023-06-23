@@ -1,7 +1,4 @@
-<div align="center">  
-    <img height="50" src="./src/assets/codux.svg">  
-    <h1>React App template for Codux</h1>
-</div>
+
 
 ### A Visual IDE for React Projects
 
