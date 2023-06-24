@@ -1,5 +1,6 @@
 import styles from './test.module.scss';
 import classNames from 'classnames';
+import React from 'react';
 
 export interface TestProps {
     className?: string;

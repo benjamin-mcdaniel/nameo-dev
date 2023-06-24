@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["react", "node", "aria-query", "classnames"],
+    "types": ["react", "react-dom", "node", "aria-query", "classnames"],
     "target": "es5",
     "lib": [
       "dom",
@@ -19,7 +19,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve"
+    "jsx": "react"
   },
   "include": [
     "src"
