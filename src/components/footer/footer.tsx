@@ -1,4 +1,4 @@
-import React from 'react'; // Import the React module
+import React from 'react';
 import classNames from 'classnames';
 import styles from './footer.module.scss';
 

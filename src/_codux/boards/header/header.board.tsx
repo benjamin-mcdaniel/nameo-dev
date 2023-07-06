@@ -2,11 +2,9 @@ import React from 'react';
 import { createBoard } from '@wixc3/react-board';
 import { Header } from '../../../components/header/header';
 
-const Board = () => <Header />;
-
 export default createBoard({
   name: 'Header',
-  Board,
+  Board: () => <Header />,
   environmentProps: {
     canvasWidth: 1086,
     windowBackgroundColor: '#ffffff',

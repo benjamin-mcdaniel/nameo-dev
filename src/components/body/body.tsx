@@ -1,11 +1,7 @@
-import styles from './body.module.scss';
-import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import { saveAs } from 'file-saver';
-declare module 'file-saver';
-declare module 'classnames';
-
-
+import classNames from 'classnames';
+import styles from './body.module.scss';
 
 interface ToggleUIProps {
   apiType: string;
@@ -120,10 +116,8 @@ export const Body: React.FC<BodyProps> = ({ className }) => {
           <button className={styles.exportButton} onClick={handleExportClick}>
             Export TXT
           </button>
-          
         </div>
         <div className={classNames(styles.exportButtonContainer, styles.export)}>
-         
           <button className={styles.exportButton} onClick={handleClearAll}>
             Clear All
           </button>
@@ -132,9 +126,7 @@ export const Body: React.FC<BodyProps> = ({ className }) => {
       <div className={classNames(styles['top-pad'], styles.contentvert)}>
         <div className={styles.center}>
           <div>
-            <span>
-              <input className={styles.input} ref={inputRef} />
-            </span>
+            <input className={styles.input} ref={inputRef} />
           </div>
           <div>
             <span className={classNames(styles.center, styles.search)}>

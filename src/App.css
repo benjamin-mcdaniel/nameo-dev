@@ -14,7 +14,7 @@
   align-self: center;
   align-items: center;
   justify-content: space-around;
-  align-content: flex-start;
+  align-content: center;
   justify-items: center;
   flex-wrap: nowrap;
   font-size: 25px;
@@ -24,14 +24,14 @@
   text-shadow: 3px 3px 2px rgba(0, 0, 0, 0);
   font-family: Arial, sans-serif;
 }
-.root .headername {
+.root .header.name {
   /* Add your styles for .headername here */
 }
-.root .headermenu {
+.root .header.menu {
   /* Add your styles for .menu here */
 }
 .root .center {
-  /* Add your styles for .center here */
+  margin: auto; /* Center the .center element horizontally and vertically */
 }
 .root .head-descr {
   /* Add your styles for .head-descr here */
