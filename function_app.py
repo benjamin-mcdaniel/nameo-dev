@@ -3,8 +3,8 @@ import logging
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-@app.route(route="nameo-docker-names")
-def nameo-docker-names(req: func.HttpRequest) -> func.HttpResponse:
+@app.route(route="nameo-dev-api")
+def nameo-dev-api(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     name = req.params.get('name')
