@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "mkdir -p dist && cp -R public/* dist/"
+    "build": "mkdir -p build && cp -R public/* build/"
   },
   "keywords": [],
   "author": "",
