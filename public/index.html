@@ -24,7 +24,17 @@
       padding: 10px 20px;
       background-color: #f2f2f2;
     }
-
+    
+    .website-name {
+      font-weight: bold;
+    }
+    
+    .menu-items {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
     .random-numbers {
       display: flex;
       align-items: center;
@@ -34,13 +44,14 @@
 </head>
 <body>
   <div class="header">
-    <div>
-      <button onclick="fetchRandomNumbers()">Generate 100 Random Numbers</button>
-
-
-
-      <button onclick="fetchAndDisplayData(35)">View 35 Entries</button>
-      <button onclick="fetchAndDisplayData(10)">View 10 Entries</button>
+    <div class="website-name">
+      <span>nameo.dev</span>
+    </div>
+    <div class="menu-items">
+      <span>styles: </span>
+      <button onclick="fetchRandomNumbers()">Docker</button>
+      <button onclick="fetchAndDisplayData(35)">Corporate</button>
+      <button onclick="fetchAndDisplayData(10)">Prefix:Suffix</button>
     </div>
   </div>
 
