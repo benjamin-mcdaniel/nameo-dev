@@ -3,64 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Random Data Display</title>
-  <style>
-    /* CSS styles for the grid */
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr); /* 5 columns */
-      gap: 10px; /* Gap between items */
-      padding: 20px; 
-      margin-top: 10px; /* Reduce space between header and grid */
-      /* border: 1px solid #ccc;  */
-    }
-
-    .grid-item {
-      border: 1px solid #ccc;
-      padding: 10px;
-    }
-    
-    .website-name {
-      font-weight: bold;
-    }
-    
-    .menu-items {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-    
-    .random-numbers {
-      display: flex;
-      align-items: center;
-      font-size: 14px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 20px; /* Increased padding */
-      background-color: #f2f2f2;
-      font-size: 18px; /* Increased font size */
-    }
-    
-    /* Styling for MOTD section */
-    .motd-section {
-      padding: 10px 20px; /* Decreased padding to reduce space */
-      font-size: 14px; /* Decreased font size */
-    }
-    
-    .motd-section p {
-      margin: 0; /* Remove default paragraph margin */
-    }
-    
-    #motd-content {
-      white-space: nowrap; /* Added */
-      overflow: hidden; /* Added */
-      text-overflow: ellipsis; /* Added (optional: truncates long content) */
-    }
-    
-  </style>
+  <link rel="stylesheet" href="styles.css"> <!-- Link your CSS file here -->
 </head>
 <body>
   <div class="header">
@@ -68,7 +11,7 @@
       <span>nameo.dev</span>
     </div>
     <div class="menu-items">
-      <span>styles: </span>
+      <span>generators: </span>
       <button onclick="fetchRandomNumbers()">Adj:Noun</button>
       <button onclick="fetchAndDisplayData(10)">Custom:Prefix:Suffix</button>
     </div>
