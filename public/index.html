@@ -10,19 +10,13 @@
       grid-template-columns: repeat(5, 1fr); /* 5 columns */
       gap: 10px; /* Gap between items */
       padding: 20px;
+      margin-top: 10px; /* Reduce space between header and grid */
+      border: 1px solid #ccc; /* Added border for consistency */
     }
 
     .grid-item {
       border: 1px solid #ccc;
       padding: 10px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #f2f2f2;
     }
     
     .website-name {
@@ -40,6 +34,32 @@
       align-items: center;
       font-size: 14px;
     }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px; /* Increased padding */
+      background-color: #f2f2f2;
+      font-size: 18px; /* Increased font size */
+    }
+    
+    /* Styling for MOTD section */
+    .motd-section {
+      padding: 10px 40px; /* Decreased padding to reduce space */
+      font-size: 14px; /* Decreased font size */
+    }
+    
+    .motd-section p {
+      margin: 0; /* Remove default paragraph margin */
+    }
+    
+    #motd-content {
+      white-space: nowrap; /* Added */
+      overflow: hidden; /* Added */
+      text-overflow: ellipsis; /* Added (optional: truncates long content) */
+    }
+    
   </style>
 </head>
 <body>
@@ -49,14 +69,15 @@
     </div>
     <div class="menu-items">
       <span>styles: </span>
-      <button onclick="fetchRandomNumbers()">Docker</button>
-      <button onclick="fetchAndDisplayData(35)">Corporate</button>
-      <button onclick="fetchAndDisplayData(10)">Prefix:Suffix</button>
+      <button onclick="fetchRandomNumbers()">Adj:Noun</button>
+      <button onclick="fetchAndDisplayData(10)">Custom:Prefix:Suffix</button>
     </div>
+  </div>
+  <div class="motd-section">
+    <p>MOTD: <span id="motd-content"></span></p>
   </div>
 
   <div class="grid-container" id="dataGrid"></div>
-
   <script>
     // JavaScript to fetch data from Random.org API and display random numbers
     async function fetchRandomNumbers() {
@@ -102,6 +123,27 @@
         console.error('Error fetching data:', error);
       }
     }
+
+    async function fetchMotdContent() {
+      const motdContent = document.getElementById('motd-content');
+    
+      try {
+        const response = await fetch('/motd');
+        let data = await response.text();
+    
+        // Replace line breaks with spaces to display content in a single line
+        data = data.replace(/\r?\n|\r/g, ' ');
+    
+        motdContent.textContent = data;
+      } catch (error) {
+        console.error('Error fetching Message of the Day:', error);
+        motdContent.textContent = 'Failed to fetch Message of the Day.';
+      }
+    }
+    
+    fetchMotdContent();
+    
+
 
     function displayData(data) {
       const gridContainer = document.getElementById('dataGrid');
