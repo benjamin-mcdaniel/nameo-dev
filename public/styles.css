@@ -62,3 +62,20 @@ header {
   padding: 5px 20px; /* Adjusted padding for top and left */
   background-color: #fff;
 }
+.custom-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.custom-link::after {
+  content: " -suffix";
+}
+
+.custom-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.custom-link:hover::after {
+  content: " -suffix";
+}
