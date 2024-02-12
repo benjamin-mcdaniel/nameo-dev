@@ -19,11 +19,13 @@ function createGridItems(gridId, generatorFunction) {
     grid.innerHTML = ''; // Clear existing items
 
     for (let i = 0; i < 10; i++) {
-        const value = generatorFunction();
-        const gridItem = document.createElement('div');
-        gridItem.classList.add('grid-item');
-        gridItem.textContent = value;
-        grid.appendChild(gridItem);
+        setTimeout(() => {
+            const value = generatorFunction();
+            const gridItem = document.createElement('div');
+            gridItem.classList.add('grid-item');
+            gridItem.textContent = value;
+            grid.appendChild(gridItem);
+        }, i * 250); // Delay each iteration by i * 250 milliseconds
     }
 }
 
