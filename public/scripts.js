@@ -160,7 +160,7 @@ function updateMotdCountdown(seconds) {
 }
 
 function refreshGrids() {
-    updateMotdCountdown(5);
+    updateMotdCountdown(10);
     createGridItems('hex-grid', generateRandomHex);
     createGridItemsDocker('docker-grid');
 }
