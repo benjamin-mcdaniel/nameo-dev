@@ -156,7 +156,7 @@ function copyToClipboard(text) {
 
 function updateMotdCountdown(seconds) {
     const motdSmallText = document.getElementById('small-text');
-    motdSmallText.textContent = `Refresh in ${seconds} seconds`;
+    motdSmallText.textContent = `Refresh in ${seconds} seconds, click to copy`;
 }
 
 function refreshGrids() {
