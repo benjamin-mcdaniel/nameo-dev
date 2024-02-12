@@ -97,7 +97,7 @@ async function createGridItemsDocker(gridId) {
 }
 
 
-function createGridItems(gridId, generatorFunction) {
+function createGridItems(gridId, generatorFunction, gridType) {
     const grid = document.getElementById(gridId);
     grid.innerHTML = ''; // Clear existing items
 
@@ -113,7 +113,10 @@ function createGridItems(gridId, generatorFunction) {
         gridItem.appendChild(copiedMessage);
 
         // Add click event listener to each grid item
-        gridItem.addEventListener('click', () => {
+        gridItem.addEventListener('click', (event) => {
+            // Stop the event propagation to prevent it from reaching the parent container
+            event.stopPropagation();
+
             // Copy the value to the clipboard
             copyToClipboard(value);
 
@@ -129,7 +132,7 @@ function createGridItems(gridId, generatorFunction) {
             gridItem.classList.add('blink-border');
 
             // Optionally, provide visual feedback or other actions after copying
-            console.log(`Copied to clipboard: ${value}`);
+            console.log(`Copied to clipboard (${gridType}): ${value}`);
         });
 
         grid.appendChild(gridItem);
