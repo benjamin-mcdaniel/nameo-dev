@@ -25,7 +25,7 @@ function createGridItems(gridId, generatorFunction) {
             gridItem.classList.add('grid-item');
             gridItem.textContent = value;
             grid.appendChild(gridItem);
-        }, i * 50); // Delay each iteration by i * 250 milliseconds
+        }, i * 250); // Delay each iteration by i * 250 milliseconds
     }
 }
 
@@ -69,6 +69,59 @@ async function createGridItemsDocker(gridId) {
             console.error('Error generating Docker-style name:', error);
         }
     }
+}
+
+function createGridItems(gridId, generatorFunction) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = ''; // Clear existing items
+
+    for (let i = 0; i < 10; i++) {
+        const value = generatorFunction();
+        const gridItem = document.createElement('div');
+        gridItem.classList.add('grid-item');
+        gridItem.textContent = value;
+
+        const copiedMessage = document.createElement('div');
+        copiedMessage.classList.add('copied-message');
+        copiedMessage.textContent = 'Copied';
+        gridItem.appendChild(copiedMessage);
+
+        // Add click event listener to each grid item
+        gridItem.addEventListener('click', () => {
+            // Copy the value to the clipboard
+            copyToClipboard(value);
+
+            // Show "Copied" message
+            copiedMessage.style.opacity = 1;
+
+            // Fade out the "Copied" message after 2 seconds
+            setTimeout(() => {
+                copiedMessage.style.opacity = 0;
+            }, 2000);
+
+            // Add class for blinking borders
+            gridItem.classList.add('blink-border');
+
+            // Optionally, provide visual feedback or other actions after copying
+            console.log(`Copied to clipboard: ${value}`);
+        });
+
+        grid.appendChild(gridItem);
+    }
+}
+
+function copyToClipboard(text) {
+    // Create a temporary textarea element
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+
+    // Select and copy the text
+    textarea.select();
+    document.execCommand('copy');
+
+    // Remove the temporary textarea
+    document.body.removeChild(textarea);
 }
 
 

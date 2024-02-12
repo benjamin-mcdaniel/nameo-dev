@@ -79,3 +79,33 @@ header {
 .custom-link:hover::after {
   content: " -suffix";
 }
+
+/* Add this CSS to your existing styles */
+.grid-item {
+  position: relative;
+}
+
+.copied-message {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #f2f2f2;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  opacity: 0; /* Hidden initially */
+  transition: opacity 0.5s ease-out;
+}
+
+.blink-border {
+  animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+  from {
+    border-color: lightblue;
+  }
+  to {
+    border-color: initial;
+  }
+}
