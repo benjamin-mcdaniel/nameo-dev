@@ -63,6 +63,31 @@ async function createGridItemsDocker(gridId) {
             gridItem.classList.add('grid-item');
             gridItem.textContent = dockerValue;
 
+            const copiedMessage = document.createElement('div');
+            copiedMessage.classList.add('copied-message');
+            copiedMessage.textContent = 'Copied';
+            gridItem.appendChild(copiedMessage);
+
+            // Add click event listener to each grid item
+            gridItem.addEventListener('click', () => {
+                // Copy the value to the clipboard
+                copyToClipboard(dockerValue);
+
+                // Show "Copied" message
+                copiedMessage.style.opacity = 1;
+
+                // Fade out the "Copied" message after 2 seconds
+                setTimeout(() => {
+                    copiedMessage.style.opacity = 0;
+                }, 2000);
+
+                // Add class for blinking borders
+                gridItem.classList.add('blink-border');
+
+                // Optionally, provide visual feedback or other actions after copying
+                console.log(`Copied to clipboard: ${dockerValue}`);
+            });
+
             // Append grid item to the grid
             grid.appendChild(gridItem);
         } catch (error) {
@@ -70,6 +95,7 @@ async function createGridItemsDocker(gridId) {
         }
     }
 }
+
 
 function createGridItems(gridId, generatorFunction) {
     const grid = document.getElementById(gridId);
