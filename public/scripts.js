@@ -25,7 +25,7 @@ function createGridItems(gridId, generatorFunction) {
             gridItem.classList.add('grid-item');
             gridItem.textContent = value;
             grid.appendChild(gridItem);
-        }, i * 250); // Delay each iteration by i * 250 milliseconds
+        }, i * 50); // Delay each iteration by i * 250 milliseconds
     }
 }
 
@@ -83,7 +83,7 @@ function refreshGrids() {
     createGridItemsDocker('docker-grid');
 }
 
-setInterval(refreshGrids, 5000); // Refresh every 5 seconds
+setInterval(refreshGrids, 10000); // Refresh every 10 seconds
 function onPageLoad() {
     // Call the function you want to run on page load
     refreshGrids();
