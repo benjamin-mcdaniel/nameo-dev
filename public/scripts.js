@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+
 
 async function getVersion() {
     try {
@@ -62,16 +62,47 @@ function createGridItems(gridId, generatorFunction) {
     }
 }
 
+let prefixesContent;
+let suffixesContent;
+
+// Function to fetch and store content from a file
+async function loadFileContent(file) {
+    try {
+        const response = await fetch(file);
+        return await response.text();
+    } catch (error) {
+        console.error(`Error loading content from ${file}:`, error);
+        throw error;
+    }
+}
+
+// Load prefix and suffix content on page load
+async function loadPrefixesAndSuffixes() {
+    try {
+        prefixesContent = await loadFileContent('prefixes.txt');
+        suffixesContent = await loadFileContent('suffixes.txt');
+    } catch (error) {
+        // Handle the error if needed
+    }
+}
+
+// Call the function to load prefix and suffix content
+loadPrefixesAndSuffixes();
+
+// Now you can use prefixesContent and suffixesContent in your functions
+
 async function generateDockerStyle() {
     try {
-        const prefixesContent = await readTextFile('prefixes.txt');
-        const suffixesContent = await readTextFile('suffixes.txt');
+        if (!prefixesContent || !suffixesContent) {
+            // Reload content if not already loaded
+            await loadPrefixesAndSuffixes();
+        }
 
         const prefixes = prefixesContent.split('\n').filter(Boolean);
         const suffixes = suffixesContent.split('\n').filter(Boolean);
 
-        const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)].trim(); // Trim spaces
-        const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)].trim(); // Trim spaces
+        const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)].trim();
+        const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)].trim();
 
         return `${randomPrefix}-${randomSuffix}`;
     } catch (error) {
@@ -79,6 +110,9 @@ async function generateDockerStyle() {
         throw error;
     }
 }
+
+// Continue with your other functions...
+
 
 
 async function createGridItemsDocker(gridId) {
@@ -206,4 +240,3 @@ function onPageLoad() {
 
 // Attach the function to the window.onload event
 window.onload = onPageLoad;
-});
