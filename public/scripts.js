@@ -1,3 +1,11 @@
+
+fetch('version.txt')
+          .then(response => response.text())
+          .then(version => {
+            document.getElementById('release-version').innerText = 'v' + version.trim();
+          })
+          .catch(error => console.error('Error fetching version:', error));
+
 async function readTextFile(file) {
     try {
         const response = await fetch(file);

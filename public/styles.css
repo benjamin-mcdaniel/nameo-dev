@@ -8,13 +8,21 @@ body {
 header {
   background-color: #333;
   color: #fff;
-  text-align: center;
+  text-align: left;
   padding: 10px;
+  height: 32px;
 }
 
+.release-version {
+  /* Add styling for the release version */
+  color: #fff;
+  font-size: 14px;
+  text-align: right;
+  /* You can add more styles as needed */
+}
 #motd-container {
   display: flex;
-  justify-content: center;
+  justify-content: Left;
   align-items: baseline;
   margin: 20px;
   background-color: #fff;
