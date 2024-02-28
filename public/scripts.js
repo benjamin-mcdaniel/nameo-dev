@@ -1,12 +1,35 @@
-fetch('version.txt')
-    .then(response => response.text())
-    .then(version => {
-        document.getElementById('release-version').innerText = 'v' + version.trim();
-    })
-    .catch(error => {
+document.addEventListener('DOMContentLoaded', function () {
+
+async function getVersion() {
+    try {
+        const versionResponse = await fetch('version.txt');
+        const version = await versionResponse.text();
+        console.log('Fetched version successfully:', version);
+        return 'v' + version.trim();
+    } catch (error) {
         console.error('Error fetching version:', error);
-        document.getElementById('release-version').innerText = 'Error fetching version';
-    });
+        return 'Error fetching version';
+    }
+}
+
+
+async function updateVersionInHeader() {
+    const versionElement = document.getElementById('release-version');
+    console.log('Updating version in header...');
+    try {
+        const version = await getVersion();
+        console.log('Version:', version);
+        versionElement.innerText = version;
+        console.log('Version updated successfully:', version);
+    } catch (error) {
+        console.error('Error updating version in header:', error);
+        versionElement.innerText = 'Error fetching version';
+    }
+}
+
+// Call the function to update the version on page load
+updateVersionInHeader();
+
 
 async function readTextFile(file) {
     try {
@@ -183,3 +206,4 @@ function onPageLoad() {
 
 // Attach the function to the window.onload event
 window.onload = onPageLoad;
+});

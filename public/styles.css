@@ -8,19 +8,29 @@ body {
 header {
   background-color: #333;
   color: #fff;
-  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
   padding-left: 50px;
-  height: 80px;
-  padding-top: 5px;
 }
 
-.release-version {
-  /* Add styling for the release version */
-  color: #fff;
-  font-size: 14px;
-  text-align: right;
-  /* You can add more styles as needed */
+.title-box {
+  width: 95%;
 }
+
+h1 {
+  margin: 0;
+}
+
+.version-box {
+  background-color: red;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+
 #motd-container {
   display: flex;
   justify-content: Left;
@@ -48,6 +58,7 @@ header {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 10px;
+  padding-left: 30px;
 }
 
 .grid-container,
