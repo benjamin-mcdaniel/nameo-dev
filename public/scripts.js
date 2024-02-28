@@ -2,9 +2,9 @@
 
 async function getVersion() {
     try {
-        const versionResponse = await fetch('version.txt');
+        // Append a cache-busting parameter to the URL
+        const versionResponse = await fetch(`version.txt?t=${new Date().getTime()}`);
         const version = await versionResponse.text();
-        console.log('Fetched version successfully:', version);
         return 'v' + version.trim();
     } catch (error) {
         console.error('Error fetching version:', error);
