@@ -14,34 +14,45 @@
         </div>
         <div class="version-box" id="release-version"></div>
     </header>
+    <div class="content-container">
 
 
-    <div id="motd-container">
-        <div>
-            <p id="big-text">randomized asset name generator :</p>
+        <div id="motd-container">
+            <div>
+                <p id="big-text">randomized asset name generator :</p>
+            </div>
+            <div class="release-version" id="release-version"></div>
+            <div>
+                <p id="small-text">f5 for refresh</p>
+            </div>
         </div>
-        <div class="release-version" id="release-version"></div>
+
+        <!-- Create small tag with "hex" as its name outside of the hex grid -->
         <div>
-            <p id="small-text">f5 for refresh</p>
+        <p id="grid-title">Hex</p>
+        </div>
+        <div id="hex-grid" class="grid-container">
+            <!-- Grid items for Hex grid will be generated dynamically using JavaScript -->
+        </div>
+
+        <!-- Create small tag with "Docker Style" as its name outside of the Docker Style grid -->
+        <div>
+        <p ID="grid-title">Docker Style</p>
+        </div>
+        <div id="docker-grid" class="grid-container">
+        <!-- Grid items for Docker-style naming will be generated dynamically using JavaScript -->
+        </div>
+        
+
+        <div>
+            <p ID="grid-title">GUID</p>
+        </div>
+        <div id="grid" class="grid-container">
+            <!-- Grid items for Docker-style naming will be generated dynamically using JavaScript -->
         </div>
     </div>
 
-    <!-- Create small tag with "hex" as its name outside of the hex grid -->
-    <div>
-      <p id="grid-title">Hex</p>
-    </div>
-    <div id="hex-grid" class="grid-container">
-        <!-- Grid items for Hex grid will be generated dynamically using JavaScript -->
-    </div>
+      
 
-    <!-- Create small tag with "Docker Style" as its name outside of the Docker Style grid -->
-    <div>
-      <p ID="grid-title">Docker Style</p>
-    </div>
-    <div id="docker-grid" class="grid-container">
-      <!-- Grid items for Docker-style naming will be generated dynamically using JavaScript -->
-    </div>
-
-    
 </body>
 </html>

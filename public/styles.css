@@ -3,6 +3,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f0f0f0;
+  
 }
 
 header {
@@ -21,6 +22,11 @@ header {
 
 h1 {
   margin: 0;
+}
+
+.content-container {
+  margin: 0 auto;
+  max-width: 80%;
 }
 
 .version-box {
@@ -71,10 +77,11 @@ h1 {
 
 .grid-item {
   background-color: #1785b1;
-  padding: 20px;
+  padding: 10px;
   border-radius: 8px;
   text-align: center;
   font-weight: bold;
+  font-size: 12px;
   color: white;
   
 }
@@ -86,6 +93,7 @@ h1 {
   padding: 5px 20px; /* Adjusted padding for top and left */
   background-color: #1785b1;
   color: white;
+  font-size: 14px;
 }
 .custom-link {
   text-decoration: none;

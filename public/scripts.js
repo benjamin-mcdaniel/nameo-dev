@@ -65,6 +65,16 @@ function createGridItems(gridId, generatorFunction) {
 let prefixesContent;
 let suffixesContent;
 
+async function generateGUID() {
+    try {
+        const response = await fetch('https://www.uuidgenerator.net/api/guid');
+        const guid = await response.text();
+        return guid.trim();
+    } catch (error) {
+        console.error('Error generating GUID:', error);
+        throw error;
+    }
+}
 // Function to fetch and store content from a file
 async function loadFileContent(file) {
     try {
@@ -205,6 +215,25 @@ function createGridItems(gridId, generatorFunction, gridType) {
     }
 }
 
+function createGridItemsWithGUID(gridId, generatorFunction) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+
+    for (let i = 0; i < 10; i++) {
+        setTimeout(async () => {
+            try {
+                const value = await generatorFunction();
+                const gridItem = document.createElement('div');
+                gridItem.classList.add('grid-item');
+                gridItem.textContent = value;
+                grid.appendChild(gridItem);
+            } catch (error) {
+                console.error('Error generating grid item:', error);
+            }
+        }, i * 250);
+    }
+}
+
 function copyToClipboard(text) {
     // Create a temporary textarea element
     const textarea = document.createElement('textarea');
@@ -229,6 +258,7 @@ function refreshGrids() {
     updateMotdCountdown(10);
     createGridItems('hex-grid', generateRandomHex);
     createGridItemsDocker('docker-grid');
+    createGridItemsWithGUID('grid', generateGUID);
 }
 
 setInterval(refreshGrids, 10000); // Refresh every 10 seconds
