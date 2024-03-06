@@ -11,19 +11,34 @@ async function getVersion() {
         return 'Error fetching version';
     }
 }
-
+document.addEventListener('DOMContentLoaded', function() {
+    // Your script here
+    updateVersionInHeader();
+});
 
 async function updateVersionInHeader() {
     const versionElement = document.getElementById('release-version');
-    console.log('Updating version in header...');
-    try {
-        const version = await getVersion();
-        console.log('Version:', version);
-        versionElement.innerText = version;
-        console.log('Version updated successfully:', version);
-    } catch (error) {
-        console.error('Error updating version in header:', error);
-        versionElement.innerText = 'Error fetching version';
+    
+    if (versionElement) {
+        console.log('Updating version in header...');
+        
+        try {
+            const version = await getVersion();
+            console.log('Version:', version);
+            versionElement.style.display = 'block';
+            versionElement.style.lineHeight = '45px';
+            versionElement.style.padding = '0 14px';
+            versionElement.style.textDecoration = 'none';
+            versionElement.style.color = '#FFFFFF';
+            versionElement.style.fontSize = '16px';
+            versionElement.innerText = version;
+            console.log('Version updated successfully:', version);
+        } catch (error) {
+            console.error('Error updating version in header:', error);
+            versionElement.innerText = 'Error fetching version';
+        }
+    } else {
+        console.error('Version element not found.');
     }
 }
 
@@ -46,20 +61,36 @@ function generateRandomHex() {
     const randomHex = Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
     return randomHex.toUpperCase();
 }
-
 function createGridItems(gridId, generatorFunction) {
     const grid = document.getElementById(gridId);
     grid.innerHTML = ''; // Clear existing items
 
-    for (let i = 0; i < 10; i++) {
-        setTimeout(() => {
-            const value = generatorFunction();
-            const gridItem = document.createElement('div');
-            gridItem.classList.add('grid-item');
-            gridItem.textContent = value;
-            grid.appendChild(gridItem);
-        }, i * 250); // Delay each iteration by i * 250 milliseconds
+    for (let i = 0; i < 16; i++) {
+        const gridItem = document.createElement('div');
+        gridItem.classList.add('grid-item', 'loading'); // Add a loading class
+        grid.appendChild(gridItem);
+
+        // Add mouseover event listener to change cursor style
+        gridItem.addEventListener('mouseover', () => {
+            gridItem.style.cursor = 'pointer';
+        });
+
+        // Add mouseout event listener to reset cursor style
+        gridItem.addEventListener('mouseout', () => {
+            gridItem.style.cursor = 'default';
+        });
     }
+
+    // Simulate an asynchronous delay for loading data
+    setTimeout(() => {
+        for (let i = 0; i < 16; i++) {
+            const value = generatorFunction();
+            const gridItem = grid.children[i]; // Get the previously created grid item
+            gridItem.textContent = value;
+            gridItem.classList.remove('loading'); // Remove the loading class
+            // ... (rest of the code remains unchanged)
+        }
+    }, 1000); // Adjust the delay (in milliseconds) as needed
 }
 
 let prefixesContent;
@@ -128,7 +159,7 @@ async function createGridItemsDocker(gridId) {
     // Clear existing content of the grid
     grid.innerHTML = '';
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 16; i++) {
         try {
             const dockerValue = await generateDockerStyle();
 
@@ -175,7 +206,7 @@ function createGridItems(gridId, generatorFunction, gridType) {
     const grid = document.getElementById(gridId);
     grid.innerHTML = ''; // Clear existing items
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 16; i++) {
         const value = generatorFunction();
         const gridItem = document.createElement('div');
         gridItem.classList.add('grid-item');
@@ -217,20 +248,51 @@ async function createGridItemsWithGUID(gridId, generatorFunction) {
     const grid = document.getElementById(gridId);
     grid.innerHTML = '';
 
-    for (let i = 0; i < 10; i++) {
-        setTimeout(async () => {
-            try {
-                const value = await generatorFunction();
-                const gridItem = document.createElement('div');
-                gridItem.classList.add('grid-item');
-                gridItem.textContent = value;
-                grid.appendChild(gridItem);
-            } catch (error) {
-                console.error('Error generating grid item:', error);
-            }
-        }, i * 250);
-    }
+    const promises = Array.from({ length: 16 }, async (_, i) => {
+        try {
+            const value = await generatorFunction();
+            const gridItem = document.createElement('div');
+            gridItem.classList.add('grid-item');
+            gridItem.textContent = value;
+
+            const copiedMessage = document.createElement('div');
+            copiedMessage.classList.add('copied-message');
+            copiedMessage.textContent = 'Copied';
+            gridItem.appendChild(copiedMessage);
+
+            // Add click event listener to each grid item
+            gridItem.addEventListener('click', (event) => {
+                // Stop the event propagation to prevent it from reaching the parent container
+                event.stopPropagation();
+
+                // Copy the value to the clipboard
+                copyToClipboard(value);
+
+                // Show "Copied" message
+                copiedMessage.style.opacity = 1;
+
+                // Fade out the "Copied" message after 2 seconds
+                setTimeout(() => {
+                    copiedMessage.style.opacity = 0;
+                }, 2000);
+
+                // Add class for blinking borders
+                gridItem.classList.add('blink-border');
+
+                // Optionally, provide visual feedback or other actions after copying
+                console.log(`Copied to clipboard (GUID): ${value}`);
+                
+            });
+
+            grid.appendChild(gridItem);
+        } catch (error) {
+            console.error('Error generating grid item:', error);
+        }
+    });
+
+    await Promise.all(promises);
 }
+
 
 function copyToClipboard(text) {
     // Create a temporary textarea element

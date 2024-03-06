@@ -9,31 +9,43 @@
 </head>
 <body>
     <header>
-        <div class="title-box">
-            <h1>Nameo.dev</h1>
-        </div>
-        <a href="https://twitter.com/iamcdben" target="_blank" rel="noopener noreferrer">
-            <img src="x.png" alt="X Logo"  width="24" height="24">
-        </a>
-        <div class="version-box" id="release-version"></div>
-        
+        <nav id='menu'>
+            <input type='checkbox'  onclick='updatemenu()'><label></label>
+            <ul>
+              <li><h1>Nameo.dev</h1></li>
+              <!-- <li><a class='dropdown-arrow' href='http://'>Menu</a>
+                <ul class='sub-menus'>
+                  <li><a href='http://'>Products 1</a></li>
+                  <li><a href='http://'>Products 2</a></li>
+                  <li><a href='http://'>Products 3</a></li>
+                  <li><a href='http://'>Products 4</a></li>
+                </ul>
+              </li> -->
+              <li class="grow_header">
+                <p id="big-text">randomized asset name generator :  </p>
+                </li>
+                <li>
+                <p id="small-text"> F5 for refresh</p>
+              </li>
+              <li style="float: right;" id="release-version"><a href='http://'>V</a></li>
+              <li style="float: right;">
+                <a href="https://twitter.com/iamcdben" target="_blank" rel="noopener noreferrer">
+                    <img src="x.png" alt="X Logo" width="15" height="15">
+                </a>
+            </li>
+            </ul>
+          </nav>
     </header>
     <div class="content-container">
 
 
-        <div id="motd-container">
-            <div>
-                <p id="big-text">randomized asset name generator :</p>
-            </div>
-            <div id="release-version"></div>
-            <div>
-                <p id="small-text">f5 for refresh</p>
-            </div>
+     
+        <div>
+            <p></p>
         </div>
-
         <!-- Create small tag with "hex" as its name outside of the hex grid -->
         <div>
-        <p id="grid-title">Hex</p>
+        <p id="grid-title">6 Char Hex</p>
         </div>
         <div id="hex-grid" class="grid-container">
             <!-- Grid items for Hex grid will be generated dynamically using JavaScript -->
