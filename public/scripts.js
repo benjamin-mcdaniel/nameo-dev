@@ -65,16 +65,14 @@ function createGridItems(gridId, generatorFunction) {
 let prefixesContent;
 let suffixesContent;
 
-async function generateGUID() {
-    try {
-        const response = await fetch('https://www.uuidgenerator.net/api/guid');
-        const guid = await response.text();
-        return guid.trim();
-    } catch (error) {
-        console.error('Error generating GUID:', error);
-        throw error;
-    }
+function generateGUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
+
 // Function to fetch and store content from a file
 async function loadFileContent(file) {
     try {
@@ -215,7 +213,7 @@ function createGridItems(gridId, generatorFunction, gridType) {
     }
 }
 
-function createGridItemsWithGUID(gridId, generatorFunction) {
+async function createGridItemsWithGUID(gridId, generatorFunction) {
     const grid = document.getElementById(gridId);
     grid.innerHTML = '';
 
