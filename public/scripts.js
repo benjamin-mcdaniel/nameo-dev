@@ -293,6 +293,79 @@ async function createGridItemsWithGUID(gridId, generatorFunction) {
     await Promise.all(promises);
 }
 
+document.addEventListener('DOMContentLoaded', onPageLoad);
+
+// ... (your existing code)
+
+function generateTimezoneName() {
+    const timeZones = [
+        'UTC-12', 'UTC-11', 'UTC-10', 'UTC-09', 'UTC-08', 'UTC-07',
+        'UTC-06', 'UTC-05', 'UTC-04', 'UTC-03', 'UTC-02', 'UTC-01',
+        'UTC+00', 'UTC+01', 'UTC+02', 'UTC+03', 'UTC+04', 'UTC+05',
+        'UTC+06', 'UTC+07', 'UTC+08', 'UTC+09', 'UTC+10', 'UTC+11',
+        'UTC+12'
+    ];
+
+    const currentDate = new Date();
+    const randomTimeZone = getRandomItem(timeZones);
+
+    // Custom date formatting: MMM_D_YYYY (e.g., Mar_6_2024)
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const formattedDate = `${monthNames[currentDate.getMonth()]}_${currentDate.getDate()}_${currentDate.getFullYear()}`;
+
+    return `${randomTimeZone}_${formattedDate}`;
+}
+
+function getRandomItem(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+async function createGridItemsWithTimezone(gridId) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+
+    for (let i = 0; i < 24; i++) {
+        try {
+            const timezoneValue = generateTimezoneName();
+
+            // Create grid item
+            const gridItem = document.createElement('div');
+            gridItem.classList.add('grid-item');
+            gridItem.textContent = timezoneValue;
+
+            const copiedMessage = document.createElement('div');
+            copiedMessage.classList.add('copied-message');
+            copiedMessage.textContent = 'Copied';
+            gridItem.appendChild(copiedMessage);
+
+            // Add click event listener to each grid item
+            gridItem.addEventListener('click', () => {
+                // Copy the value to the clipboard
+                copyToClipboard(timezoneValue);
+
+                // Show "Copied" message
+                copiedMessage.style.opacity = 1;
+
+                // Fade out the "Copied" message after 2 seconds
+                setTimeout(() => {
+                    copiedMessage.style.opacity = 0;
+                }, 2000);
+
+                // Add class for blinking borders
+                gridItem.classList.add('blink-border');
+
+                // Optionally, provide visual feedback or other actions after copying
+                console.log(`Copied to clipboard (Timezone): ${timezoneValue}`);
+            });
+
+            // Append grid item to the grid
+            grid.appendChild(gridItem);
+        } catch (error) {
+            console.error('Error generating timezone name:', error);
+        }
+    }
+}
+
 
 function copyToClipboard(text) {
     // Create a temporary textarea element
@@ -319,6 +392,7 @@ function refreshGrids() {
     createGridItems('hex-grid', generateRandomHex);
     createGridItemsDocker('docker-grid');
     createGridItemsWithGUID('grid', generateGUID);
+    createGridItemsWithTimezone('timezone-grid');
 }
 
 setInterval(refreshGrids, 10000); // Refresh every 10 seconds
