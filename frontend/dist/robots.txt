@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nameo.dev/sitemap.xml

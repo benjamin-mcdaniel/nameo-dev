@@ -1,0 +1,16 @@
+.site-header, .site-footer { border-bottom: 1px solid var(--border); }
+.site-footer { border-bottom: 0; border-top: 1px solid var(--border); }
+.site-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 4%; position: sticky; top: 0; backdrop-filter: saturate(180%) blur(10px); background: color-mix(in oklab, var(--bg), transparent 15%); }
+.brand { font-weight: 700; color: var(--text); }
+.site-nav a { margin-left: 16px; }
+.theme-toggle { margin-left: 16px; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+.hero { padding: 80px 0 40px; text-align: center; border-bottom: 1px solid var(--border); }
+.hero h1 { font-size: clamp(2rem, 3.6vw, 3rem); margin: 0 0 12px; }
+.hero .sub { color: var(--muted); margin-bottom: 24px; }
+.hero .actions .btn { margin: 0 8px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; padding: 40px 0; }
+.feature { border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.plan { border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.price { font-size: 1.6rem; font-weight: 700; }
+.site-footer .container { display: flex; align-items: center; justify-content: space-between; padding: 20px 4%; }
