@@ -1,23 +1,23 @@
 import Link from 'next/link'
-import { useUser } from '@auth0/nextjs-auth0/client'
+import { useAuth0 } from '@auth0/auth0-react'
 
 export default function Home() {
-  const { user, isLoading } = useUser()
+  const { isAuthenticated, isLoading, user, loginWithRedirect, logout } = useAuth0()
 
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: 24 }}>
       <h1>nameo Portal</h1>
       <p>Welcome to the portal.</p>
-      <nav style={{ display: 'flex', gap: 12, margin: '16px 0' }}>
+      <nav style={{ display: 'flex', gap: 12, margin: '16px 0', alignItems: 'center' }}>
         <Link href="/">Home</Link>
         <Link href="/dashboard">Dashboard</Link>
-        {!user && !isLoading && (
-          <a href="/api/auth/login">Login</a>
+        {!isAuthenticated && !isLoading && (
+          <button onClick={() => loginWithRedirect()}>Login</button>
         )}
-        {user && (
+        {isAuthenticated && (
           <>
-            <span>Signed in as {user.name || user.email}</span>
-            <a href="/api/auth/logout">Logout</a>
+            <span>Signed in as {user?.name || user?.email}</span>
+            <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>Logout</button>
           </>
         )}
       </nav>
