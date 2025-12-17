@@ -26,7 +26,7 @@ This document describes how to deploy the static frontend in `frontend/` to Clou
    - After first successful deploy, add custom domain:
      - `nameo.dev` → bind to this Pages project
      - Optionally `www.nameo.dev` → set as redirect to apex (via Page Rule or DNS + `_redirects` in a separate tiny site)
-   - Reserve `portal.nameo.dev` for the app later (separate project)
+     - Use `nameo.dev` as the primary app domain. No separate portal is required for MVP.
 
 ## Option B — GitHub Action (automated)
 We include a workflow at `.github/workflows/cf-pages.yml`. To enable it:
@@ -47,8 +47,8 @@ We include a workflow at `.github/workflows/cf-pages.yml`. To enable it:
 
 ## Verify after deploy
 - Open `https://nameo.dev/#/` (Home)
-- Check `#/help`, `#/login`, `#/pricing`, `#/privacy`, `#/terms`
-- Test Portal links and support email link.
+- Check `#/help`, `#/login`, `#/pricing`, `#/privacy`, `#/terms`, `#/test`
+- Confirm the Home page name checker is calling the live Worker API.
 
 ---
 

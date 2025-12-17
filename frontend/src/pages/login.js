@@ -3,8 +3,7 @@ export function Login() {
   el.className = 'page login container'
   el.innerHTML = `
     <h1>Login</h1>
-    <p>Authentication is handled in the portal.</p>
-    <a class="btn btn-primary" href="https://portal.nameo.dev/login" target="_blank" rel="noopener">Continue to Portal Login</a>
+    <p>Sign-in for nameo.dev will live here. For now, the name checker is open to everyone so you can test it freely.</p>
   `
   return el
 }
