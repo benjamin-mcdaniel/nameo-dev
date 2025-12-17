@@ -1,0 +1,7 @@
+name = "nameo-worker"
+main = "backend/worker/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# AUTH0_DOMAIN = "your-tenant.us.auth0.com"
+# AUTH0_AUDIENCE = "https://nameo-api"

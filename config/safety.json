@@ -1,0 +1,10 @@
+{
+  "minLength": 3,
+  "maxLength": 32,
+  "allowedPattern": "^[a-zA-Z0-9._-]{3,32}$",
+  "bannedSubstrings": [
+    "badword1",
+    "badword2"
+  ],
+  "profanityLibrary": "leo-profanity"
+}

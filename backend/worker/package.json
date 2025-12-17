@@ -1,0 +1,13 @@
+{
+  "name": "nameo-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev src/index.js --local",
+    "deploy": "wrangler deploy src/index.js"
+  },
+  "dependencies": {
+    "leo-profanity": "^1.7.0"
+  }
+}

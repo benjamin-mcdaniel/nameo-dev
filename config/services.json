@@ -1,0 +1,39 @@
+{
+  "services": [
+    {
+      "id": "x",
+      "label": "X (Twitter)",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://x.com/{name}"
+    },
+    {
+      "id": "instagram",
+      "label": "Instagram",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.instagram.com/{name}/"
+    },
+    {
+      "id": "facebook",
+      "label": "Facebook",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.facebook.com/{name}"
+    },
+    {
+      "id": "youtube",
+      "label": "YouTube",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.youtube.com/@{name}"
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.linkedin.com/in/{name}/"
+    }
+  ]
+}
