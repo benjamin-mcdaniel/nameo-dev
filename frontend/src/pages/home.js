@@ -1,3 +1,5 @@
+const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+
 export function Home() {
   const el = document.createElement('section')
   el.className = 'page home'
@@ -123,7 +125,9 @@ function attachLogic(root) {
     suggestionsEl.innerHTML = ''
 
     try {
-      const checkResp = await fetchJson(`/api/check?name=${encodeURIComponent(name)}`)
+      const checkResp = await fetchJson(
+        `${API_BASE}/api/check?name=${encodeURIComponent(name)}`
+      )
 
       if (!checkResp.ok) {
         if (checkResp.status === 400 && checkResp.data && checkResp.data.status === 'unsafe') {
@@ -139,7 +143,9 @@ function attachLogic(root) {
       setStatus('', '')
       renderResults(checkResp.data)
 
-      const suggResp = await fetchJson(`/api/suggestions?name=${encodeURIComponent(name)}`)
+      const suggResp = await fetchJson(
+        `${API_BASE}/api/suggestions?name=${encodeURIComponent(name)}`
+      )
       if (suggResp.ok && suggResp.data && Array.isArray(suggResp.data.suggestions)) {
         renderSuggestions(suggResp.data.suggestions)
       } else {

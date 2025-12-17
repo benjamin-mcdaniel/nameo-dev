@@ -141,7 +141,7 @@ fetchJson(`/api/check?name=${encodeURIComponent(name)}`)
 to use the full Worker URL, for example:
 
 ```js
-const API_BASE = 'https://nameo-worker.<your-subdomain>.workers.dev'
+const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
 // then:
 fetchJson(`${API_BASE}/api/check?name=${encodeURIComponent(name)}`)
 ```

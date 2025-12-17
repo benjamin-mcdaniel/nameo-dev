@@ -13,3 +13,4 @@
   }
 }
 
+npx wrangler login
