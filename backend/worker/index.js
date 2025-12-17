@@ -1,17 +1,27 @@
 import leoProfanity from 'leo-profanity'
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
 
     if (url.pathname.startsWith('/api/')) {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: CORS_HEADERS,
+        })
+      }
+
       // Require Auth0 token for all API routes (stubbed for now)
       const authResult = await verifyAuth0Token(request, env)
       if (!authResult.ok) {
-        return new Response(JSON.stringify({ error: 'unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return json({ error: 'unauthorized' }, 401)
       }
 
       if (url.pathname === '/api/check' && request.method === 'GET') {
@@ -22,10 +32,7 @@ export default {
         return handleSuggestions(url, env)
       }
 
-      return new Response(JSON.stringify({ error: 'not_found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json({ error: 'not_found' }, 404)
     }
 
     return new Response('OK')
@@ -215,6 +222,7 @@ function json(body, status = 200) {
     status,
     headers: {
       'Content-Type': 'application/json',
+      ...CORS_HEADERS,
     },
   })
 }
