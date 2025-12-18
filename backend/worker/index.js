@@ -30,32 +30,36 @@ export default {
         return handleSuggestions(url, env)
       }
 
-      // Below this point, routes require Auth0. If Auth0 is not configured,
-      // verifyAuth0Token falls back to a fixed anonymous user id so the
-      // backend can be exercised without auth during early development.
+      // Below this point, routes require a real Auth0 user. We verify the
+      // token and ensure a corresponding row exists in the D1 `users` table.
       const authResult = await verifyAuth0Token(request, env)
-      if (!authResult.ok) {
+      if (!authResult.ok || !authResult.sub) {
         return json({ error: 'unauthorized' }, 401)
       }
 
+      const user = await getOrCreateUser(env, authResult.sub, authResult.email || null)
+      if (!user) {
+        return json({ error: 'user_init_failed' }, 500)
+      }
+
       if (url.pathname === '/api/campaigns' && request.method === 'GET') {
-        return handleListCampaigns(env, authResult.sub)
+        return handleListCampaigns(env, user.id)
       }
 
       if (url.pathname === '/api/campaigns' && request.method === 'POST') {
-        return handleCreateCampaign(request, env, authResult.sub)
+        return handleCreateCampaign(request, env, user.id)
       }
 
       const campaignOptionsMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/options$/)
       if (campaignOptionsMatch && request.method === 'POST') {
         const campaignId = campaignOptionsMatch[1]
-        return handleCreateOption(request, env, authResult.sub, campaignId)
+        return handleCreateOption(request, env, user.id, campaignId)
       }
 
       const optionCheckMatch = url.pathname.match(/^\/api\/options\/([^/]+)\/check$/)
       if (optionCheckMatch && request.method === 'POST') {
         const optionId = optionCheckMatch[1]
-        return handleCheckOption(env, authResult.sub, optionId)
+        return handleCheckOption(env, user.id, optionId)
       }
 
       return json({ error: 'not_found' }, 404)
@@ -250,6 +254,31 @@ async function handleCheckOption(env, userId, optionId) {
   return json({ status: 'ok', option_id: optionId, checked_at: checkedAt, results })
 }
 
+async function getOrCreateUser(env, sub, email) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return null
+  }
+
+  const existing = await db
+    .prepare('SELECT id, email, created_at FROM users WHERE id = ?')
+    .bind(sub)
+    .first()
+
+  if (existing) {
+    return existing
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+
+  await db
+    .prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)')
+    .bind(sub, email, now)
+    .run()
+
+  return { id: sub, email, created_at: now }
+}
+
 async function loadSafetyConfig(env) {
   // In a more advanced setup, this could come from KV. For now, static JSON bundled at build.
   const config = await import('../../config/safety.json', { assert: { type: 'json' } })
@@ -380,11 +409,6 @@ async function verifyAuth0Token(request, env) {
   const [scheme, token] = authHeader.split(' ')
 
   if (!token || scheme !== 'Bearer') {
-    // If Auth0 is not configured yet, fall back to an anonymous user id
-    // so the backend can be tested without auth.
-    if (!env.AUTH0_DOMAIN || !env.AUTH0_AUDIENCE) {
-      return { ok: true, sub: 'anon' }
-    }
     return { ok: false }
   }
 
@@ -392,8 +416,7 @@ async function verifyAuth0Token(request, env) {
   const audience = env.AUTH0_AUDIENCE
 
   if (!domain || !audience) {
-    // If not configured, treat all callers as a single anonymous user.
-    return { ok: true, sub: 'anon' }
+    return { ok: false }
   }
 
   try {
@@ -414,7 +437,9 @@ async function verifyAuth0Token(request, env) {
       return { ok: false }
     }
 
-    return { ok: true, sub }
+    const email = typeof payload.email === 'string' ? payload.email : null
+
+    return { ok: true, sub, email }
   } catch (err) {
     return { ok: false }
   }
