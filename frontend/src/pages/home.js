@@ -27,6 +27,10 @@ export function Home() {
         <div id="status-message" class="status"></div>
         <div id="results" class="results"></div>
         <div id="suggestions" class="suggestions"></div>
+        <div class="actions">
+          <button id="btn-save-name" class="btn">Save this name (beta)</button>
+        </div>
+        <div id="save-message" class="hint"></div>
         <div class="hint">
           Coming soon: save this check into a campaign, track multiple options for a launch, and share them with marketing or founders.
         </div>
@@ -57,8 +61,10 @@ function attachLogic(root) {
   const statusEl = root.querySelector('#status-message')
   const resultsEl = root.querySelector('#results')
   const suggestionsEl = root.querySelector('#suggestions')
+  const saveBtn = root.querySelector('#btn-save-name')
+  const saveMessageEl = root.querySelector('#save-message')
 
-  if (!input || !statusEl || !resultsEl || !suggestionsEl) return
+  if (!input || !statusEl || !resultsEl || !suggestionsEl || !saveBtn || !saveMessageEl) return
 
   let currentController = null
   let debounceId = null
@@ -187,4 +193,80 @@ function attachLogic(root) {
   }
 
   input.addEventListener('input', scheduleRun)
+
+  async function apiFetchWithAuth(path, options = {}) {
+    const headers = new Headers(options.headers || {})
+    headers.set('Content-Type', 'application/json')
+    // Try to attach Auth0 token if available. This is lazy-imported to
+    // avoid forcing auth code on first paint.
+    try {
+      const { getAccessToken } = await import('../auth/client.js')
+      const token = await getAccessToken()
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+    } catch (err) {
+      // ignore, will fall back to anonymous user if backend allows it
+    }
+
+    const res = await fetch(path, { ...options, headers })
+    const data = await res.json().catch(() => ({}))
+    return { ok: res.ok, status: res.status, data }
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    const name = input.value.trim()
+    if (!name) {
+      saveMessageEl.textContent = 'Type a name first before saving.'
+      return
+    }
+
+    saveMessageEl.textContent = 'Saving name…'
+
+    try {
+      // Ensure there is at least one campaign. For now, we use or create
+      // a default campaign called "My first campaign".
+      const listResp = await apiFetchWithAuth('/api/campaigns')
+      if (listResp.status === 401) {
+        saveMessageEl.textContent = 'Login is required to save names. Use the Login page first.'
+        return
+      }
+
+      let campaignId = null
+      const campaigns = listResp.data?.campaigns || []
+      const existing = campaigns.find((c) => c.name === 'My first campaign')
+      if (existing) {
+        campaignId = existing.id
+      } else {
+        const createResp = await apiFetchWithAuth('/api/campaigns', {
+          method: 'POST',
+          body: JSON.stringify({ name: 'My first campaign', description: 'Default campaign created from Home page.' }),
+        })
+        if (!createResp.ok) {
+          saveMessageEl.textContent = 'Unable to create a campaign. Try again later.'
+          return
+        }
+        campaignId = createResp.data.id
+      }
+
+      const optionResp = await apiFetchWithAuth(`/api/campaigns/${encodeURIComponent(campaignId)}/options`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      })
+
+      if (!optionResp.ok) {
+        if (optionResp.status === 401) {
+          saveMessageEl.textContent = 'Login is required to save names. Use the Login page first.'
+        } else {
+          saveMessageEl.textContent = 'Unable to save this name right now.'
+        }
+        return
+      }
+
+      saveMessageEl.textContent = 'Name saved to your campaign.'
+    } catch (err) {
+      saveMessageEl.textContent = 'An error occurred while saving.'
+      console.error('Save name error', err)
+    }
+  })
 }
