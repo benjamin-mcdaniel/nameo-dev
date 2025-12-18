@@ -1,5 +1,7 @@
 import leoProfanity from 'leo-profanity'
 
+let PROFANITY_READY = false
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
@@ -123,9 +125,9 @@ async function evaluateNameSafety(name, safetyConfig) {
   }
 
   // Profanity check using leo-profanity in addition to simple substring rules.
-  // Configure library once per invocation context.
-  if (!leoProfanity.isPrepared()) {
+  if (!PROFANITY_READY) {
     leoProfanity.loadDictionary()
+    PROFANITY_READY = true
   }
 
   if (leoProfanity.check(name)) {
