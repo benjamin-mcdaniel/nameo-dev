@@ -6,26 +6,45 @@ export function Home() {
   el.innerHTML = `
     <section class="hero">
       <div class="container">
-        <h1>Name your product in minutes.</h1>
-        <p class="sub">A minimalist naming tool for founders and indie hackers.</p>
+        <h1>Give every product name a home.</h1>
+        <p class="sub">Check names instantly, organize them into campaigns, and get ready to share with your team.</p>
         <div class="actions">
-          <a class="btn" href="#/pricing">See Pricing</a>
+          <a class="btn btn-primary" href="#checker">Start checking a name</a>
+          <a class="btn" href="#/pricing">See pricing</a>
         </div>
       </div>
     </section>
 
     <section class="container" id="checker">
       <div class="card">
-        <h2>Check name availability</h2>
-        <p class="sub">Enter a name to see availability across social platforms.</p>
+        <h2>Search once, keep it forever</h2>
+        <p class="sub">Enter a name to see availability across social platforms. Soon youll be able to save this as part of a campaign.</p>
         <form id="name-form" class="stack">
           <label for="name-input">Name</label>
-          <input id="name-input" type="text" autocomplete="off" placeholder="e.g. cloaky" />
+          <input id="name-input" type="text" autocomplete="off" placeholder="e.g. blubrdbkpk" />
           <small id="name-help" class="hint">We automatically block unsafe or offensive names before checking.</small>
         </form>
         <div id="status-message" class="status"></div>
         <div id="results" class="results"></div>
         <div id="suggestions" class="suggestions"></div>
+        <div class="hint">
+          Coming soon: save this check into a campaign, track multiple options for a launch, and share them with marketing or founders.
+        </div>
+      </div>
+    </section>
+
+    <section class="container features">
+      <div class="feature">
+        <h3>Campaigns for launches</h3>
+        <p>Create a campaign for each product or project, and group all of your name ideas in one place.</p>
+      </div>
+      <div class="feature">
+        <h3>Saved searches & results</h3>
+        <p>Keep a history of which names you checked and where they were available, so you can come back later.</p>
+      </div>
+      <div class="feature">
+        <h3>Share with your team</h3>
+        <p>Share a campaign with marketing, founders, or clients so everyone can review the same set of options.</p>
       </div>
     </section>
   `
