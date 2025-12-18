@@ -7,9 +7,11 @@ import { Terms } from './pages/terms.js'
 import { NotFound } from './pages/notfound.js'
 import { Test } from './pages/test.js'
 import { Campaigns } from './pages/campaigns.js'
+import { Search } from './pages/search.js'
 
 const routes = {
   '/': Home,
+  '/search': Search,
   '/help': Help,
   '/login': Login,
   '/pricing': Pricing,

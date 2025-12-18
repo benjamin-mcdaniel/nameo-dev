@@ -10,7 +10,7 @@ export function Home() {
           <h1>Find a name that is actually available.</h1>
           <p class="sub">Check social handles in one place, then save the best options into a simple campaign you can revisit later.</p>
           <div class="actions">
-            <a class="btn btn-primary" href="#checker">Start checking a name</a>
+            <a class="btn btn-primary" href="#/search">Start checking a name</a>
             <a class="btn" href="#/pricing">See pricing</a>
           </div>
         </div>
