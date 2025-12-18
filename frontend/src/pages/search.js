@@ -6,27 +6,29 @@ export function Search() {
   el.innerHTML = `
     <h1 class="search-title">Search names across platforms</h1>
     <div class="search-layout">
-      <aside class="search-side search-side-left">
-        <h2>Search settings</h2>
-        <form id="search-form" class="stack">
-          <label for="search-input">Name</label>
-          <input id="search-input" type="text" autocomplete="off" placeholder="e.g. blubrdbkpk" />
-          <small class="hint">We block unsafe or offensive names before checking.</small>
-        </form>
-        <div id="search-status" class="status"></div>
-        <div class="search-actions">
-          <button id="btn-run-search" class="btn btn-primary">Run search</button>
-        </div>
-        <div class="search-meta">
-          <button id="btn-favorite" class="btn">Add to favorites</button>
-          <button id="btn-add-campaign" class="btn">Add to campaign</button>
-          <div id="search-meta-message" class="hint"></div>
-        </div>
-      </aside>
-
       <main class="search-main">
-        <div id="search-results" class="results"></div>
-        <div id="search-suggestions" class="suggestions"></div>
+        <section class="search-panel">
+          <h2>Search</h2>
+          <form id="search-form" class="stack">
+            <label for="search-input">Name</label>
+            <input id="search-input" type="text" autocomplete="off" placeholder="e.g. blubrdbkpk" />
+            <small class="hint">We block unsafe or offensive names before checking.</small>
+          </form>
+          <div id="search-status" class="status"></div>
+          <div class="search-actions">
+            <button id="btn-run-search" class="btn btn-primary">Run search</button>
+          </div>
+          <div class="search-meta">
+            <button id="btn-favorite" class="btn">Add to favorites</button>
+            <button id="btn-add-campaign" class="btn">Add to campaign</button>
+            <div id="search-meta-message" class="hint"></div>
+          </div>
+        </section>
+
+        <section class="search-results-block">
+          <div id="search-results" class="results"></div>
+          <div id="search-suggestions" class="suggestions"></div>
+        </section>
       </main>
 
       <aside class="search-side search-side-right">

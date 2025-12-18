@@ -33,9 +33,11 @@
 .site-footer .container { display: flex; align-items: center; justify-content: space-between; padding: 20px 4%; }
 
 .search-title { margin-bottom: 16px; }
-.search-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2.2fr) minmax(0, 1.3fr); gap: 24px; align-items: flex-start; }
+.search-layout { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr); gap: 24px; align-items: flex-start; }
 .search-side { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: color-mix(in oklab, var(--bg), white 6%); }
 .search-main { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: color-mix(in oklab, var(--bg), white 4%); }
+.search-panel { margin-bottom: 20px; }
+.search-results-block { margin-top: 8px; }
 .search-actions { margin-top: 8px; }
 .search-meta { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .search-history { max-height: 420px; overflow-y: auto; padding-right: 4px; }

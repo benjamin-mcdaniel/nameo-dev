@@ -24,8 +24,8 @@ a:hover { text-decoration: underline; }
   padding: 0.55rem 1rem;
   border: 1px solid var(--border);
   border-radius: 999px;
-  color: var(--text);
-  background: white;
+  color: #020617;
+  background: #e5e7eb;
   font-size: 0.95rem;
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
