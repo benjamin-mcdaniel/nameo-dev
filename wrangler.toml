@@ -3,5 +3,10 @@ main = "backend/worker/index.js"
 compatibility_date = "2024-01-01"
 
 [vars]
-# AUTH0_DOMAIN = "your-tenant.us.auth0.com"
+# AUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
 # AUTH0_AUDIENCE = "https://nameo-api"
+
+[[d1_databases]]
+binding = "NAMEO_DB"                # used in Worker env.NAMEO_DB
+database_name = "nameo-db"          # D1 database name in Cloudflare dashboard
+database_id = "4afe937a-4c9b-4cb1-bfad-64d8844ca26e"  

@@ -1,6 +1,8 @@
 import leoProfanity from 'leo-profanity'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 
 let PROFANITY_READY = false
+let JWKS_CACHE = null
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +22,9 @@ export default {
         })
       }
 
-      // Require Auth0 token for all API routes (stubbed for now)
+      // Require Auth0 token for all API routes. If Auth0 is not configured,
+      // verifyAuth0Token falls back to a fixed anonymous user id so the
+      // backend can be exercised without auth during early development.
       const authResult = await verifyAuth0Token(request, env)
       if (!authResult.ok) {
         return json({ error: 'unauthorized' }, 401)
@@ -32,6 +36,26 @@ export default {
 
       if (url.pathname === '/api/suggestions' && request.method === 'GET') {
         return handleSuggestions(url, env)
+      }
+
+      if (url.pathname === '/api/campaigns' && request.method === 'GET') {
+        return handleListCampaigns(env, authResult.sub)
+      }
+
+      if (url.pathname === '/api/campaigns' && request.method === 'POST') {
+        return handleCreateCampaign(request, env, authResult.sub)
+      }
+
+      const campaignOptionsMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/options$/)
+      if (campaignOptionsMatch && request.method === 'POST') {
+        const campaignId = campaignOptionsMatch[1]
+        return handleCreateOption(request, env, authResult.sub, campaignId)
+      }
+
+      const optionCheckMatch = url.pathname.match(/^\/api\/options\/([^/]+)\/check$/)
+      if (optionCheckMatch && request.method === 'POST') {
+        const optionId = optionCheckMatch[1]
+        return handleCheckOption(env, authResult.sub, optionId)
       }
 
       return json({ error: 'not_found' }, 404)
@@ -86,6 +110,144 @@ async function handleSuggestions(url, env) {
 
   const suggestions = generateSuggestions(name, safetyConfig)
   return json({ status: 'ok', name, suggestions })
+}
+
+async function handleListCampaigns(env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  const result = await db
+    .prepare('SELECT id, name, description, created_at, updated_at FROM campaigns WHERE user_id = ? ORDER BY created_at DESC')
+    .bind(userId)
+    .all()
+
+  return json({ campaigns: result.results || [] })
+}
+
+async function handleCreateCampaign(request, env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  let body = {}
+  try {
+    body = await request.json()
+  } catch (err) {
+    return json({ error: 'invalid_json' }, 400)
+  }
+
+  const name = (body.name || '').trim()
+  const description = (body.description || '').trim() || null
+
+  if (!name) {
+    return json({ error: 'name_required' }, 400)
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  const id = crypto.randomUUID()
+
+  await db
+    .prepare('INSERT INTO campaigns (id, user_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(id, userId, name, description, now, now)
+    .run()
+
+  return json({ id, name, description, created_at: now, updated_at: now }, 201)
+}
+
+async function handleCreateOption(request, env, userId, campaignId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  // Ensure campaign belongs to this user
+  const campaign = await db
+    .prepare('SELECT id FROM campaigns WHERE id = ? AND user_id = ?')
+    .bind(campaignId, userId)
+    .first()
+
+  if (!campaign) {
+    return json({ error: 'campaign_not_found' }, 404)
+  }
+
+  let body = {}
+  try {
+    body = await request.json()
+  } catch (err) {
+    return json({ error: 'invalid_json' }, 400)
+  }
+
+  const name = (body.name || '').trim()
+  if (!name) {
+    return json({ error: 'name_required' }, 400)
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  const id = crypto.randomUUID()
+
+  await db
+    .prepare('INSERT INTO options (id, campaign_id, name, created_at) VALUES (?, ?, ?, ?)')
+    .bind(id, campaignId, name, now)
+    .run()
+
+  return json({ id, campaign_id: campaignId, name, created_at: now }, 201)
+}
+
+async function handleCheckOption(env, userId, optionId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  // Load option and verify it belongs to this user via its campaign
+  const row = await db
+    .prepare(
+      'SELECT o.id, o.name, o.campaign_id FROM options o JOIN campaigns c ON o.campaign_id = c.id WHERE o.id = ? AND c.user_id = ?'
+    )
+    .bind(optionId, userId)
+    .first()
+
+  if (!row) {
+    return json({ error: 'option_not_found' }, 404)
+  }
+
+  const safetyConfig = await loadSafetyConfig(env)
+  const servicesConfig = await loadServicesConfig(env)
+
+  const safety = await evaluateNameSafety(row.name, safetyConfig)
+  if (!safety.ok) {
+    return json({ status: 'unsafe', reason: safety.reason, message: safety.message }, 400)
+  }
+
+  const checks = await Promise.allSettled(
+    servicesConfig.services.map((service) => checkServiceAvailability(service, row.name))
+  )
+
+  const results = servicesConfig.services.map((service, index) => {
+    const r = checks[index]
+    if (r.status === 'fulfilled') {
+      return { service: service.id, label: service.label, ...r.value }
+    }
+    return {
+      service: service.id,
+      label: service.label,
+      status: 'error',
+      error: 'check_failed',
+    }
+  })
+
+  const checkedAt = Math.floor(Date.now() / 1000)
+  const checkId = crypto.randomUUID()
+
+  await db
+    .prepare('INSERT INTO option_checks (id, option_id, checked_at, services_json) VALUES (?, ?, ?, ?)')
+    .bind(checkId, optionId, checkedAt, JSON.stringify(results))
+    .run()
+
+  return json({ status: 'ok', option_id: optionId, checked_at: checkedAt, results })
 }
 
 async function loadSafetyConfig(env) {
@@ -214,9 +376,48 @@ function simpleSafetyCheck(name, safetyConfig) {
 }
 
 async function verifyAuth0Token(request, env) {
-  // TODO: Implement JWT verification against Auth0 JWKS using env.AUTH0_DOMAIN and env.AUTH0_AUDIENCE.
-  // For now, this stub allows all requests through so we can develop the rest of the flow.
-  return { ok: true }
+  const authHeader = request.headers.get('Authorization') || ''
+  const [scheme, token] = authHeader.split(' ')
+
+  if (!token || scheme !== 'Bearer') {
+    // If Auth0 is not configured yet, fall back to an anonymous user id
+    // so the backend can be tested without auth.
+    if (!env.AUTH0_DOMAIN || !env.AUTH0_AUDIENCE) {
+      return { ok: true, sub: 'anon' }
+    }
+    return { ok: false }
+  }
+
+  const domain = env.AUTH0_DOMAIN
+  const audience = env.AUTH0_AUDIENCE
+
+  if (!domain || !audience) {
+    // If not configured, treat all callers as a single anonymous user.
+    return { ok: true, sub: 'anon' }
+  }
+
+  try {
+    if (!JWKS_CACHE) {
+      const jwksUrl = new URL(`https://${domain}/.well-known/jwks.json`)
+      JWKS_CACHE = createRemoteJWKSet(jwksUrl)
+    }
+
+    const issuer = `https://${domain}/`
+
+    const { payload } = await jwtVerify(token, JWKS_CACHE, {
+      issuer,
+      audience,
+    })
+
+    const sub = payload.sub
+    if (!sub || typeof sub !== 'string') {
+      return { ok: false }
+    }
+
+    return { ok: true, sub }
+  } catch (err) {
+    return { ok: false }
+  }
 }
 
 function json(body, status = 200) {

@@ -8,6 +8,7 @@
     "deploy": "wrangler deploy src/index.js"
   },
   "dependencies": {
-    "leo-profanity": "^1.7.0"
+    "leo-profanity": "^1.7.0",
+    "jose": "^5.9.6"
   }
 }
