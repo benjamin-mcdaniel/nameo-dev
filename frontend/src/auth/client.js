@@ -1,4 +1,4 @@
-import createAuth0Client from '@auth0/auth0-spa-js'
+import { createAuth0Client } from '@auth0/auth0-spa-js'
 import { authConfig, isAuthConfigured } from './config.js'
 
 let auth0Promise = null
