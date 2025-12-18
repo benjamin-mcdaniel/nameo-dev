@@ -1,12 +1,12 @@
 :root {
-  --bg: #ffffff;
+  --bg: #f8fafc;
   --text: #0f172a;
-  --muted: #475569;
+  --muted: #64748b;
   --primary: #4f46e5;
   --border: #e2e8f0;
 }
 :root.dark {
-  --bg: #0b1020;
+  --bg: #020617;
   --text: #e2e8f0;
   --muted: #94a3b8;
   --primary: #818cf8;
@@ -15,12 +15,40 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
-  margin: 0; background: var(--bg); color: var(--text);
+  margin: 0;
+  background: radial-gradient(circle at top, #e5e7eb 0, var(--bg) 38%);
+  color: var(--text);
   font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
 }
 img { max-width: 100%; display: block; }
 a { color: var(--primary); text-decoration: none; }
-.container { width: min(1100px, 92%); margin: 0 auto; }
-.btn { display: inline-block; padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: transparent; }
-.btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+a:hover { text-decoration: underline; }
+.container { width: min(1120px, 92%); margin: 0 auto; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  background: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.35);
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+.btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
 main { min-height: calc(100vh - 140px); }
