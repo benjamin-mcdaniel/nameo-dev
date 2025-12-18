@@ -6,6 +6,7 @@ import { Privacy } from './pages/privacy.js'
 import { Terms } from './pages/terms.js'
 import { NotFound } from './pages/notfound.js'
 import { Test } from './pages/test.js'
+import { Campaigns } from './pages/campaigns.js'
 
 const routes = {
   '/': Home,
@@ -15,6 +16,7 @@ const routes = {
   '/privacy': Privacy,
   '/terms': Terms,
   '/test': Test,
+  '/campaigns': Campaigns,
 }
 
 function getPath() {

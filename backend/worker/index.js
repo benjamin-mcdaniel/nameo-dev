@@ -22,20 +22,20 @@ export default {
         })
       }
 
-      // Require Auth0 token for all API routes. If Auth0 is not configured,
-      // verifyAuth0Token falls back to a fixed anonymous user id so the
-      // backend can be exercised without auth during early development.
-      const authResult = await verifyAuth0Token(request, env)
-      if (!authResult.ok) {
-        return json({ error: 'unauthorized' }, 401)
-      }
-
       if (url.pathname === '/api/check' && request.method === 'GET') {
         return handleCheck(url, env)
       }
 
       if (url.pathname === '/api/suggestions' && request.method === 'GET') {
         return handleSuggestions(url, env)
+      }
+
+      // Below this point, routes require Auth0. If Auth0 is not configured,
+      // verifyAuth0Token falls back to a fixed anonymous user id so the
+      // backend can be exercised without auth during early development.
+      const authResult = await verifyAuth0Token(request, env)
+      if (!authResult.ok) {
+        return json({ error: 'unauthorized' }, 401)
       }
 
       if (url.pathname === '/api/campaigns' && request.method === 'GET') {
