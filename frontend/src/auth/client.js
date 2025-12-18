@@ -3,7 +3,7 @@ import { authConfig, isAuthConfigured } from './config.js'
 
 let auth0Promise = null
 
-function getClient() {
+async function getClient() {
   if (!isAuthConfigured()) return null
   if (!auth0Promise) {
     auth0Promise = createAuth0Client({
@@ -19,19 +19,19 @@ function getClient() {
 }
 
 export async function loginWithRedirect() {
-  const client = getClient()
+  const client = await getClient()
   if (!client) throw new Error('Auth0 is not configured')
   await client.loginWithRedirect()
 }
 
 export async function logout() {
-  const client = getClient()
+  const client = await getClient()
   if (!client) throw new Error('Auth0 is not configured')
   await client.logout({ returnTo: window.location.origin })
 }
 
 export async function getAccessToken() {
-  const client = getClient()
+  const client = await getClient()
   if (!client) return null
   try {
     const token = await client.getTokenSilently({
@@ -44,7 +44,7 @@ export async function getAccessToken() {
 }
 
 export async function isAuthenticated() {
-  const client = getClient()
+  const client = await getClient()
   if (!client) return false
   try {
     return await client.isAuthenticated()
@@ -54,7 +54,7 @@ export async function isAuthenticated() {
 }
 
 export async function getUser() {
-  const client = getClient()
+  const client = await getClient()
   if (!client) return null
   try {
     return await client.getUser()
