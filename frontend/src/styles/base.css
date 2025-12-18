@@ -16,7 +16,7 @@ body {
 img { max-width: 100%; display: block; }
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
-.container { width: min(1120px, 92%); margin: 0 auto; }
+.container { width: min(1240px, 94%); margin: 0 auto; }
 .btn {
   display: inline-flex;
   align-items: center;
@@ -24,8 +24,8 @@ a:hover { text-decoration: underline; }
   padding: 0.55rem 1rem;
   border: 1px solid var(--border);
   border-radius: 999px;
-  color: #020617;
-  background: #e5e7eb;
+  color: var(--text);
+  background: #111827;
   font-size: 0.95rem;
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;

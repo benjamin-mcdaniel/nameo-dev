@@ -33,13 +33,13 @@
 .site-footer .container { display: flex; align-items: center; justify-content: space-between; padding: 20px 4%; }
 
 .search-title { margin-bottom: 16px; }
-.search-layout { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr); gap: 24px; align-items: flex-start; }
+.search-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1.1fr); gap: 24px; align-items: flex-start; }
 .search-side { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: color-mix(in oklab, var(--bg), white 6%); }
 .search-main { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: color-mix(in oklab, var(--bg), white 4%); }
 .search-panel { margin-bottom: 20px; }
 .search-results-block { margin-top: 8px; }
-.search-actions { margin-top: 8px; }
-.search-meta { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.search-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+.search-meta { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .search-history { max-height: 420px; overflow-y: auto; padding-right: 4px; }
 .history-item { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; margin-bottom: 6px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; text-align: left; font-size: 0.9rem; }
 .history-item:hover { background: color-mix(in oklab, var(--bg), white 12%); }
