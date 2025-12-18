@@ -3,7 +3,6 @@
 .site-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 4%; position: sticky; top: 0; backdrop-filter: saturate(180%) blur(10px); background: color-mix(in oklab, var(--bg), transparent 15%); }
 .brand { font-weight: 700; color: var(--text); }
 .site-nav a { margin-left: 16px; }
-.theme-toggle { margin-left: 16px; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
 .hero { padding: 80px 0 40px; border-bottom: 1px solid var(--border); }
 .hero-inner { display: flex; align-items: center; justify-content: center; text-align: left; }
 .hero-copy { max-width: 640px; }

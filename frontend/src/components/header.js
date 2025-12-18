@@ -15,20 +15,7 @@ export function Header() {
     <a href="#/login" class="btn btn-primary">Login</a>
   `
 
-  const themeToggle = document.createElement('button')
-  themeToggle.className = 'theme-toggle'
-  themeToggle.title = 'Toggle dark mode'
-  themeToggle.textContent = '🌓'
-  themeToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark')
-    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
-  })
-
-  const saved = localStorage.getItem('theme')
-  if (saved === 'dark') document.documentElement.classList.add('dark')
-
   header.appendChild(brand)
   header.appendChild(nav)
-  header.appendChild(themeToggle)
   return header
 }
