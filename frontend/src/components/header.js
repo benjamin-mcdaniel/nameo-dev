@@ -18,11 +18,32 @@ export function Header() {
   const userSlot = document.createElement('div')
   userSlot.className = 'user-slot'
   userSlot.innerHTML = `
-    <a href="#/login" class="btn btn-primary">Login</a>
+    <a href="#/login" class="btn btn-primary" id="header-login-link">Login</a>
   `
 
   header.appendChild(brand)
   header.appendChild(nav)
   header.appendChild(userSlot)
+  attachHeaderAuthState(userSlot.querySelector('#header-login-link'))
   return header
+}
+
+function attachHeaderAuthState(linkEl) {
+  if (!linkEl) return
+
+  import('../auth/client.js')
+    .then(async (mod) => {
+      const { isAuthenticated } = mod
+      const authed = await isAuthenticated().catch(() => false)
+      if (authed) {
+        linkEl.textContent = 'Account'
+        linkEl.href = '#/login'
+      } else {
+        linkEl.textContent = 'Login'
+        linkEl.href = '#/login'
+      }
+    })
+    .catch(() => {
+      // leave as Login on error
+    })
 }
