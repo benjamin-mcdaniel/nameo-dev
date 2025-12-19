@@ -62,3 +62,25 @@ export async function getUser() {
     return null
   }
 }
+
+export async function handleAuthRedirectCallbackIfNeeded() {
+  const client = await getClient()
+  if (!client) return
+
+  const url = new URL(window.location.href)
+  const hasCode = url.searchParams.get('code')
+  const hasState = url.searchParams.get('state')
+
+  if (!hasCode || !hasState) return
+
+  try {
+    await client.handleRedirectCallback()
+  } catch (err) {
+    // swallow errors; user can always try logging in again
+  } finally {
+    // Clean up the query params while preserving hash routing
+    url.searchParams.delete('code')
+    url.searchParams.delete('state')
+    window.history.replaceState({}, document.title, url.toString())
+  }
+}

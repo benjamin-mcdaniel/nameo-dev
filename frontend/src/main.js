@@ -5,7 +5,7 @@ import './styles/base.css'
 import './styles/theme.css'
 import './styles/layout.css'
 
-function mount() {
+async function mount() {
   const app = document.getElementById('app')
   app.innerHTML = ''
 
@@ -18,6 +18,13 @@ function mount() {
   app.appendChild(header)
   app.appendChild(main)
   app.appendChild(footer)
+
+  try {
+    const { handleAuthRedirectCallbackIfNeeded } = await import('./auth/client.js')
+    await handleAuthRedirectCallbackIfNeeded()
+  } catch (err) {
+    // ignore auth redirect errors; app can still function anonymously
+  }
 
   router.mount(main)
 }
