@@ -2,9 +2,9 @@
   --bg: #020617;
   --text: #e5e7eb;
   --muted: #9ca3af;
-  --primary: #3b82f6;
+  --primary: #9146ff;
   --border: #1f2937;
-  --heading: #facc15;
+  --heading: #9146ff;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -35,10 +35,10 @@ a:hover { text-decoration: underline; }
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 .btn-primary {
-  background: #eab308; /* slightly deeper than heading */
+  background: #7c3aed; /* slightly deeper purple than heading */
   color: #ffffff;
   border-color: #ffffff;
-  box-shadow: 0 0 0 1px #ffffff;
+  box-shadow: 0 0 0 1px #7c3aed;
 }
 .btn:hover {
   transform: translateY(-1px);
