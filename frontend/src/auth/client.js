@@ -13,6 +13,8 @@ async function getClient() {
         audience: authConfig.audience,
         redirect_uri: authConfig.redirectUri,
       },
+      cacheLocation: 'localstorage',
+      useRefreshTokens: true,
     })
   }
   return auth0Promise
