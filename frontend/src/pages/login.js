@@ -48,9 +48,15 @@ function attachAuthLogic(root) {
       statusEl.textContent = 'You are logged in.'
       const user = await getUser()
       userEl.textContent = user?.email ? `Signed in as ${user.email}` : ''
+      loginBtn.style.display = 'none'
+      logoutBtn.style.display = ''
+      deleteBtn.style.display = ''
     } else {
       statusEl.textContent = 'You are not logged in.'
       userEl.textContent = ''
+      loginBtn.style.display = ''
+      logoutBtn.style.display = 'none'
+      deleteBtn.style.display = 'none'
     }
   }
 
