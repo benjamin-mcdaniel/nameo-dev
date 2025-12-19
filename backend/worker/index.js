@@ -42,6 +42,10 @@ export default {
         return json({ error: 'user_init_failed' }, 500)
       }
 
+      if (url.pathname === '/api/account' && request.method === 'DELETE') {
+        return handleDeleteAccount(env, user.id)
+      }
+
       if (url.pathname === '/api/campaigns' && request.method === 'GET') {
         return handleListCampaigns(env, user.id)
       }
@@ -252,6 +256,20 @@ async function handleCheckOption(env, userId, optionId) {
     .run()
 
   return json({ status: 'ok', option_id: optionId, checked_at: checkedAt, results })
+}
+
+async function handleDeleteAccount(env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  await db
+    .prepare('DELETE FROM users WHERE id = ?')
+    .bind(userId)
+    .run()
+
+  return json({ status: 'deleted' })
 }
 
 async function getOrCreateUser(env, sub, email) {
