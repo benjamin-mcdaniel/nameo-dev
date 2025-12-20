@@ -9,6 +9,16 @@ async function mount() {
   const app = document.getElementById('app')
   app.innerHTML = ''
 
+  // Ensure we complete any Auth0 redirect handling *before* we
+  // render the header, so the header can immediately reflect
+  // the correct authenticated state on first paint.
+  try {
+    const { handleAuthRedirectCallbackIfNeeded } = await import('./auth/client.js')
+    await handleAuthRedirectCallbackIfNeeded()
+  } catch (err) {
+    // ignore auth redirect errors; app can still function anonymously
+  }
+
   const header = Header()
   const main = document.createElement('main')
   main.id = 'main'
@@ -18,13 +28,6 @@ async function mount() {
   app.appendChild(header)
   app.appendChild(main)
   app.appendChild(footer)
-
-  try {
-    const { handleAuthRedirectCallbackIfNeeded } = await import('./auth/client.js')
-    await handleAuthRedirectCallbackIfNeeded()
-  } catch (err) {
-    // ignore auth redirect errors; app can still function anonymously
-  }
 
   router.mount(main)
 }
