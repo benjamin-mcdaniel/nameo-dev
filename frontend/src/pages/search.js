@@ -267,4 +267,17 @@ function attachSearchLogic(root) {
   })
 
   renderHistory()
+
+  // If the home page left a pending search value, pick it up and
+  // execute it once when this page is first loaded.
+  try {
+    const pending = localStorage.getItem('nameo_pending_search')
+    if (pending) {
+      localStorage.removeItem('nameo_pending_search')
+      input.value = pending
+      runSearch(pending)
+    }
+  } catch {
+    // ignore storage errors
+  }
 }

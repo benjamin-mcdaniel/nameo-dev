@@ -51,8 +51,13 @@ function attachLogic(root) {
   form.addEventListener('submit', (e) => {
     e.preventDefault()
     const value = (input.value || '').trim()
-    // Optional: could persist value for later use, but for now we only
-    // forward the user into the dedicated Search page.
+    if (value) {
+      try {
+        localStorage.setItem('nameo_pending_search', value)
+      } catch {
+        // ignore storage errors; user will still land on Search page
+      }
+    }
     window.location.hash = '#/search'
   })
 }
