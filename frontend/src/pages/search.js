@@ -5,30 +5,30 @@ export function Search() {
   el.className = 'page search container'
   el.innerHTML = `
     <h1 class="search-title">Search names across platforms</h1>
+    <div class="search-terms-banner" id="search-terms-banner">
+      <span>Please read our <a href="#/help">terms and conditions</a> before using the search.</span>
+      <button type="button" class="banner-close" aria-label="Dismiss notice">&times;</button>
+    </div>
     <div class="search-layout">
       <main class="search-main">
-        <section class="search-panel">
-          <h2>Search</h2>
-          <form id="search-form" class="stack">
-            <label for="search-input">Name</label>
-            <input id="search-input" type="text" autocomplete="off" placeholder="e.g. blubrdbkpk" />
-            <small class="hint">We block unsafe or offensive names before checking.</small>
-          </form>
-          <div id="search-status" class="status"></div>
-          <div class="search-actions">
-            <button id="btn-run-search" class="btn btn-primary">Run search</button>
-          </div>
-          <div class="search-meta">
-            <button id="btn-favorite" class="btn">Add to favorites</button>
-            <button id="btn-add-campaign" class="btn">Add to campaign</button>
+        <div class="search-main-inner">
+          <aside class="search-actions-col">
+            <button id="btn-favorite" class="btn fav-button">★ <span>Add to favorites</span></button>
             <div id="search-meta-message" class="hint"></div>
-          </div>
-        </section>
+          </aside>
 
-        <section class="search-results-block">
-          <div id="search-results" class="results"></div>
-          <div id="search-suggestions" class="suggestions"></div>
-        </section>
+          <section class="search-results-panel">
+            <form id="search-form" class="search-input-row">
+              <input id="search-input" type="text" autocomplete="off" placeholder="Search a name across platforms" />
+              <button id="btn-run-search" class="btn btn-primary" type="submit">Search</button>
+            </form>
+            <div id="search-status" class="status"></div>
+            <section class="search-results-block">
+              <div id="search-results" class="results"></div>
+              <div id="search-suggestions" class="suggestions"></div>
+            </section>
+          </section>
+        </div>
       </main>
 
       <aside class="search-side search-side-right">
@@ -43,17 +43,25 @@ export function Search() {
 }
 
 function attachSearchLogic(root) {
+  const termsBannerEl = root.querySelector('#search-terms-banner')
+  const termsBannerClose = termsBannerEl?.querySelector('.banner-close')
   const input = root.querySelector('#search-input')
   const statusEl = root.querySelector('#search-status')
   const resultsEl = root.querySelector('#search-results')
   const suggestionsEl = root.querySelector('#search-suggestions')
   const runBtn = root.querySelector('#btn-run-search')
   const favBtn = root.querySelector('#btn-favorite')
-  const addCampaignBtn = root.querySelector('#btn-add-campaign')
   const metaMessageEl = root.querySelector('#search-meta-message')
   const historyEl = root.querySelector('#search-history')
+  const form = root.querySelector('#search-form')
 
-  if (!input || !statusEl || !resultsEl || !suggestionsEl || !runBtn || !favBtn || !addCampaignBtn || !metaMessageEl || !historyEl) return
+  if (!input || !statusEl || !resultsEl || !suggestionsEl || !runBtn || !favBtn || !metaMessageEl || !historyEl || !form) return
+
+  if (termsBannerEl && termsBannerClose) {
+    termsBannerClose.addEventListener('click', () => {
+      termsBannerEl.style.display = 'none'
+    })
+  }
 
   let currentController = null
 
@@ -229,22 +237,8 @@ function attachSearchLogic(root) {
     }
   }
 
-  async function apiFetchWithAuth(path, options = {}) {
-    const headers = new Headers(options.headers || {})
-    headers.set('Content-Type', 'application/json')
-    try {
-      const { getAccessToken } = await import('../auth/client.js')
-      const token = await getAccessToken()
-      if (token) headers.set('Authorization', `Bearer ${token}`)
-    } catch {
-      // ignore
-    }
-    const res = await fetch(path, { ...options, headers })
-    const data = await res.json().catch(() => ({}))
-    return { ok: res.ok, status: res.status, data }
-  }
-
-  runBtn.addEventListener('click', () => {
+  form.addEventListener('submit', (e) => {
+    e.preventDefault()
     runSearch(input.value)
   })
 
@@ -269,59 +263,6 @@ function attachSearchLogic(root) {
       metaMessageEl.textContent = 'Added to favorites.'
     } catch {
       metaMessageEl.textContent = 'Could not save favorite.'
-    }
-  })
-
-  addCampaignBtn.addEventListener('click', async () => {
-    const name = (input.value || '').trim()
-    if (!name) {
-      metaMessageEl.textContent = 'Type a name first before adding to a campaign.'
-      return
-    }
-
-    metaMessageEl.textContent = 'Adding to campaign…'
-
-    try {
-      const listResp = await apiFetchWithAuth('/api/campaigns')
-      if (listResp.status === 401) {
-        metaMessageEl.textContent = 'Login is required to use campaigns. Use the Login page first.'
-        return
-      }
-
-      let campaignId = null
-      const campaigns = listResp.data?.campaigns || []
-      const existing = campaigns.find((c) => c.name === 'My first campaign')
-      if (existing) {
-        campaignId = existing.id
-      } else {
-        const createResp = await apiFetchWithAuth('/api/campaigns', {
-          method: 'POST',
-          body: JSON.stringify({ name: 'My first campaign', description: 'Default campaign created from Search page.' }),
-        })
-        if (!createResp.ok) {
-          metaMessageEl.textContent = 'Unable to create a campaign. Try again later.'
-          return
-        }
-        campaignId = createResp.data.id
-      }
-
-      const optionResp = await apiFetchWithAuth(`/api/campaigns/${encodeURIComponent(campaignId)}/options`, {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      })
-
-      if (!optionResp.ok) {
-        if (optionResp.status === 401) {
-          metaMessageEl.textContent = 'Login is required to use campaigns. Use the Login page first.'
-        } else {
-          metaMessageEl.textContent = 'Unable to add to campaign right now.'
-        }
-        return
-      }
-
-      metaMessageEl.textContent = 'Added to your campaign.'
-    } catch (err) {
-      metaMessageEl.textContent = 'An error occurred while adding to campaign.'
     }
   })
 
