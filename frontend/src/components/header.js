@@ -10,7 +10,7 @@ export function Header() {
   const nav = document.createElement('nav')
   nav.className = 'site-nav'
   nav.innerHTML = `
-    <a href="#/search">Search</a>
+    <a href="#/search" class="nav-search-primary">Search</a>
     <a href="#/pricing">Pricing</a>
     <a href="#/help">Help</a>
   `

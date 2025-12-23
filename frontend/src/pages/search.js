@@ -6,7 +6,7 @@ export function Search() {
   el.innerHTML = `
     <h1 class="search-title">Search names across platforms</h1>
     <div class="search-terms-banner" id="search-terms-banner">
-      <span>Please read our <a href="#/help">terms and conditions</a> before using the search.</span>
+      <span>Please read our <a href="#/terms">terms and conditions</a> before using the search.</span>
       <button type="button" class="banner-close" aria-label="Dismiss notice">&times;</button>
     </div>
     <div class="search-layout">

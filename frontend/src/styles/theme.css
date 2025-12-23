@@ -6,6 +6,7 @@
 .brand-text { letter-spacing: 0.03em; color: var(--text); }
 .site-nav { display: flex; align-items: center; gap: 16px; }
 .site-nav a { margin-left: 0; color: var(--text); }
+.site-nav a.nav-search-primary { color: var(--primary); font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--primary), transparent 60%); background: color-mix(in oklab, var(--bg), var(--primary) 8%); }
 .user-slot { margin-left: 16px; display: flex; align-items: center; }
 .user-menu { position: relative; }
 .user-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 10px; border: 1px solid var(--border); background: #111827; color: var(--text); cursor: pointer; font-size: 0.85rem; }
@@ -27,6 +28,8 @@
 .checker-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr); gap: 24px; align-items: flex-start; }
 .card { border: 1px solid var(--border); border-radius: 16px; padding: 20px; background: color-mix(in oklab, var(--bg), white 4%); }
 .card-primary { box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08); }
+.home-search-row { display: flex; gap: 8px; align-items: stretch; margin-top: 12px; }
+.home-search-row input { flex: 1; }
 .stack { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; }
 .status { margin: 6px 0 12px; min-height: 1.2em; font-size: 0.9rem; color: var(--muted); }
 .status.status-info { color: var(--primary); }
