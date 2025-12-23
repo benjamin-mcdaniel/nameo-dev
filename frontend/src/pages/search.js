@@ -11,26 +11,26 @@ export function Search() {
     </div>
     <div class="search-layout">
       <section class="search-main">
+        <form id="search-form" class="search-input-row">
+          <input id="search-input" type="text" autocomplete="off" placeholder="Search a name across platforms" />
+          <button id="btn-run-search" class="btn btn-primary" type="submit">Search</button>
+        </form>
+        <div id="search-status" class="status"></div>
+
         <div class="search-main-inner">
           <aside class="search-actions-col">
             <button id="btn-favorite" class="btn fav-button">★ <span>Add to favorites</span></button>
             <div id="search-meta-message" class="hint"></div>
           </aside>
 
-          <div class="search-input-panel">
-            <form id="search-form" class="search-input-row">
-              <input id="search-input" type="text" autocomplete="off" placeholder="Search a name across platforms" />
-              <button id="btn-run-search" class="btn btn-primary" type="submit">Search</button>
-            </form>
-            <div id="search-status" class="status"></div>
-          </div>
+          <section class="search-results-block">
+            <div id="search-results" class="results"></div>
+            <div id="search-suggestions" class="suggestions"></div>
+          </section>
         </div>
       </section>
 
       <aside class="search-side search-side-right">
-        <h2>Results</h2>
-        <div id="search-results" class="results"></div>
-        <div id="search-suggestions" class="suggestions"></div>
         <h2>Recent searches</h2>
         <div id="search-history" class="search-history"></div>
       </aside>
