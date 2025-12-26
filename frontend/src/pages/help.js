@@ -3,22 +3,22 @@ export function Help() {
   el.className = 'page help container'
   el.innerHTML = `
     <h1>Help</h1>
-    <p>nameo.dev is a small tool for checking whether a name is available across a few major platforms and keeping track of ideas. This page explains how it works today and what is planned, without committing to timelines.</p>
+    <p>nameo.dev is a small tool for checking whether a name is available across a few major platforms and keeping track of ideas. Most people fall into one of two buckets: quick solo checks, or deeper research for brands and launches. This page explains how it works today and what is being explored, without committing to timelines.</p>
 
     <h2>How it works right now</h2>
     <ul class="bullet-list">
-      <li><strong>Search.</strong> Use the Search page to type a name and see basic availability results across the supported platforms.</li>
+      <li><strong>Solo checks.</strong> Use the Search page to type a name and see basic taken / not taken style availability across the supported platforms.</li>
       <li><strong>Safety.</strong> We block obviously unsafe or offensive names before running checks to avoid hitting external services with them.</li>
-      <li><strong>History & favorites.</strong> Recent searches and simple favorites are stored locally in your browser so you can come back to ideas.</li>
+      <li><strong>History & favorites.</strong> Recent searches and simple favorites are stored locally in your browser so you can come back to a single stream of ideas.</li>
       <li><strong>Accounts.</strong> Logging in lets you save options into simple campaigns behind the scenes using Auth0 and a small database.</li>
     </ul>
 
-    <h2>What campaigns mean (without promises)</h2>
-    <p>Campaigns are a way to group a handful of naming options around a specific project. The current implementation is very light weight and may change. The general idea is:</p>
+    <h2>Solo vs advanced use (without promises)</h2>
+    <p>Campaigns and future features are where the line between solo and advanced use shows up. The current implementation is very light weight and may change. The general idea is:</p>
     <ul class="bullet-list">
-      <li><strong>One place per project.</strong> Keep a few names together for a launch or product line.</li>
-      <li><strong>Saved checks.</strong> Re-run or review which options looked promising without having to remember them all.</li>
-      <li><strong>Future sharing.</strong> Longer term, the same structure could power links you share with teammates or clients.</li>
+      <li><strong>Solo basics.</strong> An individual might only need one history of checks and a sense of whether a name is open for a single purpose.</li>
+      <li><strong>Advanced research.</strong> Teams exploring names for launches or new brands might care about richer signals like when handles were registered or how widely a name is used in different markets (ideas, not built).</li>
+      <li><strong>Future sharing.</strong> Longer term, the same structure could power reports or views you share in tools like chat or docs when comparing a shortlist.</li>
     </ul>
 
     <h2>Accounts, login, and data</h2>

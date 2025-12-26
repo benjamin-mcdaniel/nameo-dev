@@ -57,6 +57,7 @@ function attachUserMenu(container) {
         const user = await getUser().catch(() => null)
         const email = user?.email || ''
         const initial = (email || 'N').charAt(0).toUpperCase()
+        const picture = user?.picture || ''
 
         const wrapper = document.createElement('div')
         wrapper.className = 'user-menu'
@@ -64,7 +65,10 @@ function attachUserMenu(container) {
         const toggle = document.createElement('button')
         toggle.type = 'button'
         toggle.className = 'user-pill'
-        toggle.innerHTML = `<span class="user-initial">${initial}</span><span class="user-caret">▾</span>`
+        const avatarHtml = picture
+          ? `<img src="${picture}" alt="${email || 'Account'}" class="user-avatar">`
+          : `<span class="user-initial">${initial}</span>`
+        toggle.innerHTML = `${avatarHtml}<span class="user-caret">▾</span>`
 
         const dropdown = document.createElement('div')
         dropdown.className = 'user-menu-dropdown'

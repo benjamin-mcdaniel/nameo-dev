@@ -9,14 +9,15 @@
 .site-nav a.nav-search-primary { color: var(--primary); font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--primary), transparent 60%); background: color-mix(in oklab, var(--bg), var(--primary) 8%); }
 .user-slot { margin-left: 16px; display: flex; align-items: center; }
 .user-menu { position: relative; }
-.user-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 10px; border: 1px solid var(--border); background: #111827; color: var(--text); cursor: pointer; font-size: 0.85rem; }
-.user-initial { width: 20px; height: 20px; border-radius: 6px; background: var(--heading); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: #ffffff; }
+.user-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: #111827; color: var(--text); cursor: pointer; font-size: 0.9rem; }
+.user-initial { width: 24px; height: 24px; border-radius: 999px; background: var(--heading); display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: #ffffff; }
+.user-avatar { width: 26px; height: 26px; border-radius: 999px; object-fit: cover; display: inline-block; }
 .user-caret { font-size: 0.7rem; opacity: 0.8; }
-.user-menu-dropdown { position: absolute; right: 0; margin-top: 6px; min-width: 180px; border-radius: 12px; border: 1px solid var(--border); background: #020617; box-shadow: 0 18px 45px rgba(0,0,0,0.7); padding: 8px 0; display: none; z-index: 20; }
+.user-menu-dropdown { position: absolute; right: 0; margin-top: 8px; min-width: 230px; border-radius: 14px; border: 1px solid var(--border); background: #020617; box-shadow: 0 18px 45px rgba(0,0,0,0.7); padding: 10px 0; display: none; z-index: 20; }
 .user-menu-dropdown.open { display: block; }
-.user-menu-header { padding: 6px 12px 8px; border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); }
+.user-menu-header { padding: 8px 14px 10px; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
 .user-menu-email { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.user-menu-item { width: 100%; padding: 8px 12px; background: transparent; border: 0; text-align: left; font-size: 0.85rem; color: var(--text); cursor: pointer; }
+.user-menu-item { width: 100%; padding: 9px 14px; background: transparent; border: 0; text-align: left; font-size: 0.9rem; color: var(--text); cursor: pointer; }
 .user-menu-item:hover { background: color-mix(in oklab, var(--bg), white 12%); }
 .hero { padding: 80px 0 40px; border-bottom: 1px solid var(--border); }
 .hero-inner { display: flex; align-items: center; justify-content: center; text-align: left; }
