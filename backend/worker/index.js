@@ -86,6 +86,13 @@ async function handleCheck(url, env) {
   const safetyConfig = await loadSafetyConfig(env)
   const servicesConfig = await loadServicesConfig(env)
 
+  const turnstileToken = url.searchParams.get('cf_turnstile_token') || ''
+
+  const turnstileOk = await verifyTurnstile(env, turnstileToken)
+  if (!turnstileOk) {
+    return json({ status: 'captcha_failed' }, 400)
+  }
+
   const safety = await evaluateNameSafety(name, safetyConfig)
   if (!safety.ok) {
     return json({ status: 'unsafe', reason: safety.reason, message: safety.message }, 400)
@@ -113,6 +120,28 @@ async function handleCheck(url, env) {
   })
 
   return json({ status: 'ok', name, results })
+}
+
+async function verifyTurnstile(env, token) {
+  if (!env.TURNSTILE_SECRET) {
+    return true
+  }
+
+  if (!token) {
+    return false
+  }
+
+  const formData = new FormData()
+  formData.append('secret', env.TURNSTILE_SECRET)
+  formData.append('response', token)
+
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    body: formData,
+  })
+
+  const data = await res.json().catch(() => ({}))
+  return !!data.success
 }
 
 async function handleSuggestions(url, env) {
