@@ -19,7 +19,7 @@ export function Search() {
 
         <div class="search-main-inner">
           <aside class="search-actions-col">
-            <button id="btn-favorite" class="btn fav-button">★ <span>Add to favorites</span></button>
+            <button id="btn-favorite" class="btn fav-button">★ <span>Favorite</span></button>
             <div id="search-meta-message" class="hint"></div>
           </aside>
 
