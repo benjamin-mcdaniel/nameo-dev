@@ -123,12 +123,16 @@ async function handleCheck(url, env) {
 }
 
 async function verifyTurnstile(env, token) {
+  // If no secret is configured, skip verification entirely (use dashboard/WAF rules instead).
   if (!env.TURNSTILE_SECRET) {
     return true
   }
 
+  // If there is a secret but no token was provided, allow the request.
+  // This lets you run Turnstile at the edge (before the site loads)
+  // without forcing every client request to pass a token parameter.
   if (!token) {
-    return false
+    return true
   }
 
   const formData = new FormData()

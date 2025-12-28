@@ -1,5 +1,4 @@
 const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
-let turnstileToken = ''
 
 export function Search() {
   const el = document.createElement('section')
@@ -17,9 +16,6 @@ export function Search() {
           <button id="btn-run-search" class="btn btn-primary" type="submit">Search</button>
         </form>
         <div id="search-status" class="status"></div>
-        <div id="search-turnstile" class="search-turnstile">
-          <div class="cf-turnstile" data-sitekey="0x4AAAAAACJaGx2vYCGTnUxw" data-callback="nameoTurnstileCallback"></div>
-        </div>
 
         <div class="search-main-inner">
           <aside class="search-actions-col">
@@ -59,10 +55,6 @@ function attachSearchLogic(root) {
   const form = root.querySelector('#search-form')
 
   if (!input || !statusEl || !resultsEl || !suggestionsEl || !runBtn || !favBtn || !metaMessageEl || !historyEl || !form) return
-
-  window.nameoTurnstileCallback = function (token) {
-    turnstileToken = token || ''
-  }
 
   if (termsBannerEl && termsBannerClose) {
     termsBannerClose.addEventListener('click', () => {
@@ -259,11 +251,7 @@ function attachSearchLogic(root) {
     suggestionsEl.innerHTML = ''
 
     try {
-      const params = new URLSearchParams({ name: trimmed })
-      if (turnstileToken) {
-        params.set('cf_turnstile_token', turnstileToken)
-      }
-      const checkResp = await fetchJson(`${API_BASE}/api/check?${params.toString()}`)
+      const checkResp = await fetchJson(`${API_BASE}/api/check?name=${encodeURIComponent(trimmed)}`)
       if (!checkResp.ok) {
         if (checkResp.status === 400 && checkResp.data && checkResp.data.status === 'unsafe') {
           setStatus(checkResp.data.message || 'Name is not allowed.', 'error')
