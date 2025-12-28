@@ -33,3 +33,14 @@ CREATE TABLE IF NOT EXISTS option_checks (
 CREATE INDEX IF NOT EXISTS idx_campaigns_user ON campaigns(user_id);
 CREATE INDEX IF NOT EXISTS idx_options_campaign ON options(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_checks_option ON option_checks(option_id, checked_at DESC);
+
+-- Per-user search history for the main Search page.
+CREATE TABLE IF NOT EXISTS search_history (
+  id TEXT PRIMARY KEY,              -- UUID
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  status TEXT NOT NULL,             -- e.g. full / partial / taken
+  searched_at INTEGER NOT NULL      -- unix timestamp (seconds)
+);
+
+CREATE INDEX IF NOT EXISTS idx_history_user_ts ON search_history(user_id, searched_at DESC);

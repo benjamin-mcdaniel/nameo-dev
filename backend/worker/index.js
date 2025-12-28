@@ -54,6 +54,14 @@ export default {
         return handleCreateCampaign(request, env, user.id)
       }
 
+      if (url.pathname === '/api/search-history' && request.method === 'GET') {
+        return handleListSearchHistory(env, user.id)
+      }
+
+      if (url.pathname === '/api/search-history' && request.method === 'POST') {
+        return handleAddSearchHistory(request, env, user.id)
+      }
+
       const campaignOptionsMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/options$/)
       if (campaignOptionsMatch && request.method === 'POST') {
         const campaignId = campaignOptionsMatch[1]
@@ -270,6 +278,55 @@ async function handleDeleteAccount(env, userId) {
     .run()
 
   return json({ status: 'deleted' })
+}
+
+async function handleListSearchHistory(env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  const result = await db
+    .prepare(
+      'SELECT id, name, status, searched_at FROM search_history WHERE user_id = ? ORDER BY searched_at DESC LIMIT 50'
+    )
+    .bind(userId)
+    .all()
+
+  return json({ items: result.results || [] })
+}
+
+async function handleAddSearchHistory(request, env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  let body = {}
+  try {
+    body = await request.json()
+  } catch (err) {
+    return json({ error: 'invalid_json' }, 400)
+  }
+
+  const name = (body.name || '').trim()
+  const status = (body.status || '').trim() || 'partial'
+
+  if (!name) {
+    return json({ error: 'name_required' }, 400)
+  }
+
+  const id = crypto.randomUUID()
+  const searchedAt = Math.floor(Date.now() / 1000)
+
+  await db
+    .prepare(
+      'INSERT INTO search_history (id, user_id, name, status, searched_at) VALUES (?, ?, ?, ?, ?)'
+    )
+    .bind(id, userId, name, status, searchedAt)
+    .run()
+
+  return json({ id, name, status, searched_at: searchedAt }, 201)
 }
 
 async function getOrCreateUser(env, sub, email) {

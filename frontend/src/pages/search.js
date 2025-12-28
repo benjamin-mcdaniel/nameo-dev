@@ -81,7 +81,37 @@ function attachSearchLogic(root) {
     return 'partial'
   }
 
-  function loadHistory() {
+  async function apiFetchWithAuth(path, options = {}) {
+    const headers = new Headers(options.headers || {})
+    headers.set('Content-Type', 'application/json')
+    try {
+      const { getAccessToken } = await import('../auth/client.js')
+      const token = await getAccessToken()
+      if (token) headers.set('Authorization', `Bearer ${token}`)
+    } catch {
+      // ignore; will fall back to local-only behavior
+    }
+
+    const res = await fetch(path, { ...options, headers })
+    const data = await res.json().catch(() => ({}))
+    return { ok: res.ok, status: res.status, data }
+  }
+
+  async function loadHistory() {
+    // Try to load from backend first for logged-in users.
+    try {
+      const resp = await apiFetchWithAuth('/api/search-history')
+      if (resp.ok && Array.isArray(resp.data.items)) {
+        return resp.data.items.map((item) => ({
+          name: item.name,
+          status: item.status,
+          ts: (item.searched_at || 0) * 1000,
+        }))
+      }
+    } catch {
+      // fall through to local
+    }
+
     try {
       const raw = localStorage.getItem('nameo_search_history')
       return raw ? JSON.parse(raw) : []
@@ -90,7 +120,7 @@ function attachSearchLogic(root) {
     }
   }
 
-  function saveHistory(items) {
+  function saveHistoryLocally(items) {
     try {
       localStorage.setItem('nameo_search_history', JSON.stringify(items.slice(0, 50)))
     } catch {
@@ -98,17 +128,29 @@ function attachSearchLogic(root) {
     }
   }
 
-  function addToHistory(name, status) {
+  async function addToHistory(name, status) {
     const trimmed = (name || '').trim()
     if (!trimmed) return
-    const items = loadHistory().filter((i) => i.name !== trimmed)
+
+    // Fire-and-forget to backend; ignore errors.
+    try {
+      await apiFetchWithAuth('/api/search-history', {
+        method: 'POST',
+        body: JSON.stringify({ name: trimmed, status }),
+      })
+    } catch {
+      // ignore; we still maintain a local history below
+    }
+
+    // Maintain a local copy for anonymous users or offline fallback.
+    const items = (await loadHistory()).filter((i) => i.name !== trimmed)
     items.unshift({ name: trimmed, status, ts: Date.now() })
-    saveHistory(items)
-    renderHistory()
+    saveHistoryLocally(items)
+    await renderHistory()
   }
 
-  function renderHistory() {
-    const items = loadHistory()
+  async function renderHistory() {
+    const items = await loadHistory()
     if (!items.length) {
       historyEl.innerHTML = '<p class="hint">No searches yet.</p>'
       return
