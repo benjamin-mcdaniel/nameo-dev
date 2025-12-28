@@ -3,41 +3,41 @@ export function Pricing() {
   el.className = 'page pricing container'
   el.innerHTML = `
     <h1>Pricing</h1>
-    <p class="sub">nameo.dev is still in early access. The main split we think about is between people doing quick, one-off checks and people doing deeper research for brands or launches. The details below are directional, not locked in.</p>
+    <p class="sub">nameo.dev is in beta. Right now everything is effectively free while we learn. Long term, we expect features to split into Free, Basic, and Advanced tiers like this (subject to change).</p>
 
     <div class="plans">
       <div class="plan">
-        <h3>Solo basics</h3>
-        <p class="price">For individuals checking if a name is open</p>
+        <h3>Free (beta)</h3>
+        <p class="price">For anyone trying out simple checks</p>
         <ul>
-          <li>Search across key social platforms with simple taken / available signals</li>
-          <li>Lightweight local history and favorites for a single user</li>
-          <li>A small number of saved explorations for personal or gaming brands</li>
+          <li>Up to 25 searches per day during beta</li>
+          <li>Basic taken / not taken style results across supported platforms</li>
+          <li>Single stream of local history and favorites in your browser</li>
         </ul>
-        <a class="btn btn-primary" href="mailto:hello@nameo.dev?subject=Solo%20access">Join solo waitlist</a>
+        <p class="price">Today, all users are effectively on this tier while we iterate.</p>
       </div>
 
       <div class="plan">
-        <h3>Advanced research</h3>
-        <p class="price">For launches, brand teams, and deeper naming work</p>
+        <h3>Basic</h3>
+        <p class="price">For solo builders and side projects</p>
         <ul>
-          <li>Richer availability data such as registration timelines where possible (future)</li>
-          <li>Campaign-style organization for launches and multi-market projects</li>
-          <li>Reports that summarize market penetration for shortlists of names (idea stage)</li>
-          <li>Sharing and collaboration features for teams and clients (not built yet)</li>
+          <li>Up to 500 searches per day</li>
+          <li>Taken / not taken plus an estimate of how long a handle has been in use where possible (future)</li>
+          <li>Gentle guidance when a name looks crowded so you can adjust or pick an adjacent option</li>
         </ul>
-        <a class="btn btn-primary" href="mailto:hello@nameo.dev?subject=Advanced%20research%20access">Talk about early access</a>
+        <p class="price">Intended for individuals who want a bit more signal without full reports.</p>
       </div>
 
       <div class="plan">
-        <h3>Custom</h3>
-        <p class="price">For agencies and larger teams</p>
+        <h3>Advanced</h3>
+        <p class="price">For startups, brand teams, and deeper research</p>
         <ul>
-          <li>Flexible limits and seats</li>
-          <li>Workflow integrations (not built yet)</li>
-          <li>Shared views you can send to clients</li>
+          <li>Unlimited searches (within reasonable fair use)</li>
+          <li>Richer context on taken names, including age and basic saturation patterns where we can infer them (planned)</li>
+          <li>Suggestions for adjacent names and new word combinations to help avoid collisions</li>
+          <li>Exportable reports per name or per campaign that summarize options for teams and clients (idea stage)</li>
         </ul>
-        <a class="btn" href="mailto:hello@nameo.dev?subject=Custom%20plan">Email us</a>
+        <p class="price">This is where more of the "help a business find a stable, distinct identity" features will land.</p>
       </div>
     </div>
   `
