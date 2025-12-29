@@ -42,6 +42,9 @@
 .result-available { color: #16a34a; }
 .result-taken { color: #b91c1c; }
 .result-unknown { color: var(--muted); }
+.result-coming_soon { color: var(--muted); font-style: italic; }
+.results-group { margin-top: 12px; }
+.results-group h3 { margin: 8px 0 4px; font-size: 1rem; }
 .suggestions-list { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .suggestions-list li { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border); font-size: 0.85rem; }
 .actions { margin-top: 12px; }

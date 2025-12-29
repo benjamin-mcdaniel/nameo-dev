@@ -1,5 +1,54 @@
 const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
 
+// Static catalog of platforms grouped by how people typically search.
+// Only a subset are actually wired to the backend today; the rest are
+// shown as "coming soon" so we can design the layout ahead of time.
+const PLATFORM_GROUPS = [
+  {
+    id: 'common',
+    label: 'Common platforms',
+    tier: 'common', // included for all tiers long term
+    platforms: [
+      { id: 'x', label: 'X (Twitter)', supported: true },
+      { id: 'instagram', label: 'Instagram', supported: true },
+      { id: 'facebook', label: 'Facebook', supported: true },
+      { id: 'youtube', label: 'YouTube', supported: true },
+      { id: 'linkedin', label: 'LinkedIn', supported: true },
+      { id: 'tiktok', label: 'TikTok', supported: false },
+      { id: 'pinterest', label: 'Pinterest', supported: false },
+    ],
+  },
+  {
+    id: 'niche',
+    label: 'Niche and community',
+    tier: 'niche', // planned for Basic and above
+    platforms: [
+      { id: 'reddit', label: 'Reddit communities', supported: false },
+      { id: 'discord', label: 'Discord servers', supported: false },
+      { id: 'twitch', label: 'Twitch', supported: false },
+      { id: 'github', label: 'GitHub', supported: false },
+      { id: 'producthunt', label: 'Product Hunt', supported: false },
+      { id: 'medium', label: 'Medium', supported: false },
+      { id: 'substack', label: 'Substack', supported: false },
+      { id: 'behance', label: 'Behance', supported: false },
+      { id: 'dribbble', label: 'Dribbble', supported: false },
+    ],
+  },
+  {
+    id: 'advanced',
+    label: 'Advanced search',
+    tier: 'advanced', // planned for Advanced membership
+    platforms: [
+      { id: 'domains_core', label: 'Core domains (.com, .net, .io, .co)', supported: false },
+      { id: 'domains_modern', label: 'Modern domains (.app, .dev, .ai, .xyz)', supported: false },
+      { id: 'appstore_ios', label: 'iOS App Store (name collisions)', supported: false },
+      { id: 'appstore_android', label: 'Google Play Store (name collisions)', supported: false },
+      { id: 'trademarks_us', label: 'US trademarks (basic name checks)', supported: false },
+      { id: 'trademarks_eu', label: 'EU trademarks (basic name checks)', supported: false },
+    ],
+  },
+]
+
 export function Search() {
   const el = document.createElement('section')
   el.className = 'page search container'
@@ -183,31 +232,51 @@ function attachSearchLogic(root) {
       return
     }
 
-    const rows = data.results
-      .map((r) => {
-        const status = r.status || 'unknown'
-        return `
-          <tr>
-            <td>${r.label || r.service}</td>
-            <td class="result-${status}">${status}</td>
-          </tr>
-        `
-      })
-      .join('')
+    const byId = new Map()
+    for (const r of data.results) {
+      if (!r || !r.service) continue
+      byId.set(r.service, r)
+    }
+
+    function renderGroup(group) {
+      const rows = group.platforms
+        .map((p) => {
+          const backend = byId.get(p.id)
+          const status = backend ? (backend.status || 'unknown') : 'coming_soon'
+          const label = backend ? (backend.label || backend.service) : p.label
+          return `
+            <tr>
+              <td>${label}</td>
+              <td class="result-${status}">${status === 'coming_soon' ? 'coming soon' : status}</td>
+            </tr>
+          `
+        })
+        .join('')
+
+      return `
+        <div class="results-group">
+          <h3>${group.label}</h3>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `
+    }
+
+    const groupsHtml = PLATFORM_GROUPS.map(renderGroup).join('')
 
     resultsEl.innerHTML = `
       <h2>Results</h2>
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Service</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
+      ${groupsHtml}
+      <p class="hint">Common platforms are checked today. Niche and advanced search areas are being wired up and will show real data as they come online.</p>
     `
   }
 
