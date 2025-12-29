@@ -13,7 +13,6 @@ const PLATFORM_GROUPS = [
       { id: 'instagram', label: 'Instagram', supported: true },
       { id: 'facebook', label: 'Facebook', supported: true },
       { id: 'youtube', label: 'YouTube', supported: true },
-      { id: 'linkedin', label: 'LinkedIn', supported: true },
       { id: 'tiktok', label: 'TikTok', supported: false },
       { id: 'pinterest', label: 'Pinterest', supported: false },
     ],
@@ -45,6 +44,7 @@ const PLATFORM_GROUPS = [
       { id: 'appstore_android', label: 'Google Play Store (name collisions)', supported: false },
       { id: 'trademarks_us', label: 'US trademarks (basic name checks)', supported: false },
       { id: 'trademarks_eu', label: 'EU trademarks (basic name checks)', supported: false },
+      { id: 'linkedin', label: 'LinkedIn', supported: true },
     ],
   },
 ]
