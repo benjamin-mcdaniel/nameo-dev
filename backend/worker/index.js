@@ -369,22 +369,25 @@ async function getOrCreateUser(env, sub, email) {
   }
 
   const existing = await db
-    .prepare('SELECT id, email, created_at FROM users WHERE id = ?')
+    .prepare('SELECT id, email, tier, created_at FROM users WHERE id = ?')
     .bind(sub)
     .first()
 
   if (existing) {
-    return existing
+    // Older rows may not have tier populated; treat missing/empty as beta.
+    const tier = existing.tier || 'beta'
+    return { id: existing.id, email: existing.email, tier, created_at: existing.created_at }
   }
 
   const now = Math.floor(Date.now() / 1000)
+  const tier = 'beta' // initial signup tier with full access during beta; updated later via backend flows
 
   await db
-    .prepare('INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)')
-    .bind(sub, email, now)
+    .prepare('INSERT INTO users (id, email, tier, created_at) VALUES (?, ?, ?, ?)')
+    .bind(sub, email, tier, now)
     .run()
 
-  return { id: sub, email, created_at: now }
+  return { id: sub, email, tier, created_at: now }
 }
 
 async function loadSafetyConfig(env) {

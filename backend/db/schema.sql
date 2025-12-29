@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,              -- Auth0 sub
   email TEXT,
+  tier TEXT NOT NULL DEFAULT 'beta', -- beta, free, standard, advanced
   created_at INTEGER NOT NULL       -- unix timestamp (seconds)
 );
 
