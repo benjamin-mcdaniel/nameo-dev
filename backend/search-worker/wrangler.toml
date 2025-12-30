@@ -1,0 +1,10 @@
+name = "nameo-search-worker"
+main = "backend/search-worker/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Reserved for future use (e.g. AUTH, feature flags)
+
+# This Worker is intended to act as a dedicated search orchestrator.
+# It can be deployed independently from the main nameo-worker and called
+# from there once advanced search features are ready.
