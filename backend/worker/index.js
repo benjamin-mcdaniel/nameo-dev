@@ -22,6 +22,10 @@ export default {
         })
       }
 
+      if (url.pathname === '/api/health' && request.method === 'GET') {
+        return handleHealth(env)
+      }
+
       if (url.pathname === '/api/check' && request.method === 'GET') {
         return handleCheck(url, env)
       }
@@ -103,6 +107,36 @@ async function handleCheck(url, env) {
 
   const results = await runChecksForName(env, name, null)
   return json({ status: 'ok', name, results })
+}
+
+async function handleHealth(env) {
+  const orchestratorUrl = env.ORCHESTRATOR_URL || ''
+  const token = env.ORCHESTRATOR_TOKEN || ''
+
+  let orchestrator = {
+    configured: !!(orchestratorUrl && token),
+    reachable: false,
+  }
+
+  if (orchestrator.configured) {
+    try {
+      const healthRes = await fetch(new URL('/health', orchestratorUrl).toString(), {
+        method: 'GET',
+      })
+      if (healthRes.ok) {
+        const data = await healthRes.json().catch(() => ({}))
+        orchestrator.reachable = data && data.status === 'ok'
+      }
+    } catch {
+      orchestrator.reachable = false
+    }
+  }
+
+  return json({
+    status: 'ok',
+    worker: { healthy: true },
+    orchestrator,
+  })
 }
 
 async function verifyTurnstile(env, token) {
