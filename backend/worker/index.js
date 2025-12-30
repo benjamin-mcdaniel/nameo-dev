@@ -268,19 +268,34 @@ async function handleCheckOption(env, userId, optionId) {
 }
 
 // Central place to decide how to run checks for a given name.
-// Today this still uses the local services.json config and direct
-// url_status checks. In the future, this is where we can:
-// - Look up the user's tier
-// - Call out to an external orchestrator service for complex searches
-// - Fall back to a minimal set of checks if that orchestrator is down.
+// This function is the only place that knows whether we:
+// - Call out to the external orchestrator service, or
+// - Fall back to the local services.json + url_status checks.
 async function runChecksForName(env, name, userIdOrNull) {
-  const servicesConfig = await loadServicesConfig(env)
+  // Try orchestrator first when configured. Any failure should fall back
+  // to local checks so the public API keeps working even if the VM or
+  // Cloudflare routing is down.
+  const url = env.ORCHESTRATOR_URL
+  const token = env.ORCHESTRATOR_TOKEN
 
-  // Placeholder for future orchestration logic, e.g.:
-  // if (shouldUseOrchestrator(env, userIdOrNull)) {
-  //   const orchestrated = await callOrchestrator(env, { name, userId: userIdOrNull })
-  //   return orchestrated.results
-  // }
+  if (url && token) {
+    try {
+      const orchestrated = await callOrchestrator(env, url, token, name, userIdOrNull)
+      if (
+        orchestrated &&
+        orchestrated.status === 'ok' &&
+        Array.isArray(orchestrated.results) &&
+        orchestrated.results.length > 0
+      ) {
+        return orchestrated.results
+      }
+      // If orchestrator returns an error or empty list, fall through to local checks.
+    } catch (err) {
+      // Ignore orchestrator failures and continue to local checks.
+    }
+  }
+
+  const servicesConfig = await loadServicesConfig(env)
 
   const checks = await Promise.allSettled(
     servicesConfig.services.map((service) => checkServiceAvailability(service, name))
@@ -300,6 +315,49 @@ async function runChecksForName(env, name, userIdOrNull) {
   })
 
   return results
+}
+
+// Low-level helper for calling the orchestrator VM. This is intentionally
+// conservative: we only use it when ORCHESTRATOR_URL and ORCHESTRATOR_TOKEN
+// are configured, and any network / HTTP / JSON error is treated as a
+// signal to fall back to local checks.
+async function callOrchestrator(env, url, token, name, userIdOrNull) {
+  const trimmed = (name || '').trim()
+  if (!trimmed) {
+    return null
+  }
+
+  const body = {
+    name: trimmed,
+    user: userIdOrNull
+      ? {
+          id: userIdOrNull,
+          // We could look up tier here in the future and pass it through.
+        }
+      : undefined,
+    groups: ['common', 'niche', 'advanced'],
+    modes: ['basic_availability'],
+  }
+
+  const res = await fetch(new URL('/v1/search-basic', url).toString(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    return null
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!data || typeof data !== 'object') {
+    return null
+  }
+
+  return data
 }
 
 async function handleDeleteAccount(env, userId) {
