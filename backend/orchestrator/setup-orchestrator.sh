@@ -58,7 +58,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=$APP_DIR/backend/orchestrator
-ExecStart=$APP_DIR/backend/orchestrator/.venv/bin/uvicorn orchestrator_app:app --host 0.0.0.0 --port 8081
+ExecStart=$APP_DIR/backend/orchestrator/.venv/bin/uvicorn orchestrator_app:app --host 0.0.0.0 --port 8005
 Restart=always
 User=$(whoami)
 
