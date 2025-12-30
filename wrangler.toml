@@ -5,8 +5,11 @@ compatibility_date = "2024-01-01"
 [vars]
 # AUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
 # AUTH0_AUDIENCE = "https://nameo-api"
+ORCHESTRATOR_URL = "https://do.nameo.dev"
+# Change this to a random shared secret and do NOT commit real secrets
+ORCHESTRATOR_TOKEN = "change-me-orchestrator-token"
 
 [[d1_databases]]
 binding = "NAMEO_DB"                # used in Worker env.NAMEO_DB
 database_name = "nameo-db"          # D1 database name in Cloudflare dashboard
-database_id = "4afe937a-4c9b-4cb1-bfad-64d8844ca26e"  
+database_id = "4afe937a-4c9b-4cb1-bfad-64d8844ca26e"
