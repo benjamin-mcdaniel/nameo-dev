@@ -84,7 +84,6 @@ export default {
 async function handleCheck(url, env) {
   const name = url.searchParams.get('name')?.trim() || ''
   const safetyConfig = await loadSafetyConfig(env)
-  const servicesConfig = await loadServicesConfig(env)
 
   const turnstileToken = url.searchParams.get('cf_turnstile_token') || ''
 
@@ -102,23 +101,7 @@ async function handleCheck(url, env) {
     return json({ status: 'error', error: 'missing_name' }, 400)
   }
 
-  const checks = await Promise.allSettled(
-    servicesConfig.services.map((service) => checkServiceAvailability(service, name))
-  )
-
-  const results = servicesConfig.services.map((service, index) => {
-    const r = checks[index]
-    if (r.status === 'fulfilled') {
-      return { service: service.id, label: service.label, ...r.value }
-    }
-    return {
-      service: service.id,
-      label: service.label,
-      status: 'error',
-      error: 'check_failed',
-    }
-  })
-
+  const results = await runChecksForName(env, name, null)
   return json({ status: 'ok', name, results })
 }
 
@@ -271,8 +254,36 @@ async function handleCheckOption(env, userId, optionId) {
     return json({ status: 'unsafe', reason: safety.reason, message: safety.message }, 400)
   }
 
+  const results = await runChecksForName(env, row.name, userId)
+
+  const checkedAt = Math.floor(Date.now() / 1000)
+  const checkId = crypto.randomUUID()
+
+  await db
+    .prepare('INSERT INTO option_checks (id, option_id, checked_at, services_json) VALUES (?, ?, ?, ?)')
+    .bind(checkId, optionId, checkedAt, JSON.stringify(results))
+    .run()
+
+  return json({ status: 'ok', option_id: optionId, checked_at: checkedAt, results })
+}
+
+// Central place to decide how to run checks for a given name.
+// Today this still uses the local services.json config and direct
+// url_status checks. In the future, this is where we can:
+// - Look up the user's tier
+// - Call out to an external orchestrator service for complex searches
+// - Fall back to a minimal set of checks if that orchestrator is down.
+async function runChecksForName(env, name, userIdOrNull) {
+  const servicesConfig = await loadServicesConfig(env)
+
+  // Placeholder for future orchestration logic, e.g.:
+  // if (shouldUseOrchestrator(env, userIdOrNull)) {
+  //   const orchestrated = await callOrchestrator(env, { name, userId: userIdOrNull })
+  //   return orchestrated.results
+  // }
+
   const checks = await Promise.allSettled(
-    servicesConfig.services.map((service) => checkServiceAvailability(service, row.name))
+    servicesConfig.services.map((service) => checkServiceAvailability(service, name))
   )
 
   const results = servicesConfig.services.map((service, index) => {
@@ -288,15 +299,7 @@ async function handleCheckOption(env, userId, optionId) {
     }
   })
 
-  const checkedAt = Math.floor(Date.now() / 1000)
-  const checkId = crypto.randomUUID()
-
-  await db
-    .prepare('INSERT INTO option_checks (id, option_id, checked_at, services_json) VALUES (?, ?, ?, ?)')
-    .bind(checkId, optionId, checkedAt, JSON.stringify(results))
-    .run()
-
-  return json({ status: 'ok', option_id: optionId, checked_at: checkedAt, results })
+  return results
 }
 
 async function handleDeleteAccount(env, userId) {
