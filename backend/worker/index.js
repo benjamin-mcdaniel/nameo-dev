@@ -339,14 +339,26 @@ async function callOrchestrator(env, url, token, name, userIdOrNull) {
     modes: ['basic_availability'],
   }
 
-  const res = await fetch(new URL('/v1/search-basic', url).toString(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 4000)
+
+  let res
+  try {
+    res = await fetch(new URL('/v1/search-basic', url).toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    // Treat timeouts / network failures as a signal to fall back.
+    return null
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (!res.ok) {
     return null
