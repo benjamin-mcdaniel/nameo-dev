@@ -8,6 +8,10 @@ compatibility_date = "2024-01-01"
 ORCHESTRATOR_URL = "https://nameo-search-worker.benjamin-f-mcdaniel.workers.dev"
 ORCHESTRATOR_TOKEN = "dev-search-shared-secret"  # replace with a secret via CF dashboard for production
 
+[[services]]
+binding = "SEARCH_ORCHESTRATOR"
+service = "nameo-search-worker"
+
 [[d1_databases]]
 binding = "NAMEO_DB"                # used in Worker env.NAMEO_DB
 database_name = "nameo-db"          # D1 database name in Cloudflare dashboard

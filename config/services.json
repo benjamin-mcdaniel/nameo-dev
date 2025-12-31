@@ -26,7 +26,8 @@
       "label": "YouTube",
       "type": "social",
       "strategy": "url_status",
-      "urlTemplate": "https://www.youtube.com/@{name}"
+      "urlTemplate": "https://www.youtube.com/@{name}",
+      "method": "GET"
     },
     {
       "id": "linkedin",
@@ -34,6 +35,41 @@
       "type": "social",
       "strategy": "url_status",
       "urlTemplate": "https://www.linkedin.com/in/{name}/"
+    },
+    {
+      "id": "tiktok",
+      "label": "TikTok",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.tiktok.com/@{name}"
+    },
+    {
+      "id": "pinterest",
+      "label": "Pinterest",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.pinterest.com/{name}/"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://github.com/{name}"
+    },
+    {
+      "id": "reddit",
+      "label": "Reddit",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.reddit.com/user/{name}"
+    },
+    {
+      "id": "medium",
+      "label": "Medium",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://medium.com/@{name}"
     }
   ]
 }

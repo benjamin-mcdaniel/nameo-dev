@@ -114,11 +114,10 @@ async function handleCheck(url, env) {
 }
 
 async function handleHealth(env) {
-  const orchestratorUrl = env.ORCHESTRATOR_URL || ''
-  const token = env.ORCHESTRATOR_TOKEN || ''
+  const orchestratorService = env.SEARCH_ORCHESTRATOR
 
   let orchestrator = {
-    configured: !!(orchestratorUrl && token),
+    configured: !!orchestratorService,
     reachable: false,
     search_ok: false,
     last_status: null,
@@ -127,9 +126,7 @@ async function handleHealth(env) {
 
   if (orchestrator.configured) {
     try {
-      const healthRes = await fetch(new URL('/health', orchestratorUrl).toString(), {
-        method: 'GET',
-      })
+      const healthRes = await orchestratorService.fetch('http://orchestrator/health')
       orchestrator.last_status = healthRes.status
       if (healthRes.ok) {
         const data = await healthRes.json().catch(() => ({}))
@@ -145,7 +142,7 @@ async function handleHealth(env) {
     // as /api/check, but with a fixed lightweight name.
     if (orchestrator.reachable) {
       try {
-        const testResp = await callOrchestrator(env, orchestratorUrl, token, 'healthtest', null)
+        const testResp = await callOrchestrator(env, null, null, 'healthtest', null)
         if (testResp && testResp.status === 'ok') {
           orchestrator.search_ok = true
         }
@@ -628,7 +625,8 @@ async function evaluateNameSafety(name, safetyConfig) {
 async function checkServiceAvailability(service, name) {
   if (service.strategy === 'url_status') {
     const url = service.urlTemplate.replace('{name}', encodeURIComponent(name))
-    const res = await fetch(url, { method: 'HEAD' })
+    const method = service.method || 'HEAD'
+    const res = await fetch(url, { method })
 
     if (res.status === 404) {
       return { status: 'available', code: res.status }
