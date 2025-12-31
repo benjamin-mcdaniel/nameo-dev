@@ -120,6 +120,7 @@ async function handleHealth(env) {
   let orchestrator = {
     configured: !!(orchestratorUrl && token),
     reachable: false,
+    search_ok: false,
   }
 
   if (orchestrator.configured) {
@@ -133,6 +134,20 @@ async function handleHealth(env) {
       }
     } catch {
       orchestrator.reachable = false
+    }
+
+    // If basic /health looks good, also try a tiny test search through the
+    // same orchestrator pipeline. This uses the same callOrchestrator helper
+    // as /api/check, but with a fixed lightweight name.
+    if (orchestrator.reachable) {
+      try {
+        const testResp = await callOrchestrator(env, orchestratorUrl, token, 'healthtest', null)
+        if (testResp && testResp.status === 'ok') {
+          orchestrator.search_ok = true
+        }
+      } catch {
+        orchestrator.search_ok = false
+      }
     }
   }
 

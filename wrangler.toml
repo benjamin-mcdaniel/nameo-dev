@@ -5,8 +5,8 @@ compatibility_date = "2024-01-01"
 [vars]
 # AUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
 # AUTH0_AUDIENCE = "https://nameo-api"
-# ORCHESTRATOR_URL = "https://do.nameo.dev"  # paused for now; leaving here for future DO/secondary orchestrator use
-# ORCHESTRATOR_TOKEN = "change-me-orchestrator-token"  # do not use in production, replace via secrets
+ORCHESTRATOR_URL = "https://nameo-search-worker.benjamin-f-mcdaniel.workers.dev"
+ORCHESTRATOR_TOKEN = "dev-search-shared-secret"  # replace with a secret via CF dashboard for production
 
 [[d1_databases]]
 binding = "NAMEO_DB"                # used in Worker env.NAMEO_DB
