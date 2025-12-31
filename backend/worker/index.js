@@ -121,6 +121,8 @@ async function handleHealth(env) {
     configured: !!(orchestratorUrl && token),
     reachable: false,
     search_ok: false,
+    last_status: null,
+    last_error: null,
   }
 
   if (orchestrator.configured) {
@@ -128,12 +130,14 @@ async function handleHealth(env) {
       const healthRes = await fetch(new URL('/health', orchestratorUrl).toString(), {
         method: 'GET',
       })
+      orchestrator.last_status = healthRes.status
       if (healthRes.ok) {
         const data = await healthRes.json().catch(() => ({}))
         orchestrator.reachable = data && data.status === 'ok'
       }
-    } catch {
+    } catch (err) {
       orchestrator.reachable = false
+      orchestrator.last_error = (err && err.message) || 'fetch_failed'
     }
 
     // If basic /health looks good, also try a tiny test search through the
@@ -145,8 +149,9 @@ async function handleHealth(env) {
         if (testResp && testResp.status === 'ok') {
           orchestrator.search_ok = true
         }
-      } catch {
+      } catch (err) {
         orchestrator.search_ok = false
+        orchestrator.last_error = (err && err.message) || 'search_test_failed'
       }
     }
   }
