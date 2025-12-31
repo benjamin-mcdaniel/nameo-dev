@@ -26,6 +26,10 @@ export default {
         return handleHealth(env)
       }
 
+      if (url.pathname === '/api/test-orchestrator' && request.method === 'GET') {
+        return handleTestOrchestrator(url, env)
+      }
+
       if (url.pathname === '/api/check' && request.method === 'GET') {
         return handleCheck(url, env)
       }
@@ -137,6 +141,61 @@ async function handleHealth(env) {
     worker: { healthy: true },
     orchestrator,
   })
+}
+
+// Simple test endpoint to exercise the orchestrator wiring without
+// affecting normal /api/check behavior. It uses ORCHESTRATOR_URL and
+// ORCHESTRATOR_TOKEN if present and reports what happened.
+async function handleTestOrchestrator(url, env) {
+  const name = url.searchParams.get('name')?.trim() || 'healthtest'
+
+  const orchestratorUrl = env.ORCHESTRATOR_URL || ''
+  const token = env.ORCHESTRATOR_TOKEN || ''
+
+  if (!orchestratorUrl || !token) {
+    return json(
+      {
+        status: 'orchestrator_disabled',
+        message: 'ORCHESTRATOR_URL and ORCHESTRATOR_TOKEN are not configured.',
+        name,
+      },
+      200
+    )
+  }
+
+  let data = null
+  try {
+    data = await callOrchestrator(env, orchestratorUrl, token, name, null)
+  } catch (err) {
+    return json(
+      {
+        status: 'error',
+        name,
+        error: 'orchestrator_call_failed',
+      },
+      200
+    )
+  }
+
+  if (!data) {
+    return json(
+      {
+        status: 'no_data',
+        name,
+        message: 'Orchestrator returned no data (null/invalid).',
+      },
+      200
+    )
+  }
+
+  return json(
+    {
+      status: 'ok',
+      name,
+      orchestrator_response: data,
+    },
+    200
+  )
 }
 
 async function verifyTurnstile(env, token) {
