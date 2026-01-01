@@ -70,6 +70,10 @@ export default {
         return handleAddSearchHistory(request, env, user.id)
       }
 
+      if (url.pathname === '/api/search-history' && request.method === 'DELETE') {
+        return handleDeleteSearchHistory(url, env, user.id)
+      }
+
       const campaignOptionsMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/options$/)
       if (campaignOptionsMatch && request.method === 'POST') {
         const campaignId = campaignOptionsMatch[1]
@@ -90,7 +94,8 @@ export default {
 }
 
 async function handleCheck(url, env) {
-  const name = url.searchParams.get('name')?.trim() || ''
+  const rawName = url.searchParams.get('name')?.trim() || ''
+  const name = rawName.replace(/\s+/g, '')
   const safetyConfig = await loadSafetyConfig(env)
 
   const turnstileToken = url.searchParams.get('cf_turnstile_token') || ''
@@ -543,6 +548,25 @@ async function handleAddSearchHistory(request, env, userId) {
     .run()
 
   return json({ id, name, status, searched_at: searchedAt }, 201)
+}
+
+async function handleDeleteSearchHistory(url, env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  const name = url.searchParams.get('name')?.trim() || ''
+  if (!name) {
+    return json({ error: 'name_required' }, 400)
+  }
+
+  await db
+    .prepare('DELETE FROM search_history WHERE user_id = ? AND name = ?')
+    .bind(userId, name)
+    .run()
+
+  return json({ status: 'deleted' })
 }
 
 async function getOrCreateUser(env, sub, email) {

@@ -32,10 +32,11 @@ export function Home() {
         </div>
 
         <div class="card card-secondary">
-          <h2>Todays checks and whats coming next</h2>
+          <h2>Features today and whats coming next</h2>
           <ul class="bullet-list">
-            <li><strong>Right now.</strong> Common platforms like X, Instagram, YouTube, GitHub and more in a single pass.</li>
-            <li><strong>Next up.</strong> Guided search flows that walk you through narrowing down a name based on your goals.</li>
+            <li><strong>Today.</strong> One search to check common platforms like X, Instagram, YouTube, GitHub and more.</li>
+            <li><strong>Today.</strong> Simple results, basic suggestions, and light history so you can keep moving.</li>
+            <li><strong>Coming soon.</strong> Guided search flows that help you ask better questions about your name.</li>
             <li><strong>Later.</strong> Deeper domain, app store, and trademark-style checks for bigger launches and rebrands.</li>
           </ul>
         </div>

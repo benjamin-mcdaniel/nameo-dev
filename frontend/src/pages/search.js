@@ -9,16 +9,16 @@ const PLATFORM_GROUPS = [
     label: 'Common platforms',
     tier: 'common', // included for all tiers long term
     platforms: [
-      { id: 'x', label: 'X (Twitter)', supported: true },
-      { id: 'instagram', label: 'Instagram', supported: true },
-      { id: 'facebook', label: 'Facebook', supported: true },
-      { id: 'youtube', label: 'YouTube', supported: true },
-      { id: 'tiktok', label: 'TikTok', supported: true },
-      { id: 'pinterest', label: 'Pinterest', supported: true },
-      { id: 'linkedin', label: 'LinkedIn', supported: true },
-      { id: 'github', label: 'GitHub', supported: true },
-      { id: 'reddit', label: 'Reddit', supported: true },
-      { id: 'medium', label: 'Medium', supported: true },
+      { id: 'x', label: 'X (Twitter)', supported: true, urlTemplate: 'https://x.com/{name}' },
+      { id: 'instagram', label: 'Instagram', supported: true, urlTemplate: 'https://www.instagram.com/{name}/' },
+      { id: 'facebook', label: 'Facebook', supported: true, urlTemplate: 'https://www.facebook.com/{name}' },
+      { id: 'youtube', label: 'YouTube', supported: true, urlTemplate: 'https://www.youtube.com/@{name}' },
+      { id: 'tiktok', label: 'TikTok', supported: true, urlTemplate: 'https://www.tiktok.com/@{name}' },
+      { id: 'pinterest', label: 'Pinterest', supported: true, urlTemplate: 'https://www.pinterest.com/{name}/' },
+      { id: 'linkedin', label: 'LinkedIn', supported: true, urlTemplate: 'https://www.linkedin.com/in/{name}/' },
+      { id: 'github', label: 'GitHub', supported: true, urlTemplate: 'https://github.com/{name}' },
+      { id: 'reddit', label: 'Reddit', supported: true, urlTemplate: 'https://www.reddit.com/user/{name}' },
+      { id: 'medium', label: 'Medium', supported: true, urlTemplate: 'https://medium.com/@{name}' },
     ],
   },
   {
@@ -27,11 +27,11 @@ const PLATFORM_GROUPS = [
     tier: 'niche', // planned for Basic and above
     platforms: [
       { id: 'discord', label: 'Discord servers', supported: false },
-      { id: 'twitch', label: 'Twitch', supported: false },
-      { id: 'producthunt', label: 'Product Hunt', supported: false },
-      { id: 'substack', label: 'Substack', supported: false },
-      { id: 'behance', label: 'Behance', supported: false },
-      { id: 'dribbble', label: 'Dribbble', supported: false },
+      { id: 'twitch', label: 'Twitch', supported: false, urlTemplate: 'https://www.twitch.tv/{name}' },
+      { id: 'producthunt', label: 'Product Hunt', supported: false, urlTemplate: 'https://www.producthunt.com/@{name}' },
+      { id: 'substack', label: 'Substack', supported: false, urlTemplate: 'https://{name}.substack.com' },
+      { id: 'behance', label: 'Behance', supported: false, urlTemplate: 'https://www.behance.net/{name}' },
+      { id: 'dribbble', label: 'Dribbble', supported: false, urlTemplate: 'https://dribbble.com/{name}' },
     ],
   },
   {
@@ -63,12 +63,12 @@ export function Search() {
         <form id="search-form" class="search-input-row">
           <input id="search-input" type="text" autocomplete="off" placeholder="Search a name across platforms" />
           <button id="btn-run-search" class="btn btn-primary" type="submit">Search</button>
+          <button id="btn-favorite" class="btn fav-button" type="button">★ <span>Favorite</span></button>
         </form>
         <div id="search-status" class="status"></div>
 
         <div class="search-main-inner">
           <aside class="search-actions-col">
-            <button id="btn-favorite" class="btn fav-button">★ <span>Favorite</span></button>
             <div id="search-meta-message" class="hint"></div>
           </aside>
 
@@ -80,7 +80,7 @@ export function Search() {
       </section>
 
       <aside class="search-side search-side-right">
-        <h2>Recent searches</h2>
+        <h2>Recent Searches</h2>
         <div id="search-history" class="search-history"></div>
       </aside>
     </div>
@@ -208,22 +208,56 @@ function attachSearchLogic(root) {
       .map((item) => {
         const statusClass = `chip-status-${item.status}`
         return `
-          <button class="history-item" data-name="${item.name}">
-            <span class="history-name">${item.name}</span>
-            <span class="history-status ${statusClass}">${item.status}</span>
-          </button>
+          <div class="history-item" data-name="${item.name}">
+            <button class="history-main" type="button">
+              <span class="history-name">${item.name}</span>
+              <span class="history-status ${statusClass}">${item.status}</span>
+            </button>
+            <button class="history-delete" type="button" aria-label="Remove from history">&times;</button>
+          </div>
         `
       })
       .join('')
     historyEl.innerHTML = html
 
-    historyEl.querySelectorAll('.history-item').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const name = btn.getAttribute('data-name') || ''
-        input.value = name
-        runSearch(name)
-      })
+    historyEl.querySelectorAll('.history-item').forEach((row) => {
+      const name = row.getAttribute('data-name') || ''
+      const mainBtn = row.querySelector('.history-main')
+      const deleteBtn = row.querySelector('.history-delete')
+
+      if (mainBtn) {
+        mainBtn.addEventListener('click', () => {
+          input.value = name
+          runSearch(name)
+        })
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation()
+          await deleteHistoryItem(name)
+        })
+      }
     })
+  }
+
+  async function deleteHistoryItem(name) {
+    const trimmed = (name || '').trim()
+    if (!trimmed) return
+
+    // Best-effort delete on backend for logged-in users.
+    try {
+      await apiFetchWithAuth(`/api/search-history?name=${encodeURIComponent(trimmed)}`, {
+        method: 'DELETE',
+      })
+    } catch {
+      // ignore; still update local copy below
+    }
+
+    const items = await loadHistory()
+    const filtered = items.filter((i) => i.name !== trimmed)
+    saveHistoryLocally(filtered)
+    await renderHistory()
   }
 
   function renderResults(data) {
@@ -231,6 +265,8 @@ function attachSearchLogic(root) {
       resultsEl.innerHTML = ''
       return
     }
+
+    const name = (data.name || '').trim()
 
     const byId = new Map()
     for (const r of data.results) {
@@ -244,10 +280,18 @@ function attachSearchLogic(root) {
           const backend = byId.get(p.id)
           const status = backend ? (backend.status || 'unknown') : 'coming_soon'
           const label = backend ? (backend.label || backend.service) : p.label
+          const url = p.urlTemplate && name ? p.urlTemplate.replace('{name}', encodeURIComponent(name)) : null
+          const history = backend && backend.history ? backend.history : 'unknown'
+
+          const serviceCell = url
+            ? `<a href="${url}" target="_blank" rel="noopener">${label}</a>`
+            : label
+
           return `
             <tr>
-              <td>${label}</td>
+              <td>${serviceCell}</td>
               <td class="result-${status}">${status === 'coming_soon' ? 'coming soon' : status}</td>
+              <td>${history}</td>
             </tr>
           `
         })
@@ -261,6 +305,7 @@ function attachSearchLogic(root) {
               <tr>
                 <th>Service</th>
                 <th>Status</th>
+                <th>History</th>
               </tr>
             </thead>
             <tbody>
