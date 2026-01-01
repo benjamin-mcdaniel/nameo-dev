@@ -3,30 +3,31 @@ export function Help() {
   el.className = 'page help container'
   el.innerHTML = `
     <h1>Help</h1>
-    <p>nameo.dev is a small tool for checking whether a name is available across a few major platforms and keeping track of ideas. Most people fall into one of two buckets: quick solo checks, or deeper research for brands and launches. This page explains how it works today and what is being explored, without committing to timelines.</p>
+    <p>nameo.dev helps you understand where a name can realistically live across today&apos;s social and creator platforms. Most people fall into two buckets: quick solo checks, or deeper research for brands and launches. This page explains how it works today and what is being explored, without promising specific timelines.</p>
 
     <h2>How it works right now</h2>
     <ul class="bullet-list">
-      <li><strong>Solo checks.</strong> Use the Search page to type a name and see basic taken / not taken style availability across the supported platforms.</li>
+      <li><strong>Unified checks.</strong> Use the Search page to type a name once and see basic taken / available style signals across the supported platforms.</li>
       <li><strong>Safety.</strong> We block obviously unsafe or offensive names before running checks to avoid hitting external services with them.</li>
-      <li><strong>History & favorites.</strong> Recent searches and simple favorites are stored locally in your browser so you can come back to a single stream of ideas.</li>
-      <li><strong>Accounts.</strong> Logging in lets you save options into simple campaigns behind the scenes using Auth0 and a small database.</li>
+      <li><strong>History & favorites.</strong> If you are not logged in, recent searches and favorites are stored locally in your browser. When you log in, recent searches are also saved to a small database so you can see them again on another device.</li>
+      <li><strong>Simple signals.</strong> Results focus on whether you can likely use a name, not on legal advice or exhaustive risk scoring.</li>
     </ul>
 
     <h2>Solo vs advanced use (without promises)</h2>
-    <p>Campaigns and future features are where the line between solo and advanced use shows up. The current implementation is very light weight and may change. The general idea is:</p>
+    <p>Future features are where the line between solo and advanced use shows up. The current implementation is intentionally light weight and may change. The general idea is:</p>
     <ul class="bullet-list">
       <li><strong>Solo basics.</strong> An individual might only need one history of checks and a sense of whether a name is open for a single purpose.</li>
-      <li><strong>Advanced research.</strong> Teams exploring names for launches or new brands might care about richer signals like when handles were registered or how widely a name is used in different markets (ideas, not built).</li>
-      <li><strong>Future sharing.</strong> Longer term, the same structure could power reports or views you share in tools like chat or docs when comparing a shortlist.</li>
+      <li><strong>Advanced research (future).</strong> Teams exploring names for launches or new brands might care about richer signals like when handles were registered or how widely a name is used in different markets. These are ideas, not built features.</li>
+      <li><strong>Future sharing.</strong> Longer term, the same structure could power simple reports or views you share in tools like chat or docs when comparing a shortlist.</li>
     </ul>
 
     <h2>Accounts, login, and data</h2>
     <p>Authentication is handled by Auth0. When you log in, we receive a minimal profile (for example, an email address and sometimes an avatar) that we can use to attach saved searches to you.</p>
     <ul class="bullet-list">
-      <li><strong>Login.</strong> Use the Login page from the top navigation to sign in.</li>
-      <li><strong>Logout.</strong> You can log out from the same Login page.</li>
-      <li><strong>Delete account.</strong> There is an option on the Login page to delete your account and associated saved data. This is intended to keep things simple and reversible for you.</li>
+      <li><strong>Login.</strong> Use the account menu in the header to sign in with Auth0 when available.</li>
+      <li><strong>Logout.</strong> You can log out from the same account menu.</li>
+      <li><strong>Data stored.</strong> For logged-in users, we store a small amount of data: your profile (from Auth0) and a history of recent searches tied to your account.</li>
+      <li><strong>Privacy.</strong> We do not front-run your ideas, sell your search data, or register domains or handles based on your searches.</li>
     </ul>
 
     <h2>Support</h2>
