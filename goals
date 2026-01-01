@@ -1,0 +1,140 @@
+# nameo.dev – Product Design Goals
+
+## 1. Core Purpose / Function of the Site
+- Help people find usable, consistent names across many platforms in a world where most good names are already taken.
+- Make it easy to see, in one place, where a name is available or taken across:
+  - Social platforms (X, Instagram, Facebook, YouTube, TikTok, etc.).
+  - Community / creator spaces (Reddit, Medium, Twitch, Product Hunt, etc.).
+  - Future: domains, app stores, trademarks, and other naming surfaces.
+- Provide guidance and suggestions so users can iterate on name ideas instead of hitting dead ends.
+- Over time, evolve from a “check a handle” tool into a real “naming companion” that helps brainstorm, validate, and plan an identity across the internet.
+
+## 2. Target Customers / Users
+- **Early-stage founders & small businesses**
+  - Solo founders, small teams, side projects.
+  - Need a consistent identity across social, domain, and product spaces.
+  - Care about speed, clarity, and not making a bad irreversible naming decision.
+- **Creators & streamers**
+  - People setting up channels on YouTube, Twitch, TikTok, etc.
+  - Want the same handle across platforms where possible.
+  - Often iterate on names and want quick feedback across many sites.
+- **Personal sites & freelancers**
+  - Individuals creating personal brands, portfolios, newsletters.
+  - Need to see social + domain + newsletter names in one view.
+- **Later: agencies & power users**
+  - Agencies doing naming/branding for multiple clients.
+  - Might need higher limits, saved projects, and team sharing.
+
+## 3. Product Principles
+- **MVP first**
+  - Focus on a working, reliable core search experience before heavy design.
+  - Prefer simple layouts and minimal CSS until real usage validates directions.
+- **Cross-platform by default**
+  - Always think in terms of "the name everywhere", not just one site.
+- **Honest, simple status**
+  - For users, we only care about: can they have the name or not.
+  - Internally, any non-404 (and not clearly "not available" text) is treated as "taken".
+  - Special cases (e.g., "page isn’t available" messages) are normalized into clear "available" or "taken" states.
+- **Privacy-respecting**
+  - Only collect what we need to operate the product and improve quality.
+  - Be explicit about what we store (searches, account info, etc.) and why.
+- **Transparent limitations**
+  - Clearly show which platforms are live vs. "coming soon".
+  - Status page for backend checks so users can see if something is broken.
+
+## 4. Data We Collect and Why
+- **Account data (via Auth0)**
+  - Minimal profile info: email, name, avatar, and tier.
+  - Used for:
+    - Authentication and securing API calls.
+    - Displaying the user’s first name + avatar in the header.
+    - Tracking account tier (beta, free, standard, advanced) for limits and pricing.
+- **Search history (per user)**
+  - For logged-in users, we store recent search strings in the database (D1), with:
+    - User ID.
+    - Search name.
+    - Derived search result classification (e.g., full / partial / taken) or status.
+    - Timestamp.
+  - Purposes:
+    - Show "Recent Searches" across browsers and devices.
+    - Allow deleting history entries from the UI.
+    - Later: analytics on naming trends (aggregated/anonymous vision only).
+- **Per-browser local data (anonymous mode)**
+  - LocalStorage keys like `nameo_search_history` and `nameo_favorites`.
+  - Only used when the user is not logged in, or as an offline/local convenience.
+  - Stays on that device and is not used for cross-device features.
+- **Operational logs & platform check results (server-side)**
+  - Request logs and platform responses (status codes, certain body patterns) for debugging.
+  - Used to:
+    - Improve platform detection logic (e.g., special-case Instagram/Facebook messages).
+    - Monitor backend health and status page behavior.
+
+## 5. Pricing and Tiers (Concept)
+- **Beta / Free tier**
+  - Generous free usage while in beta.
+  - Access to core social platforms (X, Instagram, Facebook, YouTube, TikTok, etc.).
+  - Reasonable search limits per day/month.
+- **Future Paid tiers**
+  - **Standard**
+    - Higher limits on searches.
+    - Priority access to new platforms once wired up.
+  - **Advanced**
+    - Includes advanced data sources:
+      - Domain availability (common and modern TLDs).
+      - App store name conflicts (iOS/Android).
+      - Basic trademark checks.
+    - Possibly team features and project/workspace-level organization.
+- Overall pricing philosophy:
+  - Start simple and low-friction.
+  - Only charge when there is clear added value beyond basic handle checks.
+
+## 6. Product Experience Goals
+- **Simple, fast search**
+  - One main search box and a clear "Search" button.
+  - Automatically normalize obvious issues (e.g., remove spaces from handles when needed).
+  - Reflect the active search in the URL so it can be bookmarked or shared.
+- **Clear results table**
+  - Grouped by platform type (Common vs. Advanced).
+  - Each row: platform name, status (available / taken / coming soon), and a direct outbound link.
+  - Separate "History" stub column for future deeper insights.
+- **Guided exploration**
+  - Suggestions for nearby names when the first choice is taken.
+  - Status page that uses a hidden test search (like `cocacola`) to validate checks.
+  - Future: guided "flows" that help users move from idea -> shortlist -> final name.
+- **Cross-device continuity**
+  - Logged-in users see the same recent searches on any device or browser.
+  - Anonymous users have per-browser history for convenience only.
+
+## 7. Content & Messaging Themes
+- Talk to **startups, small businesses, and creators**.
+  - Emphasize clarity: "See where your name is already in use before you commit."
+  - Position the product as a friendly helper, not a legal tool.
+- Highlight that the internet is **crowded with names**, and the product helps:
+  - Find small openings where a name is still viable.
+  - Align brand, domain, and social presence.
+- Reinforce the idea of **guided naming over time**:
+  - Today: checks and suggestions.
+  - Tomorrow: workflows, recommendations, and more advanced checks.
+
+## 8. Ongoing Improvement of Naming Information
+- Continuously add new platforms and refine checks.
+  - New social and creator platforms as they become important.
+  - Better detection for edge cases (e.g., suspended accounts, partial availability).
+- Expand beyond simple "available/taken" into richer signals:
+  - Popularity or saturation of a name across platforms.
+  - Confusingly similar names.
+- Feed improvements back into:
+  - Status page (transparent health of checks).
+  - User‑facing explanations (why a name is risky or strong).
+
+## 9. Guardrails & Non-goals
+- Not a legal service or legal advice; trademarks and legal conflicts should be positioned as basic signals only.
+- Do not expose raw scraping details or encourage violating platform terms; focus on high-level availability.
+- Avoid over-collecting personal data; keep storage and retention minimal and purposeful.
+
+---
+
+This file is intended as a **source of truth for product and content design**. Other tools (including LLM-based writers) can:
+- Use these sections to rewrite page copy (home, pricing, features, search, status).
+- Generate marketing messaging, onboarding flows, and help docs.
+- Propose new UI/UX flows that stay aligned with the goals above.
