@@ -656,11 +656,24 @@ async function checkServiceAvailability(service, name) {
       return { status: 'available', code: res.status }
     }
 
-    if (res.status >= 200 && res.status < 400) {
-      return { status: 'taken', code: res.status }
+    // Instagram returns a 200 with a "Sorry, this page isn't available" message
+    // when a profile does not exist. We treat that as available.
+    // Facebook returns a 200 with "This content isn't available right now" for
+    // unavailable profiles/pages; we also treat that as available.
+    if (service.id === 'instagram' || service.id === 'facebook') {
+      const text = await res.text().catch(() => '')
+      const lower = text.toLowerCase()
+      if (
+        (service.id === 'instagram' && lower.includes("sorry, this page isn't available")) ||
+        (service.id === 'facebook' && lower.includes("this content isn't available right now"))
+      ) {
+        return { status: 'available', code: res.status }
+      }
     }
 
-    return { status: 'unknown', code: res.status }
+    // For naming, anything that is not a clear 404 or known "not available"
+    // page is effectively taken (suspended, protected, error pages, etc.).
+    return { status: 'taken', code: res.status }
   }
 
   return { status: 'unsupported' }

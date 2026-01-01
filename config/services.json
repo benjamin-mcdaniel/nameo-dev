@@ -12,14 +12,16 @@
       "label": "Instagram",
       "type": "social",
       "strategy": "url_status",
-      "urlTemplate": "https://www.instagram.com/{name}/"
+      "urlTemplate": "https://www.instagram.com/{name}/",
+      "method": "GET"
     },
     {
       "id": "facebook",
       "label": "Facebook",
       "type": "social",
       "strategy": "url_status",
-      "urlTemplate": "https://www.facebook.com/{name}"
+      "urlTemplate": "https://www.facebook.com/{name}",
+      "method": "GET"
     },
     {
       "id": "youtube",

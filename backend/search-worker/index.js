@@ -58,11 +58,20 @@ async function checkServiceAvailability(service, name) {
       return { status: 'available', code: res.status }
     }
 
-    if (res.status >= 200 && res.status < 400) {
-      return { status: 'taken', code: res.status }
+    if (service.id === 'instagram' || service.id === 'facebook') {
+      const text = await res.text().catch(() => '')
+      const lower = text.toLowerCase()
+      if (
+        (service.id === 'instagram' && lower.includes("sorry, this page isn't available")) ||
+        (service.id === 'facebook' && lower.includes("this content isn't available right now"))
+      ) {
+        return { status: 'available', code: res.status }
+      }
     }
 
-    return { status: 'unknown', code: res.status }
+    // Mirror main worker behavior: anything that is not a clear 404 or known
+    // "not available" page is effectively taken.
+    return { status: 'taken', code: res.status }
   }
 
   return { status: 'unsupported' }
