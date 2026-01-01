@@ -327,7 +327,7 @@ function attachSearchLogic(root) {
     }
 
     const items = list
-      .map((s) => `<li><button type="button" class="suggestion-item" data-name="${s}">${s}</button></li>`)
+      .map((s) => `<li><a href="#/search?name=${encodeURIComponent(s)}">${s}</a></li>`)
       .join('')
 
     suggestionsEl.innerHTML = `
@@ -336,15 +336,6 @@ function attachSearchLogic(root) {
         ${items}
       </ul>
     `
-
-    suggestionsEl.querySelectorAll('.suggestion-item').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const name = btn.getAttribute('data-name') || ''
-        if (!name) return
-        input.value = name
-        runSearch(name)
-      })
-    })
   }
 
   async function fetchJson(path) {
