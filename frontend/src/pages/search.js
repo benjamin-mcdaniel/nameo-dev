@@ -141,19 +141,32 @@ function attachSearchLogic(root) {
     return { ok: res.ok, status: res.status, data }
   }
 
-  async function loadHistory() {
-    // Try to load from backend first for logged-in users.
+  async function getAuthState() {
     try {
-      const resp = await apiFetchWithAuth('/api/search-history')
-      if (resp.ok && Array.isArray(resp.data.items)) {
-        return resp.data.items.map((item) => ({
-          name: item.name,
-          status: item.status,
-          ts: (item.searched_at || 0) * 1000,
-        }))
-      }
+      const { isAuthenticated } = await import('../auth/client.js')
+      return await isAuthenticated()
     } catch {
-      // fall through to local
+      return false
+    }
+  }
+
+  async function loadHistory() {
+    const loggedIn = await getAuthState()
+
+    if (loggedIn) {
+      try {
+        const resp = await apiFetchWithAuth('/api/search-history')
+        if (resp.ok && Array.isArray(resp.data.items)) {
+          return resp.data.items.map((item) => ({
+            name: item.name,
+            status: item.status,
+            ts: (item.searched_at || 0) * 1000,
+          }))
+        }
+      } catch {
+        // fall through to empty list for logged-in users
+      }
+      return []
     }
 
     try {
@@ -172,21 +185,61 @@ function attachSearchLogic(root) {
     }
   }
 
+  async function migrateLocalHistoryToServer() {
+    const loggedIn = await getAuthState()
+    if (!loggedIn) return
+
+    let items
+    try {
+      const raw = localStorage.getItem('nameo_search_history')
+      if (!raw) return
+      items = JSON.parse(raw)
+      if (!Array.isArray(items) || !items.length) return
+    } catch {
+      return
+    }
+
+    for (const item of items) {
+      const name = (item && item.name) || ''
+      const status = item && item.status
+      const trimmed = (name || '').trim()
+      if (!trimmed) continue
+      try {
+        await apiFetchWithAuth('/api/search-history', {
+          method: 'POST',
+          body: JSON.stringify({ name: trimmed, status }),
+        })
+      } catch {
+        // ignore individual failures; best-effort migration
+      }
+    }
+
+    try {
+      localStorage.removeItem('nameo_search_history')
+    } catch {
+      // ignore
+    }
+  }
+
   async function addToHistory(name, status) {
     const trimmed = (name || '').trim()
     if (!trimmed) return
 
-    // Fire-and-forget to backend; ignore errors.
-    try {
-      await apiFetchWithAuth('/api/search-history', {
-        method: 'POST',
-        body: JSON.stringify({ name: trimmed, status }),
-      })
-    } catch {
-      // ignore; we still maintain a local history below
+    const loggedIn = await getAuthState()
+
+    if (loggedIn) {
+      try {
+        await apiFetchWithAuth('/api/search-history', {
+          method: 'POST',
+          body: JSON.stringify({ name: trimmed, status }),
+        })
+      } catch {
+        // ignore; history will simply appear empty/broken if backend fails
+      }
+      await renderHistory()
+      return
     }
 
-    // Maintain a local copy for anonymous users or offline fallback.
     const items = (await loadHistory()).filter((i) => i.name !== trimmed)
     items.unshift({ name: trimmed, status, ts: Date.now() })
     saveHistoryLocally(items)
@@ -240,13 +293,18 @@ function attachSearchLogic(root) {
     const trimmed = (name || '').trim()
     if (!trimmed) return
 
-    // Best-effort delete on backend for logged-in users.
-    try {
-      await apiFetchWithAuth(`/api/search-history?name=${encodeURIComponent(trimmed)}`, {
-        method: 'DELETE',
-      })
-    } catch {
-      // ignore; still update local copy below
+    const loggedIn = await getAuthState()
+
+    if (loggedIn) {
+      try {
+        await apiFetchWithAuth(`/api/search-history?name=${encodeURIComponent(trimmed)}`, {
+          method: 'DELETE',
+        })
+      } catch {
+        // ignore; history will simply be out of sync if backend fails
+      }
+      await renderHistory()
+      return
     }
 
     const items = await loadHistory()
@@ -424,7 +482,9 @@ function attachSearchLogic(root) {
     }
   })
 
-  renderHistory()
+  migrateLocalHistoryToServer().finally(() => {
+    renderHistory()
+  })
 
   // If the home page left a pending search value, pick it up and
   // execute it once when this page is first loaded.
