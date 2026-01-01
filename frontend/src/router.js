@@ -2,6 +2,7 @@ import { Home } from './pages/home.js'
 import { Help } from './pages/help.js'
 import { Login } from './pages/login.js'
 import { Pricing } from './pages/pricing.js'
+import { Features } from './pages/features.js'
 import { Privacy } from './pages/privacy.js'
 import { Terms } from './pages/terms.js'
 import { NotFound } from './pages/notfound.js'
@@ -15,6 +16,7 @@ const routes = {
   '/help': Help,
   '/login': Login,
   '/pricing': Pricing,
+  '/features': Features,
   '/privacy': Privacy,
   '/terms': Terms,
   '/test': Test,
