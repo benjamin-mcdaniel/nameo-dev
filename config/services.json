@@ -70,6 +70,41 @@
       "type": "social",
       "strategy": "url_status",
       "urlTemplate": "https://medium.com/@{name}"
+    },
+    {
+      "id": "twitch",
+      "label": "Twitch",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.twitch.tv/{name}"
+    },
+    {
+      "id": "producthunt",
+      "label": "Product Hunt",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.producthunt.com/@{name}"
+    },
+    {
+      "id": "substack",
+      "label": "Substack",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://{name}.substack.com"
+    },
+    {
+      "id": "behance",
+      "label": "Behance",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://www.behance.net/{name}"
+    },
+    {
+      "id": "dribbble",
+      "label": "Dribbble",
+      "type": "social",
+      "strategy": "url_status",
+      "urlTemplate": "https://dribbble.com/{name}"
     }
   ]
 }

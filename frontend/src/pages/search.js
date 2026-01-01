@@ -13,8 +13,12 @@ const PLATFORM_GROUPS = [
       { id: 'instagram', label: 'Instagram', supported: true },
       { id: 'facebook', label: 'Facebook', supported: true },
       { id: 'youtube', label: 'YouTube', supported: true },
-      { id: 'tiktok', label: 'TikTok', supported: false },
-      { id: 'pinterest', label: 'Pinterest', supported: false },
+      { id: 'tiktok', label: 'TikTok', supported: true },
+      { id: 'pinterest', label: 'Pinterest', supported: true },
+      { id: 'linkedin', label: 'LinkedIn', supported: true },
+      { id: 'github', label: 'GitHub', supported: true },
+      { id: 'reddit', label: 'Reddit', supported: true },
+      { id: 'medium', label: 'Medium', supported: true },
     ],
   },
   {
@@ -22,12 +26,9 @@ const PLATFORM_GROUPS = [
     label: 'Niche and community',
     tier: 'niche', // planned for Basic and above
     platforms: [
-      { id: 'reddit', label: 'Reddit communities', supported: false },
       { id: 'discord', label: 'Discord servers', supported: false },
       { id: 'twitch', label: 'Twitch', supported: false },
-      { id: 'github', label: 'GitHub', supported: false },
       { id: 'producthunt', label: 'Product Hunt', supported: false },
-      { id: 'medium', label: 'Medium', supported: false },
       { id: 'substack', label: 'Substack', supported: false },
       { id: 'behance', label: 'Behance', supported: false },
       { id: 'dribbble', label: 'Dribbble', supported: false },
@@ -44,7 +45,6 @@ const PLATFORM_GROUPS = [
       { id: 'appstore_android', label: 'Google Play Store (name collisions)', supported: false },
       { id: 'trademarks_us', label: 'US trademarks (basic name checks)', supported: false },
       { id: 'trademarks_eu', label: 'EU trademarks (basic name checks)', supported: false },
-      { id: 'linkedin', label: 'LinkedIn', supported: true },
     ],
   },
 ]
