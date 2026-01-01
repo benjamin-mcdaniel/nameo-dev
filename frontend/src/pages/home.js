@@ -8,10 +8,10 @@ export function Home() {
       <div class="container hero-inner">
         <div class="hero-copy">
           <h1>Name your product in minutes.</h1>
-          <p class="sub">Type a name once and see where its free across the internet  from socials to creator platforms. Built for startups, solo makers, small businesses, and streamers.</p>
+          <p class="sub">Type a name once and see where its free across the internet from socials to creator platforms. Built for startups, solo makers, small businesses, and streamers.</p>
           <div class="actions">
             <a class="btn btn-primary" href="#/search">Start a search</a>
-            <a class="btn" href="#/features">See whats included</a>
+            <a class="btn" href="#/features">See whats included</a>
           </div>
         </div>
       </div>
@@ -22,7 +22,7 @@ export function Home() {
         <div class="card card-primary">
           <h2>Ask all your questions about a name.</h2>
           <form id="home-search-form" class="home-search-row">
-            <input id="home-search-input" type="text" autocomplete="off" placeholder="Try mybrand, studio, or your stream handle" />
+            <input id="home-search-input" type="text" autocomplete="off" placeholder="Try mybrand, studio, or your stream handle" />
             <button id="home-search-submit" class="btn btn-primary" type="submit">Check availability</button>
           </form>
           <ul class="bullet-list">
@@ -32,7 +32,7 @@ export function Home() {
         </div>
 
         <div class="card card-secondary">
-          <h2>Todays checks and whats coming next</h2>
+          <h2>Todays checks and whats coming next</h2>
           <ul class="bullet-list">
             <li><strong>Right now.</strong> Common platforms like X, Instagram, YouTube, GitHub and more in a single pass.</li>
             <li><strong>Next up.</strong> Guided search flows that walk you through narrowing down a name based on your goals.</li>
