@@ -15,14 +15,18 @@ const STATUS_EXPECTATIONS = {
 
 export function Status() {
   const el = document.createElement('section')
-  el.className = 'page status container'
+  el.className = 'page status'
   el.innerHTML = `
-    <h1>Service Status</h1>
-    <p class="sub">This page runs a small internal check against the search backend to confirm that platform checks are behaving as expected.</p>
-    <div id="status-summary" class="status"></div>
-    <div id="status-results" class="results"></div>
-    <div class="actions">
-      <button id="btn-refresh-status" class="btn" type="button">Run checks again</button>
+    <div class="container status-page">
+      <div class="status-panel">
+        <h1>Service Status</h1>
+        <p class="sub">We periodically run a small internal check against the search backend to confirm that platform checks are behaving as expected.</p>
+        <div id="status-summary" class="status"></div>
+        <div id="status-results" class="results"></div>
+        <div class="actions">
+          <button id="btn-refresh-status" class="btn" type="button">Run checks again</button>
+        </div>
+      </div>
     </div>
   `
 
