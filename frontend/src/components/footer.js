@@ -7,8 +7,6 @@ export function Footer() {
       <div class="right">
         <a href="#/features">Features</a>
         <a href="#/status">Status</a>
-        <a href="mailto:support@nameo.dev">Email Support</a>
-        <a href="https://portal.nameo.dev/support/tickets" target="_blank" rel="noopener">Submit a Ticket</a>
       </div>
     </div>
   `
