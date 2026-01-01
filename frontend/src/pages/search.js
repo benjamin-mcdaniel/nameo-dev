@@ -166,7 +166,12 @@ function attachSearchLogic(root) {
       } catch {
         // fall through to empty list for logged-in users
       }
-      return []
+      try {
+        const raw = localStorage.getItem('nameo_search_history')
+        return raw ? JSON.parse(raw) : []
+      } catch {
+        return []
+      }
     }
 
     try {
@@ -199,25 +204,30 @@ function attachSearchLogic(root) {
       return
     }
 
+    let successCount = 0
+
     for (const item of items) {
       const name = (item && item.name) || ''
       const status = item && item.status
       const trimmed = (name || '').trim()
       if (!trimmed) continue
       try {
-        await apiFetchWithAuth('/api/search-history', {
+        const res = await apiFetchWithAuth('/api/search-history', {
           method: 'POST',
           body: JSON.stringify({ name: trimmed, status }),
         })
+        if (res.ok) successCount += 1
       } catch {
         // ignore individual failures; best-effort migration
       }
     }
 
-    try {
-      localStorage.removeItem('nameo_search_history')
-    } catch {
-      // ignore
+    if (successCount > 0) {
+      try {
+        localStorage.removeItem('nameo_search_history')
+      } catch {
+        // ignore
+      }
     }
   }
 
