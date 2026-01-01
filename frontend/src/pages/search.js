@@ -238,14 +238,23 @@ function attachSearchLogic(root) {
     const loggedIn = await getAuthState()
 
     if (loggedIn) {
+      let savedToServer = false
       try {
-        await apiFetchWithAuth('/api/search-history', {
+        const res = await apiFetchWithAuth('/api/search-history', {
           method: 'POST',
           body: JSON.stringify({ name: trimmed, status }),
         })
+        savedToServer = !!res.ok
       } catch {
         // ignore; history will simply appear empty/broken if backend fails
       }
+
+      if (!savedToServer) {
+        const items = (await loadHistory()).filter((i) => i.name !== trimmed)
+        items.unshift({ name: trimmed, status, ts: Date.now() })
+        saveHistoryLocally(items)
+      }
+
       await renderHistory()
       return
     }
