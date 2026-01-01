@@ -6,7 +6,7 @@ const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
 const PLATFORM_GROUPS = [
   {
     id: 'common',
-    label: 'Common platforms',
+    label: 'Common Platforms',
     tier: 'common', // included for all tiers long term
     platforms: [
       { id: 'x', label: 'X (Twitter)', supported: true, urlTemplate: 'https://x.com/{name}' },
@@ -19,14 +19,9 @@ const PLATFORM_GROUPS = [
       { id: 'github', label: 'GitHub', supported: true, urlTemplate: 'https://github.com/{name}' },
       { id: 'reddit', label: 'Reddit', supported: true, urlTemplate: 'https://www.reddit.com/user/{name}' },
       { id: 'medium', label: 'Medium', supported: true, urlTemplate: 'https://medium.com/@{name}' },
-    ],
-  },
-  {
-    id: 'niche',
-    label: 'Niche and community',
-    tier: 'niche', // planned for Basic and above
-    platforms: [
-      { id: 'discord', label: 'Discord servers', supported: false },
+      // Previously niche/community concepts are folded into the common list so
+      // users see everything in one place.
+      { id: 'discord', label: 'Discord Servers', supported: false },
       { id: 'twitch', label: 'Twitch', supported: false, urlTemplate: 'https://www.twitch.tv/{name}' },
       { id: 'producthunt', label: 'Product Hunt', supported: false, urlTemplate: 'https://www.producthunt.com/@{name}' },
       { id: 'substack', label: 'Substack', supported: false, urlTemplate: 'https://{name}.substack.com' },
@@ -36,7 +31,7 @@ const PLATFORM_GROUPS = [
   },
   {
     id: 'advanced',
-    label: 'Advanced search',
+    label: 'Advanced Search',
     tier: 'advanced', // planned for Advanced membership
     platforms: [
       { id: 'domains_core', label: 'Core domains (.com, .net, .io, .co)', supported: false },
