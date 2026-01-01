@@ -39,6 +39,10 @@
 .results, .suggestions { margin-top: 12px; }
 .results-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .results-table th, .results-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; font-size: 0.9rem; }
+.results-table th:nth-child(2),
+.results-table th:nth-child(3),
+.results-table td:nth-child(2),
+.results-table td:nth-child(3) { text-align: right; }
 .result-available { color: #16a34a; }
 .result-taken { color: #b91c1c; }
 .result-unknown { color: var(--muted); }
@@ -75,7 +79,7 @@
 .search-input-row { display: flex; gap: 8px; align-items: stretch; }
 .search-input-row input { flex: 1; }
 .search-results-block { margin-top: 0; }
-.search-history { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.search-history { padding-right: 4px; }
 .history-item { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 4px 0; margin-bottom: 6px; }
 .history-main { flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; text-align: left; font-size: 0.9rem; }
 .history-main:hover { background: color-mix(in oklab, var(--bg), white 12%); }
@@ -84,7 +88,7 @@
 .history-delete { margin-left: 6px; border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 4px; font-size: 0.9rem; line-height: 1; }
 .history-delete:hover { color: var(--text); }
 .chip-status-full { background: #dcfce7; color: #166534; }
-.chip-status-partial { background: #fbbf24; color: #ffffff; }
+.chip-status-partial { background: #f97316; color: #ffffff; }
 .chip-status-taken { background: #ef4444; color: #ffffff; }
 
 @media (max-width: 800px) {

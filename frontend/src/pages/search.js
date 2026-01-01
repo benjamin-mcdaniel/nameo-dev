@@ -355,6 +355,14 @@ function attachSearchLogic(root) {
       return
     }
 
+    // Reflect the active search in the URL so searches can be linked/bookmarked.
+    try {
+      const qs = `?name=${encodeURIComponent(trimmed)}`
+      window.location.hash = `#/search${qs}`
+    } catch {
+      // ignore URL errors
+    }
+
     setStatus('Checking availability…', 'info')
     resultsEl.innerHTML = ''
     suggestionsEl.innerHTML = ''
@@ -421,11 +429,28 @@ function attachSearchLogic(root) {
   // If the home page left a pending search value, pick it up and
   // execute it once when this page is first loaded.
   try {
-    const pending = localStorage.getItem('nameo_pending_search')
-    if (pending) {
-      localStorage.removeItem('nameo_pending_search')
-      input.value = pending
-      runSearch(pending)
+    // First, check if there's a name in the hash (e.g. #/search?name=foo).
+    const hash = window.location.hash || ''
+    let initial = ''
+    const qIndex = hash.indexOf('?')
+    if (hash.startsWith('#/search') && qIndex !== -1) {
+      const qs = hash.slice(qIndex + 1)
+      const params = new URLSearchParams(qs)
+      initial = params.get('name') || ''
+    }
+
+    // Fallback to a pending search from the home page if no hash param.
+    if (!initial) {
+      const pending = localStorage.getItem('nameo_pending_search')
+      if (pending) {
+        localStorage.removeItem('nameo_pending_search')
+        initial = pending
+      }
+    }
+
+    if (initial) {
+      input.value = initial
+      runSearch(initial)
     }
   } catch {
     // ignore storage errors

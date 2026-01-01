@@ -25,7 +25,8 @@ const routes = {
 
 function getPath() {
   const hash = window.location.hash || '#/'
-  const path = hash.slice(1)
+  const pathWithQuery = hash.slice(1)
+  const [path] = pathWithQuery.split('?')
   return path
 }
 
