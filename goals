@@ -8,6 +8,7 @@
   - Future: domains, app stores, trademarks, and other naming surfaces.
 - Provide guidance and suggestions so users can iterate on name ideas instead of hitting dead ends.
 - Over time, evolve from a “check a handle” tool into a real “naming companion” that helps brainstorm, validate, and plan an identity across the internet.
+ - Frame the product around the idea of an "Everywhere Identity": one place to understand where a brand or persona can realistically live across the modern internet.
 
 ## 2. Target Customers / Users
 - **Early-stage founders & small businesses**
@@ -35,12 +36,15 @@
   - For users, we only care about: can they have the name or not.
   - Internally, any non-404 (and not clearly "not available" text) is treated as "taken".
   - Special cases (e.g., "page isn’t available" messages) are normalized into clear "available" or "taken" states.
+  - Over time, evolve checks toward understanding suspended or zombie accounts without overpromising perfect accuracy.
 - **Privacy-respecting**
   - Only collect what we need to operate the product and improve quality.
   - Be explicit about what we store (searches, account info, etc.) and why.
+  - Explicitly commit to never front-run or sell search data (no registering domains/handles or selling query streams based on user searches).
 - **Transparent limitations**
   - Clearly show which platforms are live vs. "coming soon".
   - Status page for backend checks so users can see if something is broken.
+  - When a platform changes and our checks degrade, surface that clearly on the status page so users know when a result might be less reliable.
 
 ## 4. Data We Collect and Why
 - **Account data (via Auth0)**
@@ -87,6 +91,7 @@
 - Overall pricing philosophy:
   - Start simple and low-friction.
   - Only charge when there is clear added value beyond basic handle checks.
+  - Keep basic social handle checks ("Social Core") broadly accessible, and reserve deeper checks (domains, app stores, trademarks) for users with higher-stakes decisions (founders, agencies, etc.).
 
 ## 6. Product Experience Goals
 - **Simple, fast search**
@@ -101,6 +106,8 @@
   - Suggestions for nearby names when the first choice is taken.
   - Status page that uses a hidden test search (like `cocacola`) to validate checks.
   - Future: guided "flows" that help users move from idea -> shortlist -> final name.
+  - Move beyond just red/green status by offering intelligent iterations: variations (prefixes, suffixes, creative spellings) that preserve the feel of the original idea while increasing availability.
+  - Treat the search experience as a unified engine that can apply normalization per platform (underscores vs. dashes, length limits, etc.) behind the scenes.
 - **Cross-device continuity**
   - Logged-in users see the same recent searches on any device or browser.
   - Anonymous users have per-browser history for convenience only.
