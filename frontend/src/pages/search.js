@@ -48,7 +48,7 @@ export function Search() {
   const el = document.createElement('section')
   el.className = 'page search container'
   el.innerHTML = `
-    <h1 class="search-title">Search names across platforms</h1>
+    <h1 class="search-title">Name Search Console</h1>
     <div class="search-terms-banner" id="search-terms-banner">
       <span>Please read our <a href="#/terms">terms and conditions</a> before using the search.</span>
       <button type="button" class="banner-close" aria-label="Dismiss notice">&times;</button>
@@ -77,8 +77,13 @@ export function Search() {
       <aside class="search-side search-side-right">
         <h2>Recent Searches</h2>
         <div id="search-history" class="search-history"></div>
+
+        <h2>Favorites</h2>
+        <div id="search-favorites" class="search-favorites"></div>
       </aside>
     </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
   `
 
   attachSearchLogic(el)
@@ -96,9 +101,11 @@ function attachSearchLogic(root) {
   const favBtn = root.querySelector('#btn-favorite')
   const metaMessageEl = root.querySelector('#search-meta-message')
   const historyEl = root.querySelector('#search-history')
+  const favoritesEl = root.querySelector('#search-favorites')
+  const toastEl = root.querySelector('#toast')
   const form = root.querySelector('#search-form')
 
-  if (!input || !statusEl || !resultsEl || !suggestionsEl || !runBtn || !favBtn || !metaMessageEl || !historyEl || !form) return
+  if (!input || !statusEl || !resultsEl || !suggestionsEl || !runBtn || !favBtn || !metaMessageEl || !historyEl || !favoritesEl || !toastEl || !form) return
 
   if (termsBannerEl && termsBannerClose) {
     termsBannerClose.addEventListener('click', () => {
@@ -106,7 +113,83 @@ function attachSearchLogic(root) {
     })
   }
 
+  function loadFavorites() {
+    try {
+      const raw = localStorage.getItem('nameo_favorites')
+      const list = raw ? JSON.parse(raw) : []
+      return Array.isArray(list) ? list : []
+    } catch {
+      return []
+    }
+  }
+
+  function saveFavorites(list) {
+    try {
+      localStorage.setItem('nameo_favorites', JSON.stringify(list.slice(0, 50)))
+    } catch {
+      // ignore
+    }
+  }
+
+  async function renderFavorites() {
+    const list = loadFavorites()
+    if (!list.length) {
+      favoritesEl.innerHTML = '<p class="hint">No favorites yet.</p>'
+      return
+    }
+
+    favoritesEl.innerHTML = list
+      .map(
+        (name) => `
+          <div class="favorites-item" data-name="${name}">
+            <button class="favorites-main" type="button">
+              <span class="favorites-name">${name}</span>
+            </button>
+            <button class="favorites-delete" type="button" aria-label="Remove from favorites">&times;</button>
+          </div>
+        `
+      )
+      .join('')
+
+    favoritesEl.querySelectorAll('.favorites-item').forEach((row) => {
+      const name = row.getAttribute('data-name') || ''
+      const mainBtn = row.querySelector('.favorites-main')
+      const deleteBtn = row.querySelector('.favorites-delete')
+
+      if (mainBtn) {
+        mainBtn.addEventListener('click', () => {
+          input.value = name
+          runSearch(name)
+        })
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          const next = loadFavorites().filter((n) => n !== name)
+          saveFavorites(next)
+          renderFavorites()
+          showToast('Removed from favorites.')
+        })
+      }
+    })
+  }
+
   let currentController = null
+
+  let toastTimer = null
+  function showToast(message) {
+    toastEl.textContent = message || ''
+    if (!message) {
+      toastEl.classList.remove('toast-show')
+      return
+    }
+    toastEl.classList.add('toast-show')
+    if (toastTimer) clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => {
+      toastEl.classList.remove('toast-show')
+    }, 1800)
+  }
 
   function setStatus(message, type = '') {
     statusEl.textContent = message || ''
@@ -487,22 +570,25 @@ function attachSearchLogic(root) {
   favBtn.addEventListener('click', () => {
     const name = (input.value || '').trim()
     if (!name) {
-      metaMessageEl.textContent = 'Type a name first before adding to favorites.'
+      showToast('Type a name first before adding to favorites.')
       return
     }
     try {
-      const raw = localStorage.getItem('nameo_favorites')
-      const list = raw ? JSON.parse(raw) : []
-      if (!list.includes(name)) list.push(name)
-      localStorage.setItem('nameo_favorites', JSON.stringify(list))
-      metaMessageEl.textContent = 'Added to favorites.'
+      const list = loadFavorites()
+      if (!list.includes(name)) {
+        list.unshift(name)
+      }
+      saveFavorites(list)
+      renderFavorites()
+      showToast('Added to favorites.')
     } catch {
-      metaMessageEl.textContent = 'Could not save favorite.'
+      showToast('Could not save favorite.')
     }
   })
 
   migrateLocalHistoryToServer().finally(() => {
     renderHistory()
+    renderFavorites()
   })
 
   // If the home page left a pending search value, pick it up and

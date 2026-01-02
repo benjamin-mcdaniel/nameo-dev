@@ -6,10 +6,10 @@
   - Handles `/api/check`, `/api/suggestions`, `/api/search-history`, `/api/campaigns`, `/api/health`, etc.
   - Owns Auth + D1 database access.
   - Today it performs all platform checks itself using `config/services.json`.
-- **nameo-search-worker** (search orchestrator stub)
+- **nameo-search-worker** (search orchestrator)
   - Exposes `/health` and `/v1/search-basic`.
-  - Right now `/v1/search-basic` is a stub that returns an empty `results` list.
-  - In the future it will own "heavier" and more custom search logic; `nameo-worker` will call it via the `SEARCH_ORCHESTRATOR` binding.
+  - Executes `url_status` checks from `config/services.json` and returns a normalized `results` list.
+  - In the future it will own "heavier" and more custom search logic; `nameo-worker` can call it via the `SEARCH_ORCHESTRATOR` binding.
 
 ## How Facebook and Instagram checks work (today)
 

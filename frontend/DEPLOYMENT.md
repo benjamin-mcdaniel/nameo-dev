@@ -29,12 +29,9 @@ This document describes how to deploy the static frontend in `frontend/` to Clou
      - Use `nameo.dev` as the primary app domain. No separate portal is required for MVP.
 
 ## Option B — GitHub Action (automated)
-We include a workflow at `.github/workflows/cf-pages.yml`. To enable it:
-- Add GitHub repository secrets:
-  - `CF_API_TOKEN` (Pages write token)
-  - `CF_ACCOUNT_ID`
-  - `CF_PAGES_PROJECT` (e.g., `nameo-frontend`)
-- Push to `main` to publish to production; PRs/branches publish to previews.
+This repo does not include a GitHub Actions workflow for Pages deployment.
+
+Cloudflare Pages deploys automatically via its Git integration (recommended).
 
 ## Routing
 - Hash-based router avoids special server config. A SPA fallback is still provided by `public/_redirects`.

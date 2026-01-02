@@ -48,12 +48,6 @@ Hash-based routes:
 - `#/privacy`
 - `#/terms`
 
-## Portal links
-- Portal: https://portal.nameo.dev
-- Login: https://portal.nameo.dev/login
-- Tickets: https://portal.nameo.dev/support/tickets
-- Support: support@nameo.dev
-
 ## Notes
 - Add your Cloudflare Web Analytics token in `index.html` if desired.
 - Replace favicon and social images in `public/`.

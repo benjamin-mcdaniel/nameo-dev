@@ -1,5 +1,5 @@
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url)
 
     if (url.pathname === '/health') {
@@ -7,6 +7,15 @@ export default {
     }
 
     if (url.pathname === '/v1/search-basic' && request.method === 'POST') {
+      const expectedToken = (env && env.ORCHESTRATOR_TOKEN) || ''
+      if (expectedToken) {
+        const auth = request.headers.get('Authorization') || ''
+        const [scheme, token] = auth.split(' ')
+        if (scheme !== 'Bearer' || token !== expectedToken) {
+          return json({ error: 'unauthorized' }, 401)
+        }
+      }
+
       const body = await request.json().catch(() => ({}))
       const name = (body.name || '').trim()
       if (!name) {
