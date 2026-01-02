@@ -4,72 +4,95 @@ export function Home() {
   const el = document.createElement('section')
   el.className = 'page home'
   el.innerHTML = `
-    <section class="hero">
-      <div class="container hero-inner">
-        <div class="hero-copy">
-          <h1>Name your product in minutes.</h1>
-          <p class="sub">Type a name once and see where its free across the internet from socials to creator platforms. Built for startups, solo makers, small businesses, and streamers.</p>
-          <div class="actions">
-            <a class="btn btn-primary" href="#checker">Answer one question</a>
-            <a class="btn" href="#/use-case">See how people use it</a>
+    <section class="hero home-hero">
+      <div class="container hero-inner home-hero-inner">
+        <div class="home-hero-copy">
+          <div class="home-hero-eyebrow">Nameo.dev • Everywhere identity</div>
+          <h1>Find a name you can actually use.</h1>
+          <p class="sub">Check availability across the internet in one place - from social handles to creator platforms. Built for founders, makers, and creators.</p>
+          <div class="actions home-hero-actions">
+            <a class="btn btn-primary" href="#/search">Start searching</a>
+            <a class="btn" href="#/pricing">Pricing</a>
+          </div>
+          <div class="home-hero-footnote">Best-effort signals. Always verify on the platform before you commit.</div>
+        </div>
+
+        <div class="home-hero-panel">
+          <div class="home-hero-panel-title">What you get</div>
+          <div class="home-hero-panel-grid">
+            <div class="home-hero-panel-item">
+              <div class="home-hero-panel-kicker">Fast</div>
+              <div>One input, many checks.</div>
+            </div>
+            <div class="home-hero-panel-item">
+              <div class="home-hero-panel-kicker">Clear</div>
+              <div>Simple available/taken signals.</div>
+            </div>
+            <div class="home-hero-panel-item">
+              <div class="home-hero-panel-kicker">Guided</div>
+              <div>Suggestions to keep you moving.</div>
+            </div>
+            <div class="home-hero-panel-item">
+              <div class="home-hero-panel-kicker">Built to grow</div>
+              <div>Advanced workflows and reports.</div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="home-main" id="checker">
-      <div class="container checker-grid">
-        <div class="card card-primary">
-          <h2>Are you naming something with basic search?</h2>
-          <p class="hint">Basic search is for quick handle checks (beta/basic). Advanced workflows are for startups and teams that need a unified identity plan.</p>
-          <div class="actions-inline" style="margin-top: 10px;">
-            <a class="btn btn-primary" href="#/search">Yes — take me to basic search</a>
-            <a class="btn" href="#/advanced">No — I need an advanced workflow</a>
+    <section class="home-main">
+      <div class="container">
+        <div class="home-highlights">
+          <div class="home-highlights-header">
+            <h2>Built for real naming decisions</h2>
+            <p class="hint">A modern brand needs a domain and consistent handles. Nameo is designed around that reality.</p>
           </div>
 
-          <h3 style="margin-top: 18px;">Or just start with a name</h3>
-          <form id="home-search-form" class="home-search-row">
-            <input id="home-search-input" type="text" autocomplete="off" placeholder="Try mybrand, studio, or your stream handle" />
-            <button id="home-search-submit" class="btn btn-primary" type="submit">Check availability</button>
-          </form>
-          <ul class="bullet-list">
-            <li><strong>One search, many answers.</strong> See if your name is taken on major platforms without opening a dozen tabs.</li>
-            <li><strong>Keep track of the good ones.</strong> Use history and suggestions to remember which ideas felt right.</li>
-          </ul>
-        </div>
+          <div class="home-highlights-grid">
+            <div class="home-highlight-card">
+              <h3>Social core checks</h3>
+              <p class="hint">Quick visibility across the common platforms that define your presence.</p>
+              <div class="actions-inline">
+                <a class="btn btn-primary" href="#/search">Run a search</a>
+              </div>
+            </div>
+            <div class="home-highlight-card">
+              <h3>Shortlist without losing ideas</h3>
+              <p class="hint">History, favorites, and a workflow that keeps momentum while you explore options.</p>
+              <div class="actions-inline">
+                <a class="btn" href="#/use-case">See use cases</a>
+              </div>
+            </div>
+            <div class="home-highlight-card">
+              <h3>Advanced workflows</h3>
+              <p class="hint">For startups and teams: compare candidates, see handle variations, and generate a report.</p>
+              <div class="actions-inline">
+                <a class="btn" href="#/advanced">Try advanced</a>
+              </div>
+            </div>
+          </div>
 
-        <div class="card card-secondary">
-          <h2>Features today and whats coming next</h2>
-          <ul class="bullet-list">
-            <li><strong>Today.</strong> One search to check common platforms like X, Instagram, YouTube, GitHub and more.</li>
-            <li><strong>Today.</strong> Simple results, basic suggestions, and light history so you can keep moving.</li>
-            <li><strong>Coming soon.</strong> Guided search flows that help you ask better questions about your name.</li>
-            <li><strong>Later.</strong> Deeper domain, app store, and trademark-style checks for bigger launches and rebrands.</li>
-          </ul>
+          <div class="home-roadmap">
+            <div class="home-roadmap-title">Coming soon</div>
+            <div class="home-roadmap-grid">
+              <div class="home-roadmap-item">
+                <div class="home-roadmap-kicker">Guided flows</div>
+                <div class="hint">Step-by-step naming help that turns a rough idea into a shortlist.</div>
+              </div>
+              <div class="home-roadmap-item">
+                <div class="home-roadmap-kicker">Domains + app stores</div>
+                <div class="hint">Deeper checks for launches where the stakes are higher.</div>
+              </div>
+              <div class="home-roadmap-item">
+                <div class="home-roadmap-kicker">Shareable reports</div>
+                <div class="hint">Clean summaries you can send to co-founders or clients.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   `
-  attachLogic(el)
   return el
-}
-
-function attachLogic(root) {
-  const form = root.querySelector('#home-search-form')
-  const input = root.querySelector('#home-search-input')
-
-  if (!form || !input) return
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault()
-    const value = (input.value || '').trim()
-    if (value) {
-      try {
-        localStorage.setItem('nameo_pending_search', value)
-      } catch {
-        // ignore storage errors; user will still land on Search page
-      }
-    }
-    window.location.hash = '#/search'
-  })
 }
