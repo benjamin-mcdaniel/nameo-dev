@@ -11,7 +11,7 @@ export function Home() {
           <p class="sub">Type a name once and see where its free across the internet from socials to creator platforms. Built for startups, solo makers, small businesses, and streamers.</p>
           <div class="actions">
             <a class="btn btn-primary" href="#checker">Answer one question</a>
-            <a class="btn" href="#/features">See whats included</a>
+            <a class="btn" href="#/use-case">See how people use it</a>
           </div>
         </div>
       </div>

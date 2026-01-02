@@ -5,7 +5,7 @@ export function Footer() {
     <div class="container">
       <div class="left"> ${new Date().getFullYear()} nameo.dev</div>
       <div class="right">
-        <a href="#/features">Features</a>
+        <a href="#/use-case">Use Case</a>
         <a> - </a>
         <a href="#/status">Status</a>
       </div>

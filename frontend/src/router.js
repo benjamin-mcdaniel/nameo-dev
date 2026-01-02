@@ -21,6 +21,7 @@ const routes = {
   '/help': Help,
   '/login': Login,
   '/pricing': Pricing,
+  '/use-case': Features,
   '/features': Features,
   '/status': Status,
   '/privacy': Privacy,

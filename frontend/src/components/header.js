@@ -11,6 +11,7 @@ export function Header() {
   nav.className = 'site-nav'
   nav.innerHTML = `
     <a href="#/search" class="nav-search-primary">Search</a>
+    <a href="#/use-case">Use Case</a>
     <a href="#/pricing">Pricing</a>
     <a href="#/help">Help</a>
   `
