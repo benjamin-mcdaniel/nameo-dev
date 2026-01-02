@@ -10,7 +10,7 @@ export function Home() {
           <h1>Name your product in minutes.</h1>
           <p class="sub">Type a name once and see where its free across the internet from socials to creator platforms. Built for startups, solo makers, small businesses, and streamers.</p>
           <div class="actions">
-            <a class="btn btn-primary" href="#/search">Start a search</a>
+            <a class="btn btn-primary" href="#checker">Answer one question</a>
             <a class="btn" href="#/features">See whats included</a>
           </div>
         </div>
@@ -20,7 +20,14 @@ export function Home() {
     <section class="home-main" id="checker">
       <div class="container checker-grid">
         <div class="card card-primary">
-          <h2>Ask all your questions about a name.</h2>
+          <h2>Are you naming something with basic search?</h2>
+          <p class="hint">Basic search is for quick handle checks (beta/basic). Advanced workflows are for startups and teams that need a unified identity plan.</p>
+          <div class="actions-inline" style="margin-top: 10px;">
+            <a class="btn btn-primary" href="#/search">Yes — take me to basic search</a>
+            <a class="btn" href="#/advanced">No — I need an advanced workflow</a>
+          </div>
+
+          <h3 style="margin-top: 18px;">Or just start with a name</h3>
           <form id="home-search-form" class="home-search-row">
             <input id="home-search-input" type="text" autocomplete="off" placeholder="Try mybrand, studio, or your stream handle" />
             <button id="home-search-submit" class="btn btn-primary" type="submit">Check availability</button>

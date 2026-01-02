@@ -10,10 +10,14 @@ import { NotFound } from './pages/notfound.js'
 import { Test } from './pages/test.js'
 import { Campaigns } from './pages/campaigns.js'
 import { Search } from './pages/search.js'
+import { Advanced } from './pages/advanced.js'
+import { AdvancedReport } from './pages/advanced_report.js'
 
 const routes = {
   '/': Home,
   '/search': Search,
+  '/advanced': Advanced,
+  '/advanced-report': AdvancedReport,
   '/help': Help,
   '/login': Login,
   '/pricing': Pricing,

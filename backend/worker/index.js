@@ -74,6 +74,16 @@ export default {
         return handleDeleteSearchHistory(url, env, user.id)
       }
 
+      if (url.pathname === '/api/advanced-reports' && request.method === 'POST') {
+        return handleCreateAdvancedReport(request, env, user.id)
+      }
+
+      const advancedReportMatch = url.pathname.match(/^\/api\/advanced-reports\/([^/]+)$/)
+      if (advancedReportMatch && request.method === 'GET') {
+        const reportId = advancedReportMatch[1]
+        return handleGetAdvancedReport(env, user.id, reportId)
+      }
+
       const campaignOptionsMatch = url.pathname.match(/^\/api\/campaigns\/([^/]+)\/options$/)
       if (campaignOptionsMatch && request.method === 'POST') {
         const campaignId = campaignOptionsMatch[1]
@@ -499,6 +509,70 @@ async function handleDeleteAccount(env, userId) {
     .run()
 
   return json({ status: 'deleted' })
+}
+
+async function handleCreateAdvancedReport(request, env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  let body = {}
+  try {
+    body = await request.json()
+  } catch {
+    return json({ error: 'invalid_json' }, 400)
+  }
+
+  const id = crypto.randomUUID()
+  const now = Math.floor(Date.now() / 1000)
+  const report = {
+    id,
+    project_type: (body.project_type || '').trim(),
+    description: (body.description || '').trim(),
+    seed: (body.seed || '').trim(),
+    surfaces: body.surfaces && typeof body.surfaces === 'object' ? body.surfaces : {},
+    status: 'stub',
+    created_at: now,
+    updated_at: now,
+  }
+
+  await db
+    .prepare('INSERT INTO advanced_reports (id, user_id, report_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
+    .bind(id, userId, JSON.stringify(report), now, now)
+    .run()
+
+  return json({ id, created_at: now }, 201)
+}
+
+async function handleGetAdvancedReport(env, userId, reportId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  const id = (reportId || '').trim()
+  if (!id) {
+    return json({ error: 'id_required' }, 400)
+  }
+
+  const row = await db
+    .prepare('SELECT id, report_json, created_at, updated_at FROM advanced_reports WHERE id = ? AND user_id = ?')
+    .bind(id, userId)
+    .first()
+
+  if (!row) {
+    return json({ error: 'not_found' }, 404)
+  }
+
+  let report = null
+  try {
+    report = JSON.parse(row.report_json || 'null')
+  } catch {
+    report = null
+  }
+
+  return json({ report: report || { id: row.id } })
 }
 
 async function handleListSearchHistory(env, userId) {

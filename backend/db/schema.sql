@@ -31,9 +31,18 @@ CREATE TABLE IF NOT EXISTS option_checks (
   services_json TEXT NOT NULL       -- JSON blob of service results from /api/check
 );
 
+CREATE TABLE IF NOT EXISTS advanced_reports (
+  id TEXT PRIMARY KEY,              -- UUID
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  report_json TEXT NOT NULL,        -- JSON blob of report inputs + (future) computed outputs
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_campaigns_user ON campaigns(user_id);
 CREATE INDEX IF NOT EXISTS idx_options_campaign ON options(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_checks_option ON option_checks(option_id, checked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_advanced_reports_user ON advanced_reports(user_id, created_at DESC);
 
 -- Per-user search history for the main Search page.
 CREATE TABLE IF NOT EXISTS search_history (
