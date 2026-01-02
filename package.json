@@ -1,0 +1,9 @@
+{
+  "name": "nameo-dev",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "jose": "^5.9.6",
+    "leo-profanity": "^1.7.0"
+  }
+}

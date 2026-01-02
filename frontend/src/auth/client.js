@@ -11,6 +11,7 @@ async function getClient() {
       clientId: authConfig.clientId,
       authorizationParams: {
         audience: authConfig.audience,
+        scope: 'openid profile email offline_access',
         redirect_uri: authConfig.redirectUri,
       },
       cacheLocation: 'localstorage',
@@ -37,7 +38,7 @@ export async function getAccessToken() {
   if (!client) return null
   try {
     const token = await client.getTokenSilently({
-      authorizationParams: { audience: authConfig.audience },
+      authorizationParams: { audience: authConfig.audience, scope: 'openid profile email offline_access' },
     })
     return token
   } catch (err) {
