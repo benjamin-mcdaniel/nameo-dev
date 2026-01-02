@@ -177,6 +177,20 @@ function attachSearchLogic(root) {
 
   let currentController = null
 
+  function debugEnabled() {
+    try {
+      return localStorage.getItem('nameo_debug') === '1'
+    } catch {
+      return false
+    }
+  }
+
+  function debugLog(...args) {
+    if (!debugEnabled()) return
+    // eslint-disable-next-line no-console
+    console.log('[nameo/search]', ...args)
+  }
+
   let toastTimer = null
   function showToast(message) {
     toastEl.textContent = message || ''
@@ -219,8 +233,21 @@ function attachSearchLogic(root) {
       // ignore; will fall back to local-only behavior
     }
 
-    const res = await fetch(path, { ...options, headers })
+    let url = path
+    try {
+      url = new URL(path, API_BASE).toString()
+    } catch {
+      url = path
+    }
+
+    debugLog('apiFetchWithAuth', { method: options.method || 'GET', url })
+
+    const res = await fetch(url, { ...options, headers })
     const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      debugLog('apiFetchWithAuth failed', { status: res.status, url, data })
+    }
     return { ok: res.ok, status: res.status, data }
   }
 
@@ -246,6 +273,7 @@ function attachSearchLogic(root) {
             ts: (item.searched_at || 0) * 1000,
           }))
         }
+        debugLog('loadHistory server response not usable', resp)
       } catch {
         // fall through to empty list for logged-in users
       }
