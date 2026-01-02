@@ -2,45 +2,77 @@ export function Pricing() {
   const el = document.createElement('section')
   el.className = 'page pricing container'
   el.innerHTML = `
-    <h1>Pricing</h1>
-    <p class="sub">nameo.dev is in beta. Right now everything is effectively free while we learn. Long term, we expect features to split into Free, Basic, and Advanced tiers like this (subject to change).</p>
+    <div class="pricing-hero">
+      <h1>Pricing</h1>
+      <p class="sub">We are in beta. Pricing will evolve, but the structure below shows where the product is heading. Basic stays accessible; advanced features fund deeper checks and reporting.</p>
+      <div class="pricing-hero-actions">
+        <a class="btn btn-primary" href="#/search">Start with basic search</a>
+        <a class="btn" href="#/advanced">Try advanced workflow</a>
+      </div>
+    </div>
 
-    <div class="plans">
-      <div class="plan">
+    <div class="pricing-grid">
+      <div class="pricing-card">
         <h3>Free (beta)</h3>
-        <p class="price">For anyone trying out simple checks</p>
-        <ul>
-          <li>Up to 25 searches per day during beta</li>
-          <li>Basic taken / not taken style results across a core set of common platforms (X, Instagram, Facebook, YouTube, LinkedIn)</li>
-          <li>Single stream of local history and favorites in your browser</li>
+        <div class="pricing-price">
+          <div class="pricing-price-amount">$0</div>
+          <div class="pricing-price-note">during beta</div>
+        </div>
+        <p class="hint">For anyone trying out quick name checks.</p>
+        <ul class="pricing-list">
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Up to 25 searches per day during beta</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Core platform checks (social availability signals)</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Local history + favorites in your browser</span></li>
         </ul>
-        <p class="price">Today, all users are effectively on this tier while we iterate and expand the list of platforms.</p>
+        <div class="pricing-cta">
+          <a class="btn btn-primary" href="#/search">Use free search</a>
+          <div class="hint">Best for quick exploration.</div>
+        </div>
       </div>
 
-      <div class="plan">
+      <div class="pricing-card recommended">
+        <div class="pricing-badge">Recommended</div>
         <h3>Basic</h3>
-        <p class="price">For solo builders and side projects</p>
-        <ul>
-          <li>Up to 500 searches per day</li>
-          <li>Taken / not taken plus an estimate of how long a handle has been in use where possible (future)</li>
-          <li>Gentle guidance when a name looks crowded so you can adjust or pick an adjacent option</li>
-          <li>Access to common platforms plus a growing set of niche and community destinations as we add them</li>
+        <div class="pricing-price">
+          <div class="pricing-price-amount">$9</div>
+          <div class="pricing-price-note">/ month (planned)</div>
+        </div>
+        <p class="hint">For solo builders who want higher limits and better guidance.</p>
+        <ul class="pricing-list">
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Higher daily search limits</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Broader platform coverage as we add more destinations</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Smarter suggestions when a name is crowded (planned)</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Synced search history when logged in</span></li>
         </ul>
-        <p class="price">Intended for individuals who want a bit more signal without full reports.</p>
+        <div class="pricing-cta">
+          <a class="btn btn-primary" href="#/search">Start building a shortlist</a>
+          <div class="hint">Most users will start here after beta.</div>
+        </div>
       </div>
 
-      <div class="plan">
+      <div class="pricing-card">
         <h3>Advanced</h3>
-        <p class="price">For startups, brand teams, and deeper research</p>
-        <ul>
-          <li>Unlimited searches (within reasonable fair use)</li>
-          <li>Richer context on taken names, including age and basic saturation patterns where we can infer them (planned)</li>
-          <li>Suggestions for adjacent names and new word combinations to help avoid collisions</li>
-          <li>Exportable reports per name or per campaign that summarize options for teams and clients (idea stage)</li>
-          <li>Full access to common, niche, and advanced-search areas such as domains, app stores, and basic trademark checks as those features come online</li>
+        <div class="pricing-price">
+          <div class="pricing-price-amount">$29</div>
+          <div class="pricing-price-note">/ month (planned)</div>
+        </div>
+        <p class="hint">For startups, agencies, and launches that need a unified identity report.</p>
+        <ul class="pricing-list">
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Advanced workflow reports per naming campaign</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Domain + app store + trademark-style signals (as they come online)</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Handle-variation recommendations (official/real/app/platform)</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Exportable/shareable reports for teams and clients (planned)</span></li>
         </ul>
-        <p class="price">This is where more of the "help a business find a stable, distinct identity" features will land.</p>
+        <div class="pricing-cta">
+          <a class="btn btn-primary" href="#/advanced">Create an advanced report</a>
+          <div class="hint">Best for higher-stakes naming decisions.</div>
+        </div>
       </div>
+    </div>
+
+    <div class="pricing-fineprint">
+      Pricing and limits are placeholders while the product is in beta.
+      If you need something specific for a launch, email <a href="mailto:support@nameo.dev">support@nameo.dev</a>.
     </div>
   `
   return el

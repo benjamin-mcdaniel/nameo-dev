@@ -1,16 +1,16 @@
 :root {
-  --bg: #020617;
-  --text: #e5e7eb;
-  --muted: #9ca3af;
-  --primary: #9146ff;
-  --border: #1f2937;
-  --heading: #9146ff;
+  --bg: #0b0f14;
+  --text: #e7eef7;
+  --muted: #98a2b3;
+  --primary: #3ecf8e;
+  --border: #1f2a37;
+  --heading: #e7eef7;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #0b1120 0, var(--bg) 45%);
+  background: radial-gradient(circle at top, #111827 0, var(--bg) 55%);
   color: var(--text);
   font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
 }
@@ -29,16 +29,16 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--border);
   border-radius: 10px;
   color: #ffffff;
-  background: var(--heading);
+  background: color-mix(in oklab, var(--bg), white 10%);
   font-size: 0.95rem;
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 .btn-primary {
-  background: #7c3aed; /* slightly deeper purple than heading */
-  color: #ffffff;
-  border-color: #ffffff;
-  box-shadow: 0 0 0 1px #7c3aed;
+  background: var(--primary);
+  color: #062315;
+  border-color: color-mix(in oklab, var(--primary), white 30%);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary), transparent 40%);
 }
 .btn:hover {
   transform: translateY(-1px);
