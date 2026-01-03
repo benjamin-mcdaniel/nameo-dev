@@ -6,7 +6,13 @@
 .brand-text { letter-spacing: 0.03em; color: var(--text); }
 .site-nav { display: flex; align-items: center; gap: 16px; }
 .site-nav a { margin-left: 0; color: var(--text); }
+.site-nav a, .site-nav a:visited { color: var(--text); -webkit-tap-highlight-color: transparent; }
+.site-nav a:hover { text-decoration: none; color: #ffffff; }
+.site-nav a:active { text-decoration: none; color: #ffffff; }
+.site-nav a:focus-visible { outline: 2px solid color-mix(in oklab, var(--primary), white 25%); outline-offset: 3px; border-radius: 999px; }
 .site-nav a.nav-search-primary { color: var(--primary); font-weight: 650; padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--primary), transparent 55%); background: color-mix(in oklab, var(--bg), var(--primary) 10%); }
+.site-nav a.nav-search-primary:hover { color: var(--primary); background: color-mix(in oklab, var(--bg), var(--primary) 14%); }
+.site-nav a.nav-search-primary:active { color: var(--primary); background: color-mix(in oklab, var(--bg), var(--primary) 12%); }
 .user-slot { margin-left: 16px; display: flex; align-items: center; }
 .user-menu { position: relative; }
 .user-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: color-mix(in oklab, var(--bg), white 8%); color: var(--text); cursor: pointer; font-size: 0.9rem; }
