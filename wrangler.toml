@@ -3,7 +3,7 @@ main = "backend/worker/index.js"
 compatibility_date = "2024-01-01"
 
 [vars]
-AUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqAUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
 AUTH0_AUDIENCE = "https://nameo-api"
 ORCHESTRATOR_URL = "https://nameo-search-worker.benjamin-f-mcdaniel.workers.dev"
 # ORCHESTRATOR_TOKEN is a secret and must be set via Wrangler/Cloudflare dashboard (do not commit it here)
