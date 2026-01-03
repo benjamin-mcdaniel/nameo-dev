@@ -14,7 +14,6 @@ export function Home() {
             <a class="btn btn-primary" href="#/search">Start searching</a>
             <a class="btn" href="#/pricing">Pricing</a>
           </div>
-          <div class="home-hero-footnote">Best-effort signals. Always verify on the platform before you commit.</div>
         </div>
 
         <div class="home-hero-panel">
