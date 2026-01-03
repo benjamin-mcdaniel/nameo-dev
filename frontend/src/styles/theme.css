@@ -29,7 +29,7 @@
 .user-menu-item:hover { background: color-mix(in oklab, var(--bg), white 12%); }
 .hero { padding: 0 0 40px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; background: var(--bg); isolation: isolate; }
 .hero::before { content: ''; position: absolute; inset: 0; background-image:
-  radial-gradient(900px circle at 20% 15%, color-mix(in oklab, var(--primary), transparent 60%) 0%, transparent 55%),
+  radial-gradient(900px circle at 20% 15%, rgba(62, 207, 142, 0.28) 0%, transparent 55%),
   radial-gradient(700px circle at 78% 28%, rgba(56, 189, 248, 0.12) 0%, transparent 55%),
   radial-gradient(900px circle at 50% 120%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
   linear-gradient(180deg, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0.75) 55%, rgba(2, 6, 23, 1) 100%);
