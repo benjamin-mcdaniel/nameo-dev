@@ -163,7 +163,7 @@ function attachLogic(root) {
             <tr>
               <th style="width: 56px;">#</th>
               <th>Candidate</th>
-              <th style="width: 120px;"> </th>
+              <th class="adv-details-col">Details</th>
             </tr>
           </thead>
           <tbody>

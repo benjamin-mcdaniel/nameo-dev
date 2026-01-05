@@ -154,7 +154,8 @@
 .chip-status-partial { background: #f97316; color: #ffffff; }
 .chip-status-taken { background: #ef4444; color: #ffffff; }
 
-.page.advanced-report .adv-table-wrap { overflow-x: auto; }
+.page.advanced-report .adv-table-wrap { overflow-x: auto; padding-right: 10px; }
+.page.advanced-report .adv-candidates-table { width: 100%; table-layout: fixed; }
 .page.advanced-report .adv-candidates-table th,
 .page.advanced-report .adv-candidates-table td { vertical-align: top; }
 .page.advanced-report .adv-rank { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -165,6 +166,8 @@
 .page.advanced-report .adv-status-full { color: #16a34a; }
 .page.advanced-report .adv-status-partial { color: #f97316; }
 .page.advanced-report .adv-status-taken { color: #ef4444; }
+.page.advanced-report .adv-details-col { width: 110px; text-align: left; }
+.page.advanced-report .adv-details { text-align: left; padding-left: 10px; white-space: nowrap; }
 .page.advanced-report .adv-details details > summary { cursor: pointer; color: var(--primary); list-style: none; }
 .page.advanced-report .adv-details details > summary::-webkit-details-marker { display: none; }
 .page.advanced-report .adv-breakdown { margin-top: 8px; }
