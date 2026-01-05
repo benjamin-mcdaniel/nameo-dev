@@ -74,6 +74,10 @@ export default {
         return handleDeleteSearchHistory(url, env, user.id)
       }
 
+      if (url.pathname === '/api/advanced-reports' && request.method === 'GET') {
+        return handleListAdvancedReports(url, env, user.id)
+      }
+
       if (url.pathname === '/api/advanced-reports' && request.method === 'POST') {
         return handleCreateAdvancedReport(request, env, user.id)
       }
@@ -509,6 +513,40 @@ async function handleDeleteAccount(env, userId) {
     .run()
 
   return json({ status: 'deleted' })
+}
+
+async function handleListAdvancedReports(url, env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) {
+    return json({ error: 'db_not_configured' }, 500)
+  }
+
+  const rawLimit = Number(url.searchParams.get('limit') || 25)
+  const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(50, rawLimit)) : 25
+
+  const result = await db
+    .prepare(
+      'SELECT id, report_json, created_at, updated_at FROM advanced_reports WHERE user_id = ? ORDER BY created_at DESC LIMIT ?'
+    )
+    .bind(userId, limit)
+    .all()
+
+  const items = (result.results || []).map((row) => {
+    let report = null
+    try {
+      report = JSON.parse(row.report_json || 'null')
+    } catch {
+      report = null
+    }
+    return {
+      id: row.id,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      report: report || { id: row.id },
+    }
+  })
+
+  return json({ items })
 }
 
 async function handleCreateAdvancedReport(request, env, userId) {
