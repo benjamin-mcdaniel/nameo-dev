@@ -155,11 +155,15 @@
 .chip-status-taken { background: #ef4444; color: #ffffff; }
 
 .page.advanced-report .adv-table-wrap { overflow-x: auto; padding-right: 10px; }
-.page.advanced-report .adv-candidates-table { width: 100%; table-layout: fixed; }
+.page.advanced-report .adv-candidates-table { width: 100%; table-layout: auto; }
 .page.advanced-report .adv-candidates-table th,
 .page.advanced-report .adv-candidates-table td { vertical-align: top; }
-.page.advanced-report .adv-candidates-table tbody tr { cursor: pointer; }
-.page.advanced-report .adv-candidates-table tbody tr:hover { background: color-mix(in oklab, var(--bg), white 6%); }
+.page.advanced-report .adv-candidates-table tbody tr.adv-row { cursor: pointer; }
+.page.advanced-report .adv-candidates-table tbody tr.adv-row:hover { background: color-mix(in oklab, var(--bg), white 6%); }
+.page.advanced-report .adv-candidates-table th:nth-child(2),
+.page.advanced-report .adv-candidates-table th:nth-child(3),
+.page.advanced-report .adv-candidates-table td:nth-child(2),
+.page.advanced-report .adv-candidates-table td:nth-child(3) { text-align: left; }
 .page.advanced-report .adv-rank { color: var(--muted); font-variant-numeric: tabular-nums; }
 .page.advanced-report .adv-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 10px; row-gap: 2px; align-items: baseline; }
 .page.advanced-report .adv-name-text { font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -168,10 +172,12 @@
 .page.advanced-report .adv-status-full { color: #16a34a; }
 .page.advanced-report .adv-status-partial { color: #f97316; }
 .page.advanced-report .adv-status-taken { color: #ef4444; }
-.page.advanced-report .adv-details-col { width: 110px; text-align: left; }
+.page.advanced-report .adv-details-col { width: 92px; text-align: left; }
 .page.advanced-report .adv-details { text-align: left; padding-left: 10px; white-space: nowrap; }
-.page.advanced-report .adv-details details > summary { cursor: pointer; color: var(--primary); list-style: none; }
-.page.advanced-report .adv-details details > summary::-webkit-details-marker { display: none; }
+.page.advanced-report .adv-view { border: 0; background: transparent; color: var(--primary); cursor: pointer; padding: 2px 0; font: inherit; }
+.page.advanced-report .adv-view:hover { text-decoration: underline; }
+.page.advanced-report .adv-row-open { background: color-mix(in oklab, var(--bg), white 4%); }
+.page.advanced-report .adv-row-details > td { padding-top: 0; padding-bottom: 10px; }
 .page.advanced-report .adv-breakdown { margin-top: 8px; }
 .page.advanced-report .adv-breakdown th,
 .page.advanced-report .adv-breakdown td { font-size: 0.85rem; padding: 5px 8px; }

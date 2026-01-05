@@ -136,18 +136,18 @@ function attachLogic(root) {
                 <span class="adv-availability">${escapeHtml(ratioText)}</span>
               </div>
             </td>
-            <td class="adv-details">
-              <details>
-                <summary>View</summary>
-                <table class="results-table adv-breakdown">
-                  <thead>
-                    <tr><th>Service</th><th>Status</th></tr>
-                  </thead>
-                  <tbody>
-                    ${serviceRows || '<tr><td colspan="2" class="hint">No results.</td></tr>'}
-                  </tbody>
-                </table>
-              </details>
+            <td class="adv-details"><button type="button" class="adv-view">View</button></td>
+          </tr>
+          <tr class="adv-row-details" hidden>
+            <td colspan="3">
+              <table class="results-table adv-breakdown">
+                <thead>
+                  <tr><th>Service</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  ${serviceRows || '<tr><td colspan="2" class="hint">No results.</td></tr>'}
+                </tbody>
+              </table>
             </td>
           </tr>
         `
@@ -181,13 +181,12 @@ function attachLogic(root) {
         const row = target && target.closest ? target.closest('tr.adv-row') : null
         if (!row) return
 
-        const details = row.querySelector('details')
-        if (!details) return
+        const detailsRow = row.nextElementSibling
+        if (!detailsRow || !detailsRow.classList.contains('adv-row-details')) return
 
-        // If the user clicked inside the details content (but not on the summary), don't toggle.
-        if (target.closest && target.closest('details') && !target.closest('summary')) return
-
-        details.open = !details.open
+        const open = !detailsRow.hidden
+        detailsRow.hidden = open
+        row.classList.toggle('adv-row-open', !open)
       })
     }
   }
