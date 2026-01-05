@@ -154,6 +154,23 @@
 .chip-status-partial { background: #f97316; color: #ffffff; }
 .chip-status-taken { background: #ef4444; color: #ffffff; }
 
+.page.advanced-report .adv-table-wrap { overflow-x: auto; }
+.page.advanced-report .adv-candidates-table th,
+.page.advanced-report .adv-candidates-table td { vertical-align: top; }
+.page.advanced-report .adv-rank { color: var(--muted); font-variant-numeric: tabular-nums; }
+.page.advanced-report .adv-name-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.page.advanced-report .adv-name-text { font-weight: 700; color: var(--text); }
+.page.advanced-report .adv-availability { color: var(--muted); font-variant-numeric: tabular-nums; }
+.page.advanced-report .adv-status { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.85rem; }
+.page.advanced-report .adv-status-full { color: #16a34a; }
+.page.advanced-report .adv-status-partial { color: #f97316; }
+.page.advanced-report .adv-status-taken { color: #ef4444; }
+.page.advanced-report .adv-details details > summary { cursor: pointer; color: var(--primary); list-style: none; }
+.page.advanced-report .adv-details details > summary::-webkit-details-marker { display: none; }
+.page.advanced-report .adv-breakdown { margin-top: 8px; }
+.page.advanced-report .adv-breakdown th,
+.page.advanced-report .adv-breakdown td { font-size: 0.85rem; padding: 5px 8px; }
+
 .search-favorites { padding-right: 4px; margin-top: 8px; }
 .favorites-item { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 4px 0; margin-bottom: 6px; }
 .favorites-main { flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; text-align: left; font-size: 0.9rem; }

@@ -12,17 +12,37 @@ export function Advanced() {
       <form id="advanced-form" class="stack">
         <label>
           <div><strong>Seed word or phrase</strong></div>
-          <input id="adv-seed" type="text" autocomplete="off" placeholder="e.g. iron" />
-          <div class="hint">We will generate 20–30 candidates based on your selection below.</div>
+          <input id="adv-seed" type="text" autocomplete="off" placeholder="e.g. iron, mountain" />
+          <div class="hint">Comma separated. We will generate up to 30 candidates based on your options below.</div>
         </label>
 
         <label>
-          <div><strong>What are you naming?</strong></div>
-          <div class="hint">Select one or multiple categories.</div>
+          <div><strong>Prefixes</strong></div>
+          <div class="hint">Optional. Applies before each seed.</div>
           <div class="actions-inline">
-            <label><input type="checkbox" id="adv-cat-identity" checked /> Personal identity</label>
-            <label><input type="checkbox" id="adv-cat-product" checked /> Product</label>
-            <label><input type="checkbox" id="adv-cat-service" checked /> Service</label>
+            <label><input type="checkbox" id="adv-pre-the" checked /> the</label>
+            <label><input type="checkbox" id="adv-pre-real" checked /> real</label>
+            <label><input type="checkbox" id="adv-pre-its" checked /> its</label>
+            <label><input type="checkbox" id="adv-pre-get" checked /> get</label>
+            <label><input type="checkbox" id="adv-pre-try" /> try</label>
+            <label><input type="checkbox" id="adv-pre-join" /> join</label>
+          </div>
+        </label>
+
+        <label>
+          <div><strong>Suffixes</strong></div>
+          <div class="hint">Optional. Applies after each seed.</div>
+          <div class="actions-inline">
+            <label><input type="checkbox" id="adv-suf-app" checked /> app</label>
+            <label><input type="checkbox" id="adv-suf-official" checked /> official</label>
+            <label><input type="checkbox" id="adv-suf-hq" checked /> hq</label>
+            <label><input type="checkbox" id="adv-suf-ai" /> ai</label>
+            <label><input type="checkbox" id="adv-suf-labs" /> labs</label>
+            <label><input type="checkbox" id="adv-suf-studio" /> studio</label>
+            <label><input type="checkbox" id="adv-suf-tools" /> tools</label>
+            <label><input type="checkbox" id="adv-suf-co" /> co</label>
+            <label><input type="checkbox" id="adv-suf-service" /> service</label>
+            <label><input type="checkbox" id="adv-suf-agency" /> agency</label>
           </div>
         </label>
 
@@ -44,9 +64,26 @@ function attachLogic(root) {
   const form = root.querySelector('#advanced-form')
   const statusEl = root.querySelector('#advanced-status')
   const seedEl = root.querySelector('#adv-seed')
-  const catIdentityEl = root.querySelector('#adv-cat-identity')
-  const catProductEl = root.querySelector('#adv-cat-product')
-  const catServiceEl = root.querySelector('#adv-cat-service')
+  const prefixEls = {
+    the: root.querySelector('#adv-pre-the'),
+    real: root.querySelector('#adv-pre-real'),
+    its: root.querySelector('#adv-pre-its'),
+    get: root.querySelector('#adv-pre-get'),
+    try: root.querySelector('#adv-pre-try'),
+    join: root.querySelector('#adv-pre-join'),
+  }
+  const suffixEls = {
+    app: root.querySelector('#adv-suf-app'),
+    official: root.querySelector('#adv-suf-official'),
+    hq: root.querySelector('#adv-suf-hq'),
+    ai: root.querySelector('#adv-suf-ai'),
+    labs: root.querySelector('#adv-suf-labs'),
+    studio: root.querySelector('#adv-suf-studio'),
+    tools: root.querySelector('#adv-suf-tools'),
+    co: root.querySelector('#adv-suf-co'),
+    service: root.querySelector('#adv-suf-service'),
+    agency: root.querySelector('#adv-suf-agency'),
+  }
 
   if (!form || !statusEl || !seedEl) return
 
@@ -110,6 +147,14 @@ function attachLogic(root) {
       .replace(/[^a-z0-9]+/g, '')
   }
 
+  function parseSeeds(raw) {
+    const parts = String(raw || '')
+      .split(',')
+      .map((s) => (s || '').trim())
+      .filter(Boolean)
+    return uniqueLimit(parts, 12)
+  }
+
   function uniqueLimit(list, limit) {
     const out = []
     const seen = new Set()
@@ -124,68 +169,33 @@ function attachLogic(root) {
     return out
   }
 
-  function buildCandidates(seed, categories) {
-    const base = normalizeSeedToBase(seed)
-    const rootName = base || ''
-    if (!rootName) return []
-
+  function buildCandidates(seedList, prefixes, suffixes) {
+    const seeds = Array.isArray(seedList) ? seedList : []
     const candidates = []
 
-    const identity = [
-      rootName,
-      `the${rootName}`,
-      `real${rootName}`,
-      `its${rootName}`,
-      `${rootName}official`,
-      `${rootName}hq`,
-      `${rootName}live`,
-      `${rootName}media`,
-    ]
+    const normalizedSeeds = seeds
+      .map((s) => normalizeSeedToBase(s))
+      .filter(Boolean)
 
-    const product = [
-      rootName,
-      `${rootName}app`,
-      `get${rootName}`,
-      `try${rootName}`,
-      `${rootName}go`,
-      `${rootName}ai`,
-      `${rootName}labs`,
-      `${rootName}studio`,
-      `${rootName}tools`,
-    ]
+    for (const s of normalizedSeeds) {
+      candidates.push(s)
 
-    const service = [
-      rootName,
-      `${rootName}service`,
-      `${rootName}co`,
-      `${rootName}works`,
-      `${rootName}group`,
-      `${rootName}partners`,
-      `${rootName}solutions`,
-      `${rootName}systems`,
-      `${rootName}agency`,
-    ]
+      for (const pre of prefixes) {
+        candidates.push(`${pre}${s}`)
+      }
 
-    if (categories.includes('identity')) candidates.push(...identity)
-    if (categories.includes('product')) candidates.push(...product)
-    if (categories.includes('service')) candidates.push(...service)
+      for (const suf of suffixes) {
+        candidates.push(`${s}${suf}`)
+      }
 
-    const trimmed = uniqueLimit(candidates, 30)
-
-    // Add some lightweight compound variants if we still need more.
-    if (trimmed.length < 20) {
-      const extra = [
-        `${rootName}plus`,
-        `${rootName}hub`,
-        `${rootName}world`,
-        `${rootName}base`,
-        `${rootName}zone`,
-        `join${rootName}`,
-      ]
-      return uniqueLimit([...trimmed, ...extra], 30)
+      for (const pre of prefixes) {
+        for (const suf of suffixes) {
+          candidates.push(`${pre}${s}${suf}`)
+        }
+      }
     }
 
-    return trimmed
+    return uniqueLimit(candidates, 30)
   }
 
   function scoreResults(results) {
@@ -211,23 +221,28 @@ function attachLogic(root) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
 
-    const seed = (seedEl.value || '').trim()
-    const categories = []
-    if (catIdentityEl?.checked) categories.push('identity')
-    if (catProductEl?.checked) categories.push('product')
-    if (catServiceEl?.checked) categories.push('service')
+    const seedRaw = (seedEl.value || '').trim()
+    const seeds = parseSeeds(seedRaw)
 
-    if (!seed) {
-      setStatus('Type a seed name first.', 'error')
+    if (!seeds.length) {
+      setStatus('Type at least one seed name first.', 'error')
       return
     }
 
-    if (!categories.length) {
-      setStatus('Select at least one category.', 'error')
+    const prefixes = Object.entries(prefixEls)
+      .filter(([, el]) => !!el?.checked)
+      .map(([key]) => key)
+
+    const suffixes = Object.entries(suffixEls)
+      .filter(([, el]) => !!el?.checked)
+      .map(([key]) => key)
+
+    if (!prefixes.length && !suffixes.length) {
+      setStatus('Select at least one prefix or suffix option.', 'error')
       return
     }
 
-    const candidates = buildCandidates(seed, categories)
+    const candidates = buildCandidates(seeds, prefixes, suffixes)
     if (!candidates.length) {
       setStatus('Could not generate candidates.', 'error')
       return
@@ -273,8 +288,10 @@ function attachLogic(root) {
 
     const report = {
       type: 'guided_advanced_search',
-      seed,
-      categories,
+      seed: seedRaw,
+      prefixes,
+      suffixes,
+      seeds,
       candidates: checked,
       created_at: Math.floor(Date.now() / 1000),
       updated_at: Math.floor(Date.now() / 1000),

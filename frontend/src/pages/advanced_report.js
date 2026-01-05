@@ -84,7 +84,9 @@ function attachLogic(root) {
 
   function renderGuidedReport(report) {
     const seed = (report && report.seed) || ''
-    const categories = Array.isArray(report?.categories) ? report.categories : []
+    const seeds = Array.isArray(report?.seeds) ? report.seeds : []
+    const prefixes = Array.isArray(report?.prefixes) ? report.prefixes : []
+    const suffixes = Array.isArray(report?.suffixes) ? report.suffixes : []
     const candidates = Array.isArray(report?.candidates) ? report.candidates : []
 
     if (!candidates.length) {
@@ -100,13 +102,14 @@ function attachLogic(root) {
     const header = `
       <div class="card">
         <h2>Advanced search inputs</h2>
-        <div class="hint"><strong>Seed:</strong> ${escapeHtml(seed || '—')}</div>
-        <div class="hint"><strong>Categories:</strong> ${escapeHtml(categories.join(', ') || '—')}</div>
+        <div class="hint"><strong>Seeds:</strong> ${escapeHtml(seeds.join(', ') || seed || '—')}</div>
+        <div class="hint"><strong>Prefixes:</strong> ${escapeHtml(prefixes.join(', ') || '—')}</div>
+        <div class="hint"><strong>Suffixes:</strong> ${escapeHtml(suffixes.join(', ') || '—')}</div>
       </div>
     `
 
-    const cards = candidates
-      .map((c) => {
+    const rows = candidates
+      .map((c, idx) => {
         const name = (c && c.name) || ''
         const results = Array.isArray(c?.results) ? c.results : []
         const available = Number(c?.score?.available || 0)
@@ -117,39 +120,36 @@ function attachLogic(root) {
           .map((r) => {
             const label = escapeHtml(r?.label || r?.service || 'Service')
             const s = r?.status || 'unknown'
-            return `
-              <tr>
-                <td>${label}</td>
-                <td class="result-${s}">${escapeHtml(s)}</td>
-              </tr>
-            `
+            return `<tr><td>${label}</td><td class="result-${s}">${escapeHtml(s)}</td></tr>`
           })
           .join('')
 
         const ratioText = total ? `${available}/${total} available` : '—'
 
         return `
-          <div class="card" style="margin-top: 12px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
-              <h2 style="margin:0;">${escapeHtml(name)}</h2>
-              <span class="history-status chip-status-${status}">${escapeHtml(status)}</span>
-            </div>
-            <div class="hint" style="margin-top: 6px;"><strong>${escapeHtml(ratioText)}</strong></div>
-            <details style="margin-top: 10px;">
-              <summary class="hint" style="cursor: pointer;">Show platform breakdown</summary>
-              <table class="results-table" style="margin-top: 10px;">
-                <thead>
-                  <tr>
-                    <th>Service</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${serviceRows || '<tr><td colspan="2" class="hint">No results.</td></tr>'}
-                </tbody>
-              </table>
-            </details>
-          </div>
+          <tr>
+            <td class="adv-rank">${idx + 1}</td>
+            <td class="adv-name">
+              <div class="adv-name-row">
+                <span class="adv-name-text">${escapeHtml(name)}</span>
+                <span class="adv-status adv-status-${status}">${escapeHtml(status)}</span>
+                <span class="adv-availability">${escapeHtml(ratioText)}</span>
+              </div>
+            </td>
+            <td class="adv-details">
+              <details>
+                <summary>Details</summary>
+                <table class="results-table adv-breakdown">
+                  <thead>
+                    <tr><th>Service</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    ${serviceRows || '<tr><td colspan="2" class="hint">No results.</td></tr>'}
+                  </tbody>
+                </table>
+              </details>
+            </td>
+          </tr>
         `
       })
       .join('')
@@ -157,7 +157,20 @@ function attachLogic(root) {
     reportRoot.innerHTML = `
       ${header}
       <h2 style="margin-top: 18px;">Ranked candidates</h2>
-      ${cards}
+      <div class="adv-table-wrap">
+        <table class="results-table adv-candidates-table">
+          <thead>
+            <tr>
+              <th style="width: 56px;">#</th>
+              <th>Candidate</th>
+              <th style="width: 120px;"> </th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
     `
   }
 
