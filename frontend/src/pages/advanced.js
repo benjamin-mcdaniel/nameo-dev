@@ -7,52 +7,61 @@ export function Advanced() {
     <h1>Advanced search</h1>
     <p class="sub">Guided search that generates multiple name options and shows which candidates are the most open across platforms.</p>
 
-    <div class="card">
-      <h2>Generate candidates</h2>
-      <form id="advanced-form" class="stack">
-        <label>
-          <div><strong>Seed word or phrase</strong></div>
-          <input id="adv-seed" type="text" autocomplete="off" placeholder="e.g. iron, mountain" />
-          <div class="hint">Comma separated. We will generate up to 30 candidates based on your options below.</div>
-        </label>
+    <div class="search-layout">
+      <div class="search-main">
+        <div class="card" style="border: 0; padding: 0; background: transparent;">
+          <h2>Generate candidates</h2>
+          <form id="advanced-form" class="stack">
+            <label>
+              <div><strong>Seed word or phrase</strong></div>
+              <input id="adv-seed" type="text" autocomplete="off" placeholder="e.g. iron, mountain" />
+              <div class="hint">Comma separated. We will generate up to 30 candidates based on your options below.</div>
+            </label>
 
-        <label>
-          <div><strong>Prefixes</strong></div>
-          <div class="hint">Optional. Applies before each seed.</div>
-          <div class="actions-inline">
-            <label><input type="checkbox" id="adv-pre-the" checked /> the</label>
-            <label><input type="checkbox" id="adv-pre-real" checked /> real</label>
-            <label><input type="checkbox" id="adv-pre-its" checked /> its</label>
-            <label><input type="checkbox" id="adv-pre-get" checked /> get</label>
-            <label><input type="checkbox" id="adv-pre-try" /> try</label>
-            <label><input type="checkbox" id="adv-pre-join" /> join</label>
-          </div>
-        </label>
+            <label>
+              <div><strong>Prefixes</strong></div>
+              <div class="hint">Optional. Applies before each seed.</div>
+              <div class="actions-inline">
+                <label><input type="checkbox" id="adv-pre-the" checked /> the</label>
+                <label><input type="checkbox" id="adv-pre-real" checked /> real</label>
+                <label><input type="checkbox" id="adv-pre-its" checked /> its</label>
+                <label><input type="checkbox" id="adv-pre-get" checked /> get</label>
+                <label><input type="checkbox" id="adv-pre-try" /> try</label>
+                <label><input type="checkbox" id="adv-pre-join" /> join</label>
+              </div>
+            </label>
 
-        <label>
-          <div><strong>Suffixes</strong></div>
-          <div class="hint">Optional. Applies after each seed.</div>
-          <div class="actions-inline">
-            <label><input type="checkbox" id="adv-suf-app" checked /> app</label>
-            <label><input type="checkbox" id="adv-suf-official" checked /> official</label>
-            <label><input type="checkbox" id="adv-suf-hq" checked /> hq</label>
-            <label><input type="checkbox" id="adv-suf-ai" /> ai</label>
-            <label><input type="checkbox" id="adv-suf-labs" /> labs</label>
-            <label><input type="checkbox" id="adv-suf-studio" /> studio</label>
-            <label><input type="checkbox" id="adv-suf-tools" /> tools</label>
-            <label><input type="checkbox" id="adv-suf-co" /> co</label>
-            <label><input type="checkbox" id="adv-suf-service" /> service</label>
-            <label><input type="checkbox" id="adv-suf-agency" /> agency</label>
-          </div>
-        </label>
+            <label>
+              <div><strong>Suffixes</strong></div>
+              <div class="hint">Optional. Applies after each seed.</div>
+              <div class="actions-inline">
+                <label><input type="checkbox" id="adv-suf-app" checked /> app</label>
+                <label><input type="checkbox" id="adv-suf-official" checked /> official</label>
+                <label><input type="checkbox" id="adv-suf-hq" checked /> hq</label>
+                <label><input type="checkbox" id="adv-suf-ai" /> ai</label>
+                <label><input type="checkbox" id="adv-suf-labs" /> labs</label>
+                <label><input type="checkbox" id="adv-suf-studio" /> studio</label>
+                <label><input type="checkbox" id="adv-suf-tools" /> tools</label>
+                <label><input type="checkbox" id="adv-suf-co" /> co</label>
+                <label><input type="checkbox" id="adv-suf-service" /> service</label>
+                <label><input type="checkbox" id="adv-suf-agency" /> agency</label>
+              </div>
+            </label>
 
-        <div class="actions-inline">
-          <button class="btn btn-primary" type="submit">Run advanced search</button>
-          <a class="btn" href="#/search">Back to basic search</a>
+            <div class="actions-inline">
+              <button class="btn btn-primary" type="submit">Run advanced search</button>
+              <a class="btn" href="#/search">Back to basic search</a>
+            </div>
+
+            <div id="advanced-status" class="status"></div>
+          </form>
         </div>
+      </div>
 
-        <div id="advanced-status" class="status"></div>
-      </form>
+      <aside class="search-side">
+        <h2>History</h2>
+        <div id="advanced-history" class="search-history"></div>
+      </aside>
     </div>
   `
 
@@ -63,6 +72,7 @@ export function Advanced() {
 function attachLogic(root) {
   const form = root.querySelector('#advanced-form')
   const statusEl = root.querySelector('#advanced-status')
+  const historyEl = root.querySelector('#advanced-history')
   const seedEl = root.querySelector('#adv-seed')
   const prefixEls = {
     the: root.querySelector('#adv-pre-the'),
@@ -116,6 +126,97 @@ function attachLogic(root) {
     return { ok: res.ok, status: res.status, data }
   }
 
+  async function getAuthState() {
+    try {
+      const { isAuthenticated } = await import('../auth/client.js')
+      return await isAuthenticated()
+    } catch {
+      return false
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+  }
+
+  function formatDate(tsSeconds) {
+    const n = Number(tsSeconds || 0)
+    if (!n) return ''
+    try {
+      return new Date(n * 1000).toLocaleDateString()
+    } catch {
+      return ''
+    }
+  }
+
+  function getReportLabel(report) {
+    const r = report && typeof report === 'object' ? report : {}
+    const seeds = Array.isArray(r.seeds) ? r.seeds : []
+    const seed = (r.seed || '').trim()
+    const label = seeds.length ? seeds.join(', ') : seed
+    return label || 'Advanced search'
+  }
+
+  async function loadAdvancedHistory() {
+    if (!historyEl) return
+    const loggedIn = await getAuthState()
+    if (!loggedIn) {
+      historyEl.innerHTML = '<p class="hint">Login required.</p>'
+      return
+    }
+
+    historyEl.innerHTML = '<p class="hint">Loading…</p>'
+    try {
+      const resp = await apiFetch('/api/advanced-reports?limit=25')
+      if (resp.ok && Array.isArray(resp.data.items)) {
+        const items = resp.data.items
+        if (!items.length) {
+          historyEl.innerHTML = '<p class="hint">No reports yet.</p>'
+          return
+        }
+
+        historyEl.innerHTML = items
+          .map((item) => {
+            const id = item?.id || ''
+            const label = getReportLabel(item?.report)
+            const date = formatDate(item?.created_at)
+            return `
+              <div class="history-item" data-report-id="${escapeHtml(id)}">
+                <button class="history-main" type="button">
+                  <span class="history-name">${escapeHtml(label)}</span>
+                  <span class="hint" style="margin: 0;">${escapeHtml(date)}</span>
+                </button>
+              </div>
+            `
+          })
+          .join('')
+
+        historyEl.querySelectorAll('.history-item').forEach((row) => {
+          const id = row.getAttribute('data-report-id') || ''
+          const btn = row.querySelector('.history-main')
+          if (!id || !btn) return
+          btn.addEventListener('click', () => {
+            window.location.hash = `#/advanced-report?id=${encodeURIComponent(id)}`
+          })
+        })
+        return
+      }
+
+      if (resp.status === 401) {
+        historyEl.innerHTML = '<p class="hint">Login required.</p>'
+        return
+      }
+    } catch {
+      // ignore
+    }
+    historyEl.innerHTML = '<p class="hint">Unable to load history.</p>'
+  }
+
   function getQueryParam(key) {
     try {
       const hash = window.location.hash || ''
@@ -137,6 +238,8 @@ function attachLogic(root) {
   } catch {
     // ignore
   }
+
+  loadAdvancedHistory()
 
   function normalizeSeedToBase(seed) {
     const raw = (seed || '').trim()
