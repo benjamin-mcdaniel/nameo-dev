@@ -11,7 +11,7 @@ export function AdvancedReport() {
     <div id="report-root"></div>
 
     <div class="actions-inline" style="margin-top: 16px;">
-      <a class="btn" href="#/advanced">Start another advanced report</a>
+      <a class="btn" href="#/advanced">Run another advanced search</a>
       <a class="btn" href="#/search">Run a basic search</a>
     </div>
   `
@@ -54,6 +54,14 @@ function attachLogic(root) {
     const headers = new Headers(options.headers || {})
     headers.set('Content-Type', 'application/json')
 
+    try {
+      const { getAccessToken } = await import('../auth/client.js')
+      const token = await getAccessToken()
+      if (token) headers.set('Authorization', `Bearer ${token}`)
+    } catch {
+      // ignore; will fall back to local-only behavior
+    }
+
     const res = await fetch(url, { ...options, headers })
     const data = await res.json().catch(() => ({}))
     return { ok: res.ok, status: res.status, data }
@@ -63,6 +71,94 @@ function attachLogic(root) {
     const raw = (seed || '').trim()
     if (!raw) return ''
     return raw.toLowerCase().replace(/[^a-z0-9]+/g, '')
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+  }
+
+  function renderGuidedReport(report) {
+    const seed = (report && report.seed) || ''
+    const categories = Array.isArray(report?.categories) ? report.categories : []
+    const candidates = Array.isArray(report?.candidates) ? report.candidates : []
+
+    if (!candidates.length) {
+      reportRoot.innerHTML = `
+        <div class="card">
+          <h2>Advanced search</h2>
+          <p class="hint">No candidates found in this report.</p>
+        </div>
+      `
+      return
+    }
+
+    const header = `
+      <div class="card">
+        <h2>Advanced search inputs</h2>
+        <div class="hint"><strong>Seed:</strong> ${escapeHtml(seed || '—')}</div>
+        <div class="hint"><strong>Categories:</strong> ${escapeHtml(categories.join(', ') || '—')}</div>
+      </div>
+    `
+
+    const cards = candidates
+      .map((c) => {
+        const name = (c && c.name) || ''
+        const results = Array.isArray(c?.results) ? c.results : []
+        const available = Number(c?.score?.available || 0)
+        const total = Number(c?.score?.total || 0)
+        const status = c?.status || 'partial'
+
+        const serviceRows = results
+          .map((r) => {
+            const label = escapeHtml(r?.label || r?.service || 'Service')
+            const s = r?.status || 'unknown'
+            return `
+              <tr>
+                <td>${label}</td>
+                <td class="result-${s}">${escapeHtml(s)}</td>
+              </tr>
+            `
+          })
+          .join('')
+
+        const ratioText = total ? `${available}/${total} available` : '—'
+
+        return `
+          <div class="card" style="margin-top: 12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
+              <h2 style="margin:0;">${escapeHtml(name)}</h2>
+              <span class="history-status chip-status-${status}">${escapeHtml(status)}</span>
+            </div>
+            <div class="hint" style="margin-top: 6px;"><strong>${escapeHtml(ratioText)}</strong></div>
+            <details style="margin-top: 10px;">
+              <summary class="hint" style="cursor: pointer;">Show platform breakdown</summary>
+              <table class="results-table" style="margin-top: 10px;">
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${serviceRows || '<tr><td colspan="2" class="hint">No results.</td></tr>'}
+                </tbody>
+              </table>
+            </details>
+          </div>
+        `
+      })
+      .join('')
+
+    reportRoot.innerHTML = `
+      ${header}
+      <h2 style="margin-top: 18px;">Ranked candidates</h2>
+      ${cards}
+    `
   }
 
   function buildStubCandidates(seed) {
@@ -107,6 +203,11 @@ function attachLogic(root) {
   }
 
   function renderReport(report) {
+    if (report && report.type === 'guided_advanced_search') {
+      renderGuidedReport(report)
+      return
+    }
+
     const seed = (report && report.seed) || ''
     const description = (report && report.description) || ''
     const projectType = (report && report.project_type) || ''
@@ -193,7 +294,6 @@ function attachLogic(root) {
       return
     }
 
-    // Try backend first.
     try {
       const resp = await apiFetch(`/api/advanced-reports/${encodeURIComponent(id)}`)
       if (resp.ok && resp.data && resp.data.report) {
@@ -201,25 +301,17 @@ function attachLogic(root) {
         renderReport(resp.data.report)
         return
       }
+      if (resp.status === 401) {
+        setStatus('Login required to view advanced reports.', 'error')
+        reportRoot.innerHTML = ''
+        return
+      }
     } catch {
       // ignore
     }
 
-    // Fall back to localStorage.
-    try {
-      const raw = localStorage.getItem(`nameo_advanced_report_${id}`)
-      if (!raw) {
-        setStatus('Report not found (local-only).', 'error')
-        reportRoot.innerHTML = ''
-        return
-      }
-      const report = JSON.parse(raw)
-      setStatus('')
-      renderReport(report)
-    } catch {
-      setStatus('Unable to load report.', 'error')
-      reportRoot.innerHTML = ''
-    }
+    setStatus('Report not found.', 'error')
+    reportRoot.innerHTML = ''
   }
 
   load()

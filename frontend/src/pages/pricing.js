@@ -7,7 +7,7 @@ export function Pricing() {
       <p class="sub">We are in beta. Pricing will evolve, but the structure below shows where the product is heading. Basic stays accessible; advanced features fund deeper checks and reporting.</p>
       <div class="pricing-hero-actions">
         <a class="btn btn-primary" href="#/search">Start with basic search</a>
-        <a class="btn" href="#/advanced">Try advanced workflow</a>
+        <a class="btn" href="#/advanced">Try advanced search</a>
       </div>
     </div>
 
@@ -51,20 +51,20 @@ export function Pricing() {
       </div>
 
       <div class="pricing-card">
-        <h3>Advanced</h3>
+        <h3>Pro Search</h3>
         <div class="pricing-price">
           <div class="pricing-price-amount">$29</div>
           <div class="pricing-price-note">/ month (planned)</div>
         </div>
         <p class="hint">For startups, agencies, and launches that need a unified identity report.</p>
         <ul class="pricing-list">
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Advanced workflow reports per naming campaign</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Domain + app store + trademark-style signals (as they come online)</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Pro Search checks (domains, marketplaces, and deeper destinations as they come online)</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Unified reports for teams and launches</span></li>
           <li><span class="pricing-check" aria-hidden="true"></span><span>Handle-variation recommendations (official/real/app/platform)</span></li>
           <li><span class="pricing-check" aria-hidden="true"></span><span>Exportable/shareable reports for teams and clients (planned)</span></li>
         </ul>
         <div class="pricing-cta">
-          <a class="btn btn-primary" href="#/advanced">Create an advanced report</a>
+          <a class="btn btn-primary" href="#/advanced">Run advanced search</a>
           <div class="hint">Best for higher-stakes naming decisions.</div>
         </div>
       </div>

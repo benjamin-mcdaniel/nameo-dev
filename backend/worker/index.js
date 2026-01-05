@@ -526,15 +526,21 @@ async function handleCreateAdvancedReport(request, env, userId) {
 
   const id = crypto.randomUUID()
   const now = Math.floor(Date.now() / 1000)
-  const report = {
-    id,
-    project_type: (body.project_type || '').trim(),
-    description: (body.description || '').trim(),
-    seed: (body.seed || '').trim(),
-    surfaces: body.surfaces && typeof body.surfaces === 'object' ? body.surfaces : {},
-    status: 'stub',
-    created_at: now,
-    updated_at: now,
+
+  let report = null
+  if (body && body.report_json && typeof body.report_json === 'object') {
+    report = { ...body.report_json, id, created_at: now, updated_at: now }
+  } else {
+    report = {
+      id,
+      project_type: (body.project_type || '').trim(),
+      description: (body.description || '').trim(),
+      seed: (body.seed || '').trim(),
+      surfaces: body.surfaces && typeof body.surfaces === 'object' ? body.surfaces : {},
+      status: 'stub',
+      created_at: now,
+      updated_at: now,
+    }
   }
 
   await db

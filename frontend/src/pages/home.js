@@ -7,9 +7,9 @@ export function Home() {
     <section class="hero home-hero">
       <div class="container hero-inner home-hero-inner">
         <div class="home-hero-copy">
-          <div class="home-hero-eyebrow">Nameo.dev • Everywhere identity</div>
+          <div class="home-hero-eyebrow">Nameo.dev • Everywhere identity Search</div>
           <h1>Find a name you can actually use.</h1>
-          <p class="sub">Check availability across the internet in one place - from social handles to creator platforms. Built for founders, makers, and creators.</p>
+          <p class="sub">Check availability across the internet in one place - from social handles to creator platforms and even domains. Built for founders, makers, and creators.</p>
           <div class="actions home-hero-actions">
             <a class="btn btn-primary" href="#/search">Start searching</a>
             <a class="btn" href="#/pricing">Pricing</a>
@@ -20,20 +20,20 @@ export function Home() {
           <div class="home-hero-panel-title">What you get</div>
           <div class="home-hero-panel-grid">
             <div class="home-hero-panel-item">
-              <div class="home-hero-panel-kicker">Fast</div>
+              <div class="home-hero-panel-kicker">Fast Search</div>
               <div>One input, many checks.</div>
             </div>
             <div class="home-hero-panel-item">
-              <div class="home-hero-panel-kicker">Clear</div>
+              <div class="home-hero-panel-kicker">Clear Results</div>
               <div>Simple available/taken signals.</div>
             </div>
             <div class="home-hero-panel-item">
-              <div class="home-hero-panel-kicker">Guided</div>
-              <div>Suggestions to keep you moving.</div>
+              <div class="home-hero-panel-kicker">Pro Guided Search</div>
+              <div>Suggestions and alternatives to keep you moving if your running into roadblocks.</div>
             </div>
             <div class="home-hero-panel-item">
               <div class="home-hero-panel-kicker">Built to grow</div>
-              <div>Advanced workflows and reports.</div>
+              <div>Advanced workflows and reports to help you make decisions on new product launches.</div>
             </div>
           </div>
         </div>
@@ -45,7 +45,7 @@ export function Home() {
         <div class="home-highlights">
           <div class="home-highlights-header">
             <h2>Built for real naming decisions</h2>
-            <p class="hint">A modern brand needs a domain and consistent handles. Nameo is designed around that reality.</p>
+            <p class="hint">A modern brand needs a island to build is moat around, today its not just your URL its also your social handles and creator platform names. Nameo is designed for that reality.</p>
           </div>
 
           <div class="home-highlights-grid">

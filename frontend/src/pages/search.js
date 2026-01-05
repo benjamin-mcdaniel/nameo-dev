@@ -31,7 +31,7 @@ const PLATFORM_GROUPS = [
   },
   {
     id: 'advanced',
-    label: 'Advanced Search',
+    label: 'Pro Search',
     tier: 'advanced', // planned for Advanced membership
     platforms: [
       { id: 'domains_core', label: 'Core domains (.com, .net, .io, .co)', supported: false },
@@ -60,6 +60,9 @@ export function Search() {
           <button id="btn-run-search" class="btn btn-primary" type="submit">Search</button>
           <button id="btn-favorite" class="btn fav-button" type="button">★ <span>Favorite</span></button>
         </form>
+        <div class="actions-inline" style="margin-top: 10px;">
+          <a class="btn" id="link-advanced-search" href="#/advanced">Try advanced search</a>
+        </div>
         <div id="search-status" class="status"></div>
 
         <div class="search-main-inner">
@@ -94,6 +97,7 @@ function attachSearchLogic(root) {
   const termsBannerEl = root.querySelector('#search-terms-banner')
   const termsBannerClose = termsBannerEl?.querySelector('.banner-close')
   const input = root.querySelector('#search-input')
+  const advancedLink = root.querySelector('#link-advanced-search')
   const statusEl = root.querySelector('#search-status')
   const resultsEl = root.querySelector('#search-results')
   const suggestionsEl = root.querySelector('#search-suggestions')
@@ -113,66 +117,22 @@ function attachSearchLogic(root) {
     })
   }
 
-  function loadFavorites() {
-    try {
-      const raw = localStorage.getItem('nameo_favorites')
-      const list = raw ? JSON.parse(raw) : []
-      return Array.isArray(list) ? list : []
-    } catch {
-      return []
-    }
-  }
-
-  function saveFavorites(list) {
-    try {
-      localStorage.setItem('nameo_favorites', JSON.stringify(list.slice(0, 50)))
-    } catch {
-      // ignore
-    }
+  if (advancedLink) {
+    advancedLink.addEventListener('click', (e) => {
+      const seed = (input.value || '').trim()
+      if (!seed) return
+      e.preventDefault()
+      window.location.hash = `#/advanced?seed=${encodeURIComponent(seed)}`
+    })
   }
 
   async function renderFavorites() {
-    const list = loadFavorites()
-    if (!list.length) {
-      favoritesEl.innerHTML = '<p class="hint">No favorites yet.</p>'
-      return
+    favoritesEl.innerHTML = '<p class="hint">Login required.</p>'
+    if (favBtn) {
+      favBtn.disabled = true
+      favBtn.setAttribute('aria-disabled', 'true')
+      favBtn.title = 'Login required'
     }
-
-    favoritesEl.innerHTML = list
-      .map(
-        (name) => `
-          <div class="favorites-item" data-name="${name}">
-            <button class="favorites-main" type="button">
-              <span class="favorites-name">${name}</span>
-            </button>
-            <button class="favorites-delete" type="button" aria-label="Remove from favorites">&times;</button>
-          </div>
-        `
-      )
-      .join('')
-
-    favoritesEl.querySelectorAll('.favorites-item').forEach((row) => {
-      const name = row.getAttribute('data-name') || ''
-      const mainBtn = row.querySelector('.favorites-main')
-      const deleteBtn = row.querySelector('.favorites-delete')
-
-      if (mainBtn) {
-        mainBtn.addEventListener('click', () => {
-          input.value = name
-          runSearch(name)
-        })
-      }
-
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation()
-          const next = loadFavorites().filter((n) => n !== name)
-          saveFavorites(next)
-          renderFavorites()
-          showToast('Removed from favorites.')
-        })
-      }
-    })
   }
 
   let currentController = null
@@ -263,83 +223,22 @@ function attachSearchLogic(root) {
   async function loadHistory() {
     const loggedIn = await getAuthState()
 
-    if (loggedIn) {
-      try {
-        const resp = await apiFetchWithAuth('/api/search-history')
-        if (resp.ok && Array.isArray(resp.data.items)) {
-          return resp.data.items.map((item) => ({
-            name: item.name,
-            status: item.status,
-            ts: (item.searched_at || 0) * 1000,
-          }))
-        }
-        debugLog('loadHistory server response not usable', resp)
-      } catch {
-        // fall through to empty list for logged-in users
-      }
-      try {
-        const raw = localStorage.getItem('nameo_search_history')
-        return raw ? JSON.parse(raw) : []
-      } catch {
-        return []
-      }
-    }
+    if (!loggedIn) return []
 
     try {
-      const raw = localStorage.getItem('nameo_search_history')
-      return raw ? JSON.parse(raw) : []
-    } catch {
-      return []
-    }
-  }
-
-  function saveHistoryLocally(items) {
-    try {
-      localStorage.setItem('nameo_search_history', JSON.stringify(items.slice(0, 50)))
+      const resp = await apiFetchWithAuth('/api/search-history')
+      if (resp.ok && Array.isArray(resp.data.items)) {
+        return resp.data.items.map((item) => ({
+          name: item.name,
+          status: item.status,
+          ts: (item.searched_at || 0) * 1000,
+        }))
+      }
+      debugLog('loadHistory server response not usable', resp)
     } catch {
       // ignore
     }
-  }
-
-  async function migrateLocalHistoryToServer() {
-    const loggedIn = await getAuthState()
-    if (!loggedIn) return
-
-    let items
-    try {
-      const raw = localStorage.getItem('nameo_search_history')
-      if (!raw) return
-      items = JSON.parse(raw)
-      if (!Array.isArray(items) || !items.length) return
-    } catch {
-      return
-    }
-
-    let successCount = 0
-
-    for (const item of items) {
-      const name = (item && item.name) || ''
-      const status = item && item.status
-      const trimmed = (name || '').trim()
-      if (!trimmed) continue
-      try {
-        const res = await apiFetchWithAuth('/api/search-history', {
-          method: 'POST',
-          body: JSON.stringify({ name: trimmed, status }),
-        })
-        if (res.ok) successCount += 1
-      } catch {
-        // ignore individual failures; best-effort migration
-      }
-    }
-
-    if (successCount > 0) {
-      try {
-        localStorage.removeItem('nameo_search_history')
-      } catch {
-        // ignore
-      }
-    }
+    return []
   }
 
   async function addToHistory(name, status) {
@@ -348,35 +247,26 @@ function attachSearchLogic(root) {
 
     const loggedIn = await getAuthState()
 
-    if (loggedIn) {
-      let savedToServer = false
-      try {
-        const res = await apiFetchWithAuth('/api/search-history', {
-          method: 'POST',
-          body: JSON.stringify({ name: trimmed, status }),
-        })
-        savedToServer = !!res.ok
-      } catch {
-        // ignore; history will simply appear empty/broken if backend fails
-      }
+    if (!loggedIn) return
 
-      if (!savedToServer) {
-        const items = (await loadHistory()).filter((i) => i.name !== trimmed)
-        items.unshift({ name: trimmed, status, ts: Date.now() })
-        saveHistoryLocally(items)
-      }
-
-      await renderHistory()
-      return
+    try {
+      await apiFetchWithAuth('/api/search-history', {
+        method: 'POST',
+        body: JSON.stringify({ name: trimmed, status }),
+      })
+    } catch {
+      // ignore
     }
 
-    const items = (await loadHistory()).filter((i) => i.name !== trimmed)
-    items.unshift({ name: trimmed, status, ts: Date.now() })
-    saveHistoryLocally(items)
     await renderHistory()
   }
 
   async function renderHistory() {
+    const loggedIn = await getAuthState()
+    if (!loggedIn) {
+      historyEl.innerHTML = '<p class="hint">Login required.</p>'
+      return
+    }
     const items = await loadHistory()
     if (!items.length) {
       historyEl.innerHTML = '<p class="hint">No searches yet.</p>'
@@ -425,21 +315,15 @@ function attachSearchLogic(root) {
 
     const loggedIn = await getAuthState()
 
-    if (loggedIn) {
-      try {
-        await apiFetchWithAuth(`/api/search-history?name=${encodeURIComponent(trimmed)}`, {
-          method: 'DELETE',
-        })
-      } catch {
-        // ignore; history will simply be out of sync if backend fails
-      }
-      await renderHistory()
-      return
-    }
+    if (!loggedIn) return
 
-    const items = await loadHistory()
-    const filtered = items.filter((i) => i.name !== trimmed)
-    saveHistoryLocally(filtered)
+    try {
+      await apiFetchWithAuth(`/api/search-history?name=${encodeURIComponent(trimmed)}`, {
+        method: 'DELETE',
+      })
+    } catch {
+      // ignore
+    }
     await renderHistory()
   }
 
@@ -595,29 +479,17 @@ function attachSearchLogic(root) {
     }
   })
 
-  favBtn.addEventListener('click', () => {
-    const name = (input.value || '').trim()
-    if (!name) {
-      showToast('Type a name first before adding to favorites.')
+  favBtn.addEventListener('click', async () => {
+    const loggedIn = await getAuthState()
+    if (!loggedIn) {
+      showToast('Login required.')
       return
     }
-    try {
-      const list = loadFavorites()
-      if (!list.includes(name)) {
-        list.unshift(name)
-      }
-      saveFavorites(list)
-      renderFavorites()
-      showToast('Added to favorites.')
-    } catch {
-      showToast('Could not save favorite.')
-    }
+    showToast('Favorites are not available yet.')
   })
 
-  migrateLocalHistoryToServer().finally(() => {
-    renderHistory()
-    renderFavorites()
-  })
+  renderHistory()
+  renderFavorites()
 
   // If the home page left a pending search value, pick it up and
   // execute it once when this page is first loaded.
@@ -630,15 +502,6 @@ function attachSearchLogic(root) {
       const qs = hash.slice(qIndex + 1)
       const params = new URLSearchParams(qs)
       initial = params.get('name') || ''
-    }
-
-    // Fallback to a pending search from the home page if no hash param.
-    if (!initial) {
-      const pending = localStorage.getItem('nameo_pending_search')
-      if (pending) {
-        localStorage.removeItem('nameo_pending_search')
-        initial = pending
-      }
     }
 
     if (initial) {
