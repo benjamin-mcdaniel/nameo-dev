@@ -293,6 +293,11 @@ function attachLogic(root) {
       } else if (resp.status === 401) {
         setStatus('Login required to save advanced searches.', 'error')
         return
+      } else {
+        const err = (resp.data && (resp.data.error || resp.data.message)) || ''
+        const detail = err ? ` (${err})` : ''
+        setStatus(`Unable to save report right now. (HTTP ${resp.status})${detail}`, 'error')
+        return
       }
     } catch {
       // ignore

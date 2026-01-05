@@ -543,10 +543,16 @@ async function handleCreateAdvancedReport(request, env, userId) {
     }
   }
 
-  await db
-    .prepare('INSERT INTO advanced_reports (id, user_id, report_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
-    .bind(id, userId, JSON.stringify(report), now, now)
-    .run()
+  try {
+    await db
+      .prepare('INSERT INTO advanced_reports (id, user_id, report_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
+      .bind(id, userId, JSON.stringify(report), now, now)
+      .run()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    // Most common cause is missing migrations/table in the remote D1.
+    return json({ error: 'db_insert_failed', message }, 500)
+  }
 
   return json({ id, created_at: now }, 201)
 }
