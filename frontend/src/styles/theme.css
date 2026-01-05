@@ -158,9 +158,11 @@
 .page.advanced-report .adv-candidates-table { width: 100%; table-layout: fixed; }
 .page.advanced-report .adv-candidates-table th,
 .page.advanced-report .adv-candidates-table td { vertical-align: top; }
+.page.advanced-report .adv-candidates-table tbody tr { cursor: pointer; }
+.page.advanced-report .adv-candidates-table tbody tr:hover { background: color-mix(in oklab, var(--bg), white 6%); }
 .page.advanced-report .adv-rank { color: var(--muted); font-variant-numeric: tabular-nums; }
-.page.advanced-report .adv-name-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.page.advanced-report .adv-name-text { font-weight: 700; color: var(--text); }
+.page.advanced-report .adv-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 10px; row-gap: 2px; align-items: baseline; }
+.page.advanced-report .adv-name-text { font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .page.advanced-report .adv-availability { color: var(--muted); font-variant-numeric: tabular-nums; }
 .page.advanced-report .adv-status { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.85rem; }
 .page.advanced-report .adv-status-full { color: #16a34a; }

@@ -127,7 +127,7 @@ function attachLogic(root) {
         const ratioText = total ? `${available}/${total} available` : '—'
 
         return `
-          <tr>
+          <tr class="adv-row">
             <td class="adv-rank">${idx + 1}</td>
             <td class="adv-name">
               <div class="adv-name-row">
@@ -138,7 +138,7 @@ function attachLogic(root) {
             </td>
             <td class="adv-details">
               <details>
-                <summary>Details</summary>
+                <summary>View</summary>
                 <table class="results-table adv-breakdown">
                   <thead>
                     <tr><th>Service</th><th>Status</th></tr>
@@ -172,6 +172,24 @@ function attachLogic(root) {
         </table>
       </div>
     `
+
+    const table = reportRoot.querySelector('.adv-candidates-table')
+    if (table) {
+      table.addEventListener('click', (e) => {
+        const target = e.target
+        if (target && target.closest && target.closest('table.adv-breakdown')) return
+        const row = target && target.closest ? target.closest('tr.adv-row') : null
+        if (!row) return
+
+        const details = row.querySelector('details')
+        if (!details) return
+
+        // If the user clicked inside the details content (but not on the summary), don't toggle.
+        if (target.closest && target.closest('details') && !target.closest('summary')) return
+
+        details.open = !details.open
+      })
+    }
   }
 
   function buildStubCandidates(seed) {
