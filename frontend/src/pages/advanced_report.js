@@ -156,6 +156,12 @@ function attachLogic(root) {
         const status = c?.status || 'partial'
 
         const serviceRows = results
+          .filter((r) => {
+            const serviceId = r?.service || ''
+            if (serviceId === 'behance') return false
+            if (serviceId === 'dribbble') return false
+            return true
+          })
           .map((r) => {
             const serviceId = r?.service || ''
             const label = escapeHtml(r?.label || serviceId || 'Service')
