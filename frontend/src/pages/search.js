@@ -25,8 +25,6 @@ const PLATFORM_GROUPS = [
       { id: 'twitch', label: 'Twitch', supported: false, urlTemplate: 'https://www.twitch.tv/{name}' },
       { id: 'producthunt', label: 'Product Hunt', supported: false, urlTemplate: 'https://www.producthunt.com/@{name}' },
       { id: 'substack', label: 'Substack', supported: false, urlTemplate: 'https://{name}.substack.com' },
-      { id: 'behance', label: 'Behance', supported: false, urlTemplate: 'https://www.behance.net/{name}' },
-      { id: 'dribbble', label: 'Dribbble', supported: false, urlTemplate: 'https://dribbble.com/{name}' },
     ],
   },
   {

@@ -1,5 +1,21 @@
 const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
 
+const SERVICE_URL_TEMPLATES = {
+  x: 'https://x.com/{name}',
+  instagram: 'https://www.instagram.com/{name}/',
+  facebook: 'https://www.facebook.com/{name}',
+  youtube: 'https://www.youtube.com/@{name}',
+  tiktok: 'https://www.tiktok.com/@{name}',
+  pinterest: 'https://www.pinterest.com/{name}/',
+  linkedin: 'https://www.linkedin.com/in/{name}/',
+  github: 'https://github.com/{name}',
+  reddit: 'https://www.reddit.com/user/{name}',
+  medium: 'https://medium.com/@{name}',
+  twitch: 'https://www.twitch.tv/{name}',
+  producthunt: 'https://www.producthunt.com/@{name}',
+  substack: 'https://{name}.substack.com',
+}
+
 export function AdvancedReport() {
   const el = document.createElement('section')
   el.className = 'page advanced-report container'
@@ -24,6 +40,29 @@ function attachLogic(root) {
   const statusEl = root.querySelector('#report-status')
   const reportRoot = root.querySelector('#report-root')
   if (!statusEl || !reportRoot) return
+
+  function getServiceUrl(serviceId, name) {
+    const tpl = SERVICE_URL_TEMPLATES[serviceId]
+    if (!tpl) return ''
+    const safeName = encodeURIComponent(String(name || '').trim())
+    if (!safeName) return ''
+    return tpl.replace('{name}', safeName)
+  }
+
+  function statusRank(status) {
+    switch (status) {
+      case 'available':
+        return 0
+      case 'taken':
+        return 1
+      case 'unknown':
+        return 2
+      case 'coming_soon':
+        return 3
+      default:
+        return 9
+    }
+  }
 
   function setStatus(message, type = '') {
     statusEl.textContent = message || ''
@@ -118,10 +157,33 @@ function attachLogic(root) {
 
         const serviceRows = results
           .map((r) => {
-            const label = escapeHtml(r?.label || r?.service || 'Service')
+            const serviceId = r?.service || ''
+            const label = escapeHtml(r?.label || serviceId || 'Service')
             const s = r?.status || 'unknown'
-            return `<tr><td>${label}</td><td class="result-${s}">${escapeHtml(s)}</td></tr>`
+            const url = getServiceUrl(serviceId, name)
+
+            const statusCell = (() => {
+              if (s === 'coming_soon') return 'coming soon'
+              if (s === 'unknown') {
+                return url
+                  ? `<a href="${url}" target="_blank" rel="noopener">Click to check</a>`
+                  : 'Click to check'
+              }
+              return escapeHtml(s)
+            })()
+
+            const serviceCell = url
+              ? `<a href="${url}" target="_blank" rel="noopener">${label}</a>`
+              : label
+
+            return { labelText: String(r?.label || serviceId || ''), status: s, html: `<tr><td>${serviceCell}</td><td class="result-${s}">${statusCell}</td></tr>` }
           })
+          .sort((a, b) => {
+            const byStatus = statusRank(a.status) - statusRank(b.status)
+            if (byStatus !== 0) return byStatus
+            return (a.labelText || '').localeCompare(b.labelText || '')
+          })
+          .map((row) => row.html)
           .join('')
 
         const ratioText = total ? `${available}/${total} available` : '—'
