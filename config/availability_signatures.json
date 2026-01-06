@@ -1,0 +1,245 @@
+{
+  "version": 1,
+  "notes": "User-editable string signatures for classifying profile/name availability checks. Each service id should match config/services.json. Matching is case-insensitive substring.",
+  "services": {
+    "x": {
+      "available": [],
+      "taken": [],
+      "unknown": [
+        "something went wrong",
+        "try again",
+        "rate limit",
+        "temporarily limited",
+        "unusual activity",
+        "verify",
+        "enable javascript",
+        "cookies"
+      ]
+    },
+    "instagram": {
+      "available": [
+        "sorry, this page isn't available"
+      ],
+      "taken": [],
+      "unknown": [
+        "challenge required",
+        "please wait",
+        "log in",
+        "login",
+        "verify",
+        "enable cookies"
+      ]
+    },
+    "facebook": {
+      "available": [
+        "this content isn't available right now"
+      ],
+      "taken": [],
+      "unknown": [
+        "log in",
+        "login",
+        "you must log in",
+        "cookies"
+      ]
+    },
+    "youtube": {
+      "available": [
+        "this page isn't available",
+        "channel does not exist",
+        "not found"
+      ],
+      "taken": [
+        "videos",
+        "subscribers"
+      ],
+      "unknown": [
+        "before you continue to youtube",
+        "sign in",
+        "unusual traffic",
+        "verify"
+      ]
+    },
+    "linkedin": {
+      "available": [
+        "profile not found",
+        "this page doesn't exist",
+        "this page does not exist"
+      ],
+      "taken": [
+        "experience",
+        "education"
+      ],
+      "unknown": [
+        "sign in",
+        "join linkedin",
+        "log in",
+        "login",
+        "captcha"
+      ]
+    },
+    "tiktok": {
+      "available": [
+        "couldn't find this account",
+        "could not find this account",
+        "user not found"
+      ],
+      "taken": [
+        "following",
+        "followers",
+        "likes"
+      ],
+      "unknown": [
+        "verify to continue",
+        "captcha",
+        "enable cookies",
+        "something went wrong"
+      ]
+    },
+    "pinterest": {
+      "available": [
+        "couldn't find that page",
+        "could not find that page",
+        "page not found"
+      ],
+      "taken": [
+        "followers",
+        "following",
+        "pins"
+      ],
+      "unknown": [
+        "log in",
+        "login",
+        "something went wrong",
+        "enable cookies"
+      ]
+    },
+    "github": {
+      "available": [
+        "not found",
+        "there isn't a github pages site here"
+      ],
+      "taken": [
+        "repositories",
+        "followers",
+        "following"
+      ],
+      "unknown": [
+        "sign in",
+        "captcha",
+        "verify"
+      ]
+    },
+    "reddit": {
+      "available": [
+        "sorry, nobody on reddit goes by that name",
+        "page not found"
+      ],
+      "taken": [
+        "karma",
+        "cake day"
+      ],
+      "unknown": [
+        "you've been blocked",
+        "blocked",
+        "verify",
+        "continue"
+      ]
+    },
+    "medium": {
+      "available": [
+        "404",
+        "page not found"
+      ],
+      "taken": [
+        "followers",
+        "following"
+      ],
+      "unknown": [
+        "sign in",
+        "log in",
+        "login"
+      ]
+    },
+    "twitch": {
+      "available": [
+        "sorry. unless you've got a time machine",
+        "this channel is not available"
+      ],
+      "taken": [
+        "followers",
+        "videos",
+        "schedule"
+      ],
+      "unknown": [
+        "something went wrong",
+        "enable cookies",
+        "two-factor",
+        "verify"
+      ]
+    },
+    "producthunt": {
+      "available": [
+        "404",
+        "page not found"
+      ],
+      "taken": [
+        "upvotes",
+        "products"
+      ],
+      "unknown": [
+        "sign in",
+        "log in",
+        "login",
+        "verify"
+      ]
+    },
+    "substack": {
+      "available": [
+        "publication not found",
+        "not found"
+      ],
+      "taken": [
+        "subscribe",
+        "published"
+      ],
+      "unknown": [
+        "captcha",
+        "verify"
+      ]
+    },
+    "behance": {
+      "available": [
+        "page not found",
+        "404"
+      ],
+      "taken": [
+        "projects",
+        "followers",
+        "following"
+      ],
+      "unknown": [
+        "sign in",
+        "log in",
+        "login",
+        "captcha"
+      ]
+    },
+    "dribbble": {
+      "available": [
+        "we couldn't find that page",
+        "page not found"
+      ],
+      "taken": [
+        "shots",
+        "followers",
+        "following"
+      ],
+      "unknown": [
+        "sign in",
+        "log in",
+        "login",
+        "captcha"
+      ]
+    }
+  }
+}
