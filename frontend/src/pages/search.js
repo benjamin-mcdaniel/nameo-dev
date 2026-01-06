@@ -355,25 +355,63 @@ function attachSearchLogic(root) {
     }
 
     function renderGroup(group) {
+      const statusRank = (status) => {
+        switch (status) {
+          case 'available':
+            return 0
+          case 'taken':
+            return 1
+          case 'unknown':
+            return 2
+          case 'coming_soon':
+            return 3
+          default:
+            return 9
+        }
+      }
+
       const rows = group.platforms
         .map((p) => {
           const backend = byId.get(p.id)
           const status = backend ? (backend.status || 'unknown') : 'coming_soon'
           const label = backend ? (backend.label || backend.service) : p.label
           const url = p.urlTemplate && name ? p.urlTemplate.replace('{name}', encodeURIComponent(name)) : null
-          const history = backend && backend.history ? backend.history : 'unknown'
           const debug = backend && backend.debug ? backend.debug : null
           const code = backend && typeof backend.code === 'number' ? backend.code : null
 
+          return {
+            p,
+            status,
+            label,
+            url,
+            debug,
+            code,
+          }
+        })
+        .sort((a, b) => {
+          const byStatus = statusRank(a.status) - statusRank(b.status)
+          if (byStatus !== 0) return byStatus
+          return (a.label || '').localeCompare(b.label || '')
+        })
+        .map(({ status, label, url, debug, code }) => {
           const serviceCell = url
             ? `<a href="${url}" target="_blank" rel="noopener">${label}</a>`
             : label
 
+          const statusCell = (() => {
+            if (status === 'coming_soon') return 'coming soon'
+            if (status === 'unknown') {
+              return url
+                ? `<a href="${url}" target="_blank" rel="noopener">Click to check</a>`
+                : 'Click to check'
+            }
+            return status
+          })()
+
           return `
             <tr>
               <td>${serviceCell}</td>
-              <td class="result-${status}">${status === 'coming_soon' ? 'coming soon' : status}</td>
-              <td>${history}</td>
+              <td class="result-${status}">${statusCell}</td>
               ${
                 debugEnabled()
                   ? `<td class="hint">${
@@ -402,7 +440,6 @@ function attachSearchLogic(root) {
               <tr>
                 <th>Service</th>
                 <th>Status</th>
-                <th>History</th>
                 ${debugEnabled() ? '<th>Debug</th>' : ''}
               </tr>
             </thead>

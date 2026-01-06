@@ -42,7 +42,15 @@ export async function getAccessToken() {
     })
     return token
   } catch (err) {
-    return null
+    try {
+      const token = await client.getTokenSilently({
+        authorizationParams: { audience: authConfig.audience, scope: 'openid profile email offline_access' },
+        cacheMode: 'off',
+      })
+      return token
+    } catch {
+      return null
+    }
   }
 }
 
@@ -50,7 +58,10 @@ export async function isAuthenticated() {
   const client = await getClient()
   if (!client) return false
   try {
-    return await client.isAuthenticated()
+    const authed = await client.isAuthenticated()
+    if (!authed) return false
+    const token = await getAccessToken()
+    return !!token
   } catch (err) {
     return false
   }

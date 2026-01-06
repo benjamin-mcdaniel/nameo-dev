@@ -69,7 +69,6 @@
         "home",
         "videos",
         "playlists",
-        "videos",
         "subscribers"
       ],
       "unknown": [
@@ -206,7 +205,6 @@
         "videos",
         "this channel is currently unavailable due to a violation of twitch's community guidelines or terms of service",
         "followers",
-        "videos",
         "schedule"
       ],
       "unknown": [

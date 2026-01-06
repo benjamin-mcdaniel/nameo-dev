@@ -5,38 +5,86 @@
 - **nameo-worker** (main API)
   - Handles `/api/check`, `/api/suggestions`, `/api/search-history`, `/api/campaigns`, `/api/health`, etc.
   - Owns Auth + D1 database access.
-  - Today it performs all platform checks itself using `config/services.json`.
+  - For availability checks it will call the search orchestrator when configured, and falls back to local checks.
 - **nameo-search-worker** (search orchestrator)
   - Exposes `/health` and `/v1/search-basic`.
   - Executes `url_status` checks from `config/services.json` and returns a normalized `results` list.
   - In the future it will own "heavier" and more custom search logic; `nameo-worker` can call it via the `SEARCH_ORCHESTRATOR` binding.
 
-## How Facebook and Instagram checks work (today)
+## How availability checks work (current)
 
-Facebook and Instagram are both checked entirely in the **main worker** using a simple URL status strategy.
+Availability checks are **best-effort HTTP fetches** (no headless browser rendering) and are classified using string signatures.
 
-- **Config:** `config/services.json`
-  - Facebook entry:
-    - `id: "facebook"`
-    - `label: "Facebook"`
-    - `strategy: "url_status"`
-    - `urlTemplate: "https://www.facebook.com/{name}"`
-  - Instagram entry:
-    - `id: "instagram"`
-    - `label: "Instagram"`
-    - `strategy: "url_status"`
-    - `urlTemplate: "https://www.instagram.com/{name}/"`
-- **Runtime:** `backend/worker/index.js`
-  - The worker loads the services list and calls `checkServiceAvailability(service, name)` for each:
-    - Builds `urlTemplate` by replacing `{name}`.
-    - Performs an HTTP request (default `HEAD`, or a per-service `method` override).
-    - Interprets status codes:
-      - `404` → `status: "available"` (handle not found).
-      - Any `2xx` or `3xx` → `status: "taken"` (something exists at that URL).
-      - Anything else → `status: "unknown"` (we keep the `code` for debugging).
-  - Results are returned as part of `/api/check` in the `results` array.
+Key files:
 
-This means **Facebook and Instagram checks run completely inside `nameo-worker`** today. The orchestrator / second worker is not involved yet.
+- `config/services.json`
+  - Source of truth for which services are checked.
+  - Each service has:
+    - `id`, `label`, `urlTemplate`
+    - `strategy`: `url_status` or `coming_soon`
+    - optional `method`: `GET` for services that require body text matching.
+
+- `config/availability_signatures.json`
+  - User-editable signatures used to classify a response as:
+    - `available`
+    - `taken`
+    - `unknown`
+  - Matching is case-insensitive substring search against:
+    - final redirected URL
+    - response body text (fetched with `GET` when needed)
+  - Supports `{name}` placeholder.
+  - Supports `global.taken` keywords.
+
+Runtime:
+
+- `backend/worker/index.js`
+  - `/api/check` runs `runChecksForName`.
+  - When the orchestrator is configured and healthy, it will use it.
+  - Otherwise it falls back to local checks using the same signature-based classifier.
+
+- `backend/search-worker/index.js`
+  - `/v1/search-basic` runs `checkServiceAvailability` for all configured services.
+
+## Known limitation: bot protection / JS-rendered pages
+
+Many large platforms return `403` / `429` or a JS-only shell to server-side requests.
+This repo intentionally treats those cases as `unknown`.
+
+This is expected behavior and is why the project includes a debug mode + user-tunable signatures.
+
+## Debug mode
+
+- Backend: `/api/check?name=<name>&debug=1` will include per-service debug fields.
+- Frontend: the Search page has a Debug checkbox (stored in `localStorage` as `nameo_debug`) that appends `debug=1` and displays:
+  - HTTP `code`
+  - which signature matched
+  - whether body was fetched
+  - final redirected URL link
+
+## Deploy
+
+Workers:
+
+```bash
+# search orchestrator
+cd backend/search-worker
+npx wrangler deploy
+
+# main API worker
+cd ../..
+npx wrangler deploy
+```
+
+Frontend:
+
+- Frontend is in `frontend/` and should be deployed via your preferred static hosting (Cloudflare Pages recommended).
+
+## Parking / maintenance notes
+
+If leaving this repo untouched for a while:
+
+- Prefer updating only `config/availability_signatures.json` when platform copy changes.
+- If a platform becomes consistently blocked, change its `strategy` in `config/services.json` to `coming_soon`.
 
 ## Current split: which worker does what
 
@@ -58,4 +106,4 @@ As we migrate a platform from the primary worker to the orchestrator, we will:
 2. Update the orchestrator to use that adapter for `/v1/search-basic`.
 3. Update `nameo-worker` to treat the orchestrator result as the source of truth for that platform, while keeping the old `url_status` code as a fallback during rollout.
 
-For now, **Facebook stays in the primary worker** using the URL-based check described above. When we eventually move it, this README will be updated to note which worker owns the Facebook logic and the adapter filename.
+For now, availability checks for all configured `url_status` services use the same signature-based classifier (both in the orchestrator and as a local fallback). If a platform becomes consistently blocked or unstable, prefer marking it `coming_soon` in `config/services.json`.
