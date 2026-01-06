@@ -35,7 +35,7 @@
       "id": "linkedin",
       "label": "LinkedIn",
       "type": "social",
-      "strategy": "url_status",
+      "strategy": "coming_soon",
       "urlTemplate": "https://www.linkedin.com/in/{name}/"
     },
     {

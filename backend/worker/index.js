@@ -732,6 +732,11 @@ async function loadServicesConfig(env) {
   return config.default || config
 }
 
+async function loadAvailabilitySignatures(env) {
+  const config = await import('../../config/availability_signatures.json', { assert: { type: 'json' } })
+  return config.default || config
+}
+
 async function evaluateNameSafety(name, safetyConfig) {
   if (!name) {
     return { ok: false, reason: 'empty', message: 'Name is required.' }
@@ -771,33 +776,78 @@ async function evaluateNameSafety(name, safetyConfig) {
 }
 
 async function checkServiceAvailability(service, name) {
+  if (service.strategy === 'coming_soon') {
+    return { status: 'coming_soon' }
+  }
+
   if (service.strategy === 'url_status') {
+    const signaturesConfig = await loadAvailabilitySignatures()
+    const perService =
+      signaturesConfig && signaturesConfig.services && signaturesConfig.services[service.id]
+        ? signaturesConfig.services[service.id]
+        : null
+
     const url = service.urlTemplate.replace('{name}', encodeURIComponent(name))
     const method = service.method || 'HEAD'
+
     const res = await fetch(url, { method })
+    const finalUrl = (res && res.url) || url
 
     if (res.status === 404) {
       return { status: 'available', code: res.status }
     }
 
-    // Instagram returns a 200 with a "Sorry, this page isn't available" message
-    // when a profile does not exist. We treat that as available.
-    // Facebook returns a 200 with "This content isn't available right now" for
-    // unavailable profiles/pages; we also treat that as available.
-    if (service.id === 'instagram' || service.id === 'facebook') {
-      const text = await res.text().catch(() => '')
-      const lower = text.toLowerCase()
-      if (
-        (service.id === 'instagram' && lower.includes("sorry, this page isn't available")) ||
-        (service.id === 'facebook' && lower.includes("this content isn't available right now"))
-      ) {
-        return { status: 'available', code: res.status }
+    const globalTaken =
+      signaturesConfig && signaturesConfig.global && Array.isArray(signaturesConfig.global.taken)
+        ? signaturesConfig.global.taken
+        : []
+    const availableNeedleList = perService && Array.isArray(perService.available) ? perService.available : []
+    const takenNeedleList = perService && Array.isArray(perService.taken) ? perService.taken : []
+    const unknownNeedleList = perService && Array.isArray(perService.unknown) ? perService.unknown : []
+
+    const needsBody =
+      availableNeedleList.length > 0 || takenNeedleList.length > 0 || unknownNeedleList.length > 0 ||
+      globalTaken.length > 0
+
+    let bodyText = ''
+    let bodyFinalUrl = finalUrl
+
+    if (needsBody) {
+      if (method === 'GET') {
+        bodyFinalUrl = finalUrl
+        bodyText = await res.text().catch(() => '')
+      } else {
+        const res2 = await fetch(url, { method: 'GET' })
+        bodyFinalUrl = (res2 && res2.url) || finalUrl
+        bodyText = await res2.text().catch(() => '')
       }
     }
 
-    // For naming, anything that is not a clear 404 or known "not available"
-    // page is effectively taken (suspended, protected, error pages, etc.).
-    return { status: 'taken', code: res.status }
+    const haystack = `${String(bodyFinalUrl || finalUrl)}\n${String(bodyText || '')}`.toLowerCase()
+    const nameLower = String(name || '').toLowerCase()
+
+    const matches = (needles) => {
+      for (const raw of needles) {
+        if (!raw) continue
+        const needle = String(raw).replaceAll('{name}', nameLower).toLowerCase()
+        if (needle && haystack.includes(needle)) return true
+      }
+      return false
+    }
+
+    if (matches(unknownNeedleList)) {
+      return { status: 'unknown', code: res.status }
+    }
+
+    if (matches(availableNeedleList)) {
+      return { status: 'available', code: res.status }
+    }
+
+    if (matches(takenNeedleList) || matches(globalTaken)) {
+      return { status: 'taken', code: res.status }
+    }
+
+    return { status: 'unknown', code: res.status }
   }
 
   return { status: 'unsupported' }

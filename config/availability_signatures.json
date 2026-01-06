@@ -1,10 +1,20 @@
 {
   "version": 1,
   "notes": "User-editable string signatures for classifying profile/name availability checks. Each service id should match config/services.json. Matching is case-insensitive substring.",
+  "global": {
+    "taken": [
+      "banned"
+    ]
+  },
   "services": {
     "x": {
-      "available": [],
-      "taken": [],
+      "available": [
+        "this account doesn't exist",
+        "try searching for another"
+      ],
+      "taken": [
+        "account suspended"
+      ],
       "unknown": [
         "something went wrong",
         "try again",
@@ -18,9 +28,12 @@
     },
     "instagram": {
       "available": [
-        "sorry, this page isn't available"
+        "sorry, this page isn't available",
+        "profile isn't available"
       ],
-      "taken": [],
+      "taken": [
+        "see more from"
+      ],
       "unknown": [
         "challenge required",
         "please wait",
@@ -34,7 +47,9 @@
       "available": [
         "this content isn't available right now"
       ],
-      "taken": [],
+      "taken": [
+        "see more from"
+      ],
       "unknown": [
         "log in",
         "login",
@@ -45,10 +60,15 @@
     "youtube": {
       "available": [
         "this page isn't available",
+        "sorry about that",
         "channel does not exist",
         "not found"
       ],
       "taken": [
+        "@",
+        "home",
+        "videos",
+        "playlists",
         "videos",
         "subscribers"
       ],
@@ -84,9 +104,10 @@
         "user not found"
       ],
       "taken": [
-        "following",
         "followers",
-        "likes"
+        "likes",
+        "follow",
+        "messages"
       ],
       "unknown": [
         "verify to continue",
@@ -99,9 +120,11 @@
       "available": [
         "couldn't find that page",
         "could not find that page",
+        "show_error=true",
         "page not found"
       ],
       "taken": [
+        "{name}",
         "followers",
         "following",
         "pins"
@@ -116,10 +139,14 @@
     "github": {
       "available": [
         "not found",
+        "find code, projects, and people on github",
         "there isn't a github pages site here"
       ],
       "taken": [
+        "overview",
         "repositories",
+        "projects",
+        "packages",
         "followers",
         "following"
       ],
@@ -136,7 +163,9 @@
       ],
       "taken": [
         "karma",
-        "cake day"
+        "cake day",
+        "this account has been banned",
+        "trophy case"
       ],
       "unknown": [
         "you've been blocked",
@@ -151,6 +180,9 @@
         "page not found"
       ],
       "taken": [
+        "{name}",
+        "home",
+        "about",
         "followers",
         "following"
       ],
@@ -163,9 +195,16 @@
     "twitch": {
       "available": [
         "sorry. unless you've got a time machine",
+        "that content is unavailable",
         "this channel is not available"
       ],
       "taken": [
+        "{name}",
+        "home",
+        "about",
+        "schedule",
+        "videos",
+        "this channel is currently unavailable due to a violation of twitch's community guidelines or terms of service",
         "followers",
         "videos",
         "schedule"
@@ -180,9 +219,13 @@
     "producthunt": {
       "available": [
         "404",
-        "page not found"
+        "page not found",
+        "we seem to have lost this page"
       ],
       "taken": [
+        "about",
+        "forums",
+        "activity",
         "upvotes",
         "products"
       ],
@@ -196,9 +239,12 @@
     "substack": {
       "available": [
         "publication not found",
-        "not found"
+        "not found",
+        "the page you are attempting to access is not found"
       ],
       "taken": [
+        "{name}",
+        "launched",
         "subscribe",
         "published"
       ],
@@ -210,9 +256,11 @@
     "behance": {
       "available": [
         "page not found",
+        "oops! we can't find that page",
         "404"
       ],
       "taken": [
+        "member since",
         "projects",
         "followers",
         "following"
@@ -227,9 +275,15 @@
     "dribbble": {
       "available": [
         "we couldn't find that page",
+        "whoops, that page is gone",
         "page not found"
       ],
       "taken": [
+        "{name}",
+        "contact us",
+        "uh-oh",
+        "the profile you're trying to view isn't public yet",
+        "designer account",
         "shots",
         "followers",
         "following"
