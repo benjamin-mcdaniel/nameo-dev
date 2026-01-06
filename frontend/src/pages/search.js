@@ -62,6 +62,10 @@ export function Search() {
         </form>
         <div class="actions-inline" style="margin-top: 10px;">
           <a class="btn" id="link-advanced-search" href="#/advanced">Try advanced search</a>
+          <label class="hint" style="display:flex; align-items:center; gap:6px; margin:0;">
+            <input id="toggle-debug" type="checkbox" />
+            Debug
+          </label>
         </div>
         <div id="search-status" class="status"></div>
 
@@ -98,6 +102,7 @@ function attachSearchLogic(root) {
   const termsBannerClose = termsBannerEl?.querySelector('.banner-close')
   const input = root.querySelector('#search-input')
   const advancedLink = root.querySelector('#link-advanced-search')
+  const debugToggle = root.querySelector('#toggle-debug')
   const statusEl = root.querySelector('#search-status')
   const resultsEl = root.querySelector('#search-results')
   const suggestionsEl = root.querySelector('#search-suggestions')
@@ -142,6 +147,14 @@ function attachSearchLogic(root) {
       return localStorage.getItem('nameo_debug') === '1'
     } catch {
       return false
+    }
+  }
+
+  function setDebugEnabled(on) {
+    try {
+      localStorage.setItem('nameo_debug', on ? '1' : '0')
+    } catch {
+      // ignore
     }
   }
 
@@ -349,6 +362,8 @@ function attachSearchLogic(root) {
           const label = backend ? (backend.label || backend.service) : p.label
           const url = p.urlTemplate && name ? p.urlTemplate.replace('{name}', encodeURIComponent(name)) : null
           const history = backend && backend.history ? backend.history : 'unknown'
+          const debug = backend && backend.debug ? backend.debug : null
+          const code = backend && typeof backend.code === 'number' ? backend.code : null
 
           const serviceCell = url
             ? `<a href="${url}" target="_blank" rel="noopener">${label}</a>`
@@ -359,6 +374,21 @@ function attachSearchLogic(root) {
               <td>${serviceCell}</td>
               <td class="result-${status}">${status === 'coming_soon' ? 'coming soon' : status}</td>
               <td>${history}</td>
+              ${
+                debugEnabled()
+                  ? `<td class="hint">${
+                      debug
+                        ? `${code ? `code:${code}` : ''} ${debug.matched || ''} ${debug.bodyFetched ? '(body)' : ''} ${
+                            debug.finalUrl
+                              ? `<a href="${debug.finalUrl}" target="_blank" rel="noopener">final</a>`
+                              : ''
+                          }`
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                        : `${code ? `code:${code}` : ''}`.trim()
+                    }</td>`
+                  : ''
+              }
             </tr>
           `
         })
@@ -373,6 +403,7 @@ function attachSearchLogic(root) {
                 <th>Service</th>
                 <th>Status</th>
                 <th>History</th>
+                ${debugEnabled() ? '<th>Debug</th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -440,7 +471,8 @@ function attachSearchLogic(root) {
     suggestionsEl.innerHTML = ''
 
     try {
-      const checkResp = await fetchJson(`${API_BASE}/api/check?name=${encodeURIComponent(trimmed)}`)
+      const checkUrl = `${API_BASE}/api/check?name=${encodeURIComponent(trimmed)}${debugEnabled() ? '&debug=1' : ''}`
+      const checkResp = await fetchJson(checkUrl)
       if (!checkResp.ok) {
         if (checkResp.status === 400 && checkResp.data && checkResp.data.status === 'unsafe') {
           setStatus(checkResp.data.message || 'Name is not allowed.', 'error')
@@ -471,6 +503,16 @@ function attachSearchLogic(root) {
     e.preventDefault()
     runSearch(input.value)
   })
+
+  if (debugToggle) {
+    debugToggle.checked = debugEnabled()
+    debugToggle.addEventListener('change', () => {
+      setDebugEnabled(!!debugToggle.checked)
+      showToast(debugToggle.checked ? 'Debug enabled.' : 'Debug disabled.')
+      const current = (input.value || '').trim()
+      if (current) runSearch(current)
+    })
+  }
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
