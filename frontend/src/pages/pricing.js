@@ -3,8 +3,8 @@ export function Pricing() {
   el.className = 'page pricing container'
   el.innerHTML = `
     <div class="pricing-hero">
-      <h1>Pricing</h1>
-      <p class="sub">Limited beta platform. The plans below are placeholders while we validate platform coverage and reliability. Today the focus is a small set of core checks with clear "self-check" fallbacks when platforms block automation.</p>
+      <h1>Beta tiers</h1>
+      <p class="sub">Limited beta platform. There are no paid features yet. The tiers below are just a way to describe what is available today vs what is planned as the platform stabilizes.</p>
       <div class="pricing-hero-actions">
         <a class="btn btn-primary" href="#/search">Start with basic search</a>
         <a class="btn" href="#/advanced">Try advanced search</a>
@@ -13,14 +13,11 @@ export function Pricing() {
 
     <div class="pricing-grid">
       <div class="pricing-card">
-        <h3>Free (beta)</h3>
-        <div class="pricing-price">
-          <div class="pricing-price-amount">$0</div>
-          <div class="pricing-price-note">during beta</div>
-        </div>
+        <h3>Core (beta)</h3>
         <p class="hint">For anyone trying out quick name checks.</p>
         <ul class="pricing-list">
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Up to 25 searches per day during beta</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Best-effort checks across core platforms</span></li>
+          <li><span class="pricing-check" aria-hidden="true"></span><span>Clear "self-check" guidance when platforms block automation</span></li>
           <li><span class="pricing-check" aria-hidden="true"></span><span>Core platform checks (social availability signals)</span></li>
           <li><span class="pricing-check" aria-hidden="true"></span><span>Local history + favorites in your browser</span></li>
         </ul>
@@ -32,12 +29,8 @@ export function Pricing() {
 
       <div class="pricing-card recommended">
         <div class="pricing-badge">Recommended</div>
-        <h3>Basic</h3>
-        <div class="pricing-price">
-          <div class="pricing-price-amount">$9</div>
-          <div class="pricing-price-note">/ month (planned)</div>
-        </div>
-        <p class="hint">Planned. For solo builders who want higher limits and better guidance when the beta stabilizes.</p>
+        <h3>Builder (beta)</h3>
+        <p class="hint">In beta. This tier represents the experience we’re targeting as reliability improves.</p>
         <ul class="pricing-list">
           <li><span class="pricing-check" aria-hidden="true"></span><span>Higher daily search limits</span></li>
           <li><span class="pricing-check" aria-hidden="true"></span><span>Broader platform coverage as we add more destinations</span></li>
@@ -51,12 +44,8 @@ export function Pricing() {
       </div>
 
       <div class="pricing-card">
-        <h3>Pro Search</h3>
-        <div class="pricing-price">
-          <div class="pricing-price-amount">$29</div>
-          <div class="pricing-price-note">/ month (planned)</div>
-        </div>
-        <p class="hint">Planned. For startups, agencies, and launches that need a unified identity report.</p>
+        <h3>Pro Search (beta)</h3>
+        <p class="hint">In beta. This tier represents deeper checks + unified reports once platform coverage is expanded.</p>
         <ul class="pricing-list">
           <li><span class="pricing-check" aria-hidden="true"></span><span>Pro Search checks (domains, marketplaces, and deeper destinations as they come online)</span></li>
           <li><span class="pricing-check" aria-hidden="true"></span><span>Unified reports for teams and launches</span></li>
@@ -71,7 +60,7 @@ export function Pricing() {
     </div>
 
     <div class="pricing-fineprint">
-      Pricing, limits, and coverage are placeholders while the product is in beta.
+      All tiers are beta tiers. Pricing is not enabled.
       If you need something specific for a launch, email <a href="mailto:support@nameo.dev">support@nameo.dev</a>.
     </div>
   `

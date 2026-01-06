@@ -70,17 +70,38 @@ function attachStatusLogic(root) {
         const status = r?.status || 'unknown'
         const code = typeof r?.code === 'number' ? r.code : null
 
-        let display = status === 'coming_soon' ? 'coming soon' : status
+        let display = 'Unknown'
         let note = ''
 
         if (status === 'unknown' && (code === 403 || code === 429)) {
           display = 'Self-check only'
           note = `HTTP ${code}`
-        } else if (status === 'unknown' && code) {
-          note = `HTTP ${code}`
+        } else if (status === 'error') {
+          display = 'Not working'
+          note = code ? `HTTP ${code}` : ''
+        } else if (status === 'coming_soon') {
+          display = 'Unknown'
+          note = 'coming soon'
+        } else if (status === 'available' || status === 'taken') {
+          display = 'Working'
+          note = code ? `HTTP ${code}` : ''
+        } else if (status === 'unknown') {
+          display = 'Unknown'
+          note = code ? `HTTP ${code}` : ''
+        } else {
+          display = 'Unknown'
+          note = code ? `HTTP ${code}` : ''
         }
 
-        return { serviceText: String(service), status, display, note, code }
+        const sortStatus = display === 'Not working'
+          ? 'error'
+          : display === 'Self-check only'
+            ? 'unknown'
+            : display === 'Working'
+              ? 'available'
+              : 'unknown'
+
+        return { serviceText: String(service), status: sortStatus, display, note, code }
       })
       .sort((a, b) => {
         const byStatus = statusRank(a.status) - statusRank(b.status)

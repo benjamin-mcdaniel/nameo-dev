@@ -12,7 +12,7 @@ export function Home() {
           <p class="sub">Limited beta: best-effort checks across core platforms. Some destinations may require manual verification when they block automated requests.</p>
           <div class="actions home-hero-actions">
             <a class="btn btn-primary" href="#/search">Start searching</a>
-            <a class="btn" href="#/pricing">Pricing</a>
+            <a class="btn" href="#/pricing">Beta tiers</a>
           </div>
         </div>
 
