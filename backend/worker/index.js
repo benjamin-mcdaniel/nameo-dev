@@ -112,6 +112,8 @@ async function handleCheck(url, env) {
   const name = rawName.replace(/\s+/g, '')
   const safetyConfig = await loadSafetyConfig(env)
 
+  const debug = url.searchParams.get('debug') === '1'
+
   const turnstileToken = url.searchParams.get('cf_turnstile_token') || ''
 
   const turnstileOk = await verifyTurnstile(env, turnstileToken)
@@ -128,7 +130,7 @@ async function handleCheck(url, env) {
     return json({ status: 'error', error: 'missing_name' }, 400)
   }
 
-  const results = await runChecksForName(env, name, null)
+  const results = await runChecksForName(env, name, null, debug)
   return json({ status: 'ok', name, results })
 }
 
@@ -400,7 +402,7 @@ async function handleCheckOption(env, userId, optionId) {
 // This function is the only place that knows whether we:
 // - Call out to the external orchestrator service, or
 // - Fall back to the local services.json + url_status checks.
-async function runChecksForName(env, name, userIdOrNull) {
+async function runChecksForName(env, name, userIdOrNull, debug = false) {
   // Try orchestrator first when configured. Any failure should fall back
   // to local checks so the public API keeps working even if the VM or
   // Cloudflare routing is down.
@@ -427,7 +429,7 @@ async function runChecksForName(env, name, userIdOrNull) {
   const servicesConfig = await loadServicesConfig(env)
 
   const checks = await Promise.allSettled(
-    servicesConfig.services.map((service) => checkServiceAvailability(service, name))
+    servicesConfig.services.map((service) => checkServiceAvailability(service, name, debug))
   )
 
   const results = servicesConfig.services.map((service, index) => {
@@ -775,7 +777,7 @@ async function evaluateNameSafety(name, safetyConfig) {
   return { ok: true }
 }
 
-async function checkServiceAvailability(service, name) {
+async function checkServiceAvailability(service, name, debug = false) {
   if (service.strategy === 'coming_soon') {
     return { status: 'coming_soon' }
   }
@@ -794,7 +796,15 @@ async function checkServiceAvailability(service, name) {
     const finalUrl = (res && res.url) || url
 
     if (res.status === 404) {
-      return { status: 'available', code: res.status }
+      return debug
+        ? { status: 'available', code: res.status, debug: { finalUrl, matched: 'status:404', bodyFetched: false } }
+        : { status: 'available', code: res.status }
+    }
+
+    if (res.status === 401 || res.status === 403 || res.status === 429) {
+      return debug
+        ? { status: 'unknown', code: res.status, debug: { finalUrl, matched: `status:${res.status}`, bodyFetched: false } }
+        : { status: 'unknown', code: res.status }
     }
 
     const globalTaken =
@@ -811,15 +821,18 @@ async function checkServiceAvailability(service, name) {
 
     let bodyText = ''
     let bodyFinalUrl = finalUrl
+    let bodyFetched = false
 
     if (needsBody) {
       if (method === 'GET') {
         bodyFinalUrl = finalUrl
         bodyText = await res.text().catch(() => '')
+        bodyFetched = true
       } else {
         const res2 = await fetch(url, { method: 'GET' })
         bodyFinalUrl = (res2 && res2.url) || finalUrl
         bodyText = await res2.text().catch(() => '')
+        bodyFetched = true
       }
     }
 
@@ -835,19 +848,41 @@ async function checkServiceAvailability(service, name) {
       return false
     }
 
-    if (matches(unknownNeedleList)) {
-      return { status: 'unknown', code: res.status }
+    const firstMatch = (needles) => {
+      for (const raw of needles) {
+        if (!raw) continue
+        const needle = String(raw).replaceAll('{name}', nameLower).toLowerCase()
+        if (needle && haystack.includes(needle)) return String(raw)
+      }
+      return null
     }
 
-    if (matches(availableNeedleList)) {
-      return { status: 'available', code: res.status }
+    // Precedence: available/taken should win over unknown to reduce false-unknown
+    // when generic strings like "login" or "verify" appear on otherwise valid pages.
+    const availableHit = firstMatch(availableNeedleList)
+    if (availableHit) {
+      return debug
+        ? { status: 'available', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `available:${availableHit}`, bodyFetched } }
+        : { status: 'available', code: res.status }
     }
 
-    if (matches(takenNeedleList) || matches(globalTaken)) {
-      return { status: 'taken', code: res.status }
+    const takenHit = firstMatch(takenNeedleList) || firstMatch(globalTaken)
+    if (takenHit) {
+      return debug
+        ? { status: 'taken', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `taken:${takenHit}`, bodyFetched } }
+        : { status: 'taken', code: res.status }
     }
 
-    return { status: 'unknown', code: res.status }
+    const unknownHit = firstMatch(unknownNeedleList)
+    if (unknownHit) {
+      return debug
+        ? { status: 'unknown', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `unknown:${unknownHit}`, bodyFetched } }
+        : { status: 'unknown', code: res.status }
+    }
+
+    return debug
+      ? { status: 'unknown', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: 'no_match', bodyFetched } }
+      : { status: 'unknown', code: res.status }
   }
 
   return { status: 'unsupported' }

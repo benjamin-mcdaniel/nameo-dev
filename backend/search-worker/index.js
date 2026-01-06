@@ -18,6 +18,7 @@ export default {
 
       const body = await request.json().catch(() => ({}))
       const name = (body.name || '').trim()
+      const debug = !!body.debug
       if (!name) {
         return json({ status: 'error', name: '', results: [] }, 400)
       }
@@ -29,7 +30,7 @@ export default {
       const servicesConfig = await loadServicesConfig()
 
       const checks = await Promise.allSettled(
-        servicesConfig.services.map((service) => checkServiceAvailability(service, name))
+        servicesConfig.services.map((service) => checkServiceAvailability(service, name, debug))
       )
 
       const results = servicesConfig.services.map((service, index) => {
@@ -62,7 +63,7 @@ async function loadAvailabilitySignatures() {
   return config.default || config
 }
 
-async function checkServiceAvailability(service, name) {
+async function checkServiceAvailability(service, name, debug = false) {
   if (service.strategy === 'coming_soon') {
     return { status: 'coming_soon' }
   }
@@ -80,7 +81,15 @@ async function checkServiceAvailability(service, name) {
     const finalUrl = (res && res.url) || url
 
     if (res.status === 404) {
-      return { status: 'available', code: res.status }
+      return debug
+        ? { status: 'available', code: res.status, debug: { finalUrl, matched: 'status:404', bodyFetched: false } }
+        : { status: 'available', code: res.status }
+    }
+
+    if (res.status === 401 || res.status === 403 || res.status === 429) {
+      return debug
+        ? { status: 'unknown', code: res.status, debug: { finalUrl, matched: `status:${res.status}`, bodyFetched: false } }
+        : { status: 'unknown', code: res.status }
     }
 
     const globalTaken =
@@ -97,43 +106,57 @@ async function checkServiceAvailability(service, name) {
 
     let bodyText = ''
     let bodyFinalUrl = finalUrl
+    let bodyFetched = false
 
     if (needsBody) {
       if (method === 'GET') {
         bodyFinalUrl = finalUrl
         bodyText = await res.text().catch(() => '')
+        bodyFetched = true
       } else {
         const res2 = await fetch(url, { method: 'GET' })
         bodyFinalUrl = (res2 && res2.url) || finalUrl
         bodyText = await res2.text().catch(() => '')
+        bodyFetched = true
       }
     }
 
     const haystack = `${String(bodyFinalUrl || finalUrl)}\n${String(bodyText || '')}`.toLowerCase()
     const nameLower = String(name || '').toLowerCase()
 
-    const matches = (needles) => {
+    const firstMatch = (needles) => {
       for (const raw of needles) {
         if (!raw) continue
         const needle = String(raw).replaceAll('{name}', nameLower).toLowerCase()
-        if (needle && haystack.includes(needle)) return true
+        if (needle && haystack.includes(needle)) return String(raw)
       }
-      return false
+      return null
     }
 
-    if (matches(unknownNeedleList)) {
-      return { status: 'unknown', code: res.status }
+    const availableHit = firstMatch(availableNeedleList)
+    if (availableHit) {
+      return debug
+        ? { status: 'available', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `available:${availableHit}`, bodyFetched } }
+        : { status: 'available', code: res.status }
     }
 
-    if (matches(availableNeedleList)) {
-      return { status: 'available', code: res.status }
+    const takenHit = firstMatch(takenNeedleList) || firstMatch(globalTaken)
+    if (takenHit) {
+      return debug
+        ? { status: 'taken', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `taken:${takenHit}`, bodyFetched } }
+        : { status: 'taken', code: res.status }
     }
 
-    if (matches(takenNeedleList) || matches(globalTaken)) {
-      return { status: 'taken', code: res.status }
+    const unknownHit = firstMatch(unknownNeedleList)
+    if (unknownHit) {
+      return debug
+        ? { status: 'unknown', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `unknown:${unknownHit}`, bodyFetched } }
+        : { status: 'unknown', code: res.status }
     }
 
-    return { status: 'unknown', code: res.status }
+    return debug
+      ? { status: 'unknown', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: 'no_match', bodyFetched } }
+      : { status: 'unknown', code: res.status }
   }
 
   return { status: 'unsupported' }
