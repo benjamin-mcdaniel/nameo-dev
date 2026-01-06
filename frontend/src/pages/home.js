@@ -9,7 +9,7 @@ export function Home() {
         <div class="home-hero-copy">
           <div class="home-hero-eyebrow">Nameo.dev • Everywhere identity Search</div>
           <h1>Find a name you can actually use.</h1>
-          <p class="sub">Check availability across the internet in one place - from social handles to creator platforms and even domains. Built for founders, makers, and creators.</p>
+          <p class="sub">Limited beta: best-effort checks across core platforms. Some destinations may require manual verification when they block automated requests.</p>
           <div class="actions home-hero-actions">
             <a class="btn btn-primary" href="#/search">Start searching</a>
             <a class="btn" href="#/pricing">Pricing</a>

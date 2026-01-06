@@ -1,18 +1,5 @@
 const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
 
-const STATUS_EXPECTATIONS = {
-  x: 'taken',
-  instagram: 'taken',
-  facebook: 'taken',
-  youtube: 'taken',
-  tiktok: 'taken',
-  pinterest: 'taken',
-  linkedin: 'taken',
-  github: 'taken',
-  reddit: 'taken',
-  medium: 'taken',
-}
-
 export function Status() {
   const el = document.createElement('section')
   el.className = 'page status'
@@ -20,7 +7,7 @@ export function Status() {
     <div class="container status-page">
       <div class="status-panel">
         <h1>Service Status</h1>
-        <p class="sub">We periodically run a small internal check against the search backend to confirm that platform checks are behaving as expected.</p>
+        <p class="sub">This page runs a lightweight check against the backend and reports platform status. Some platforms block automated checks and will show as self-check only.</p>
         <div id="status-summary" class="status"></div>
         <div id="status-results" class="results"></div>
         <div class="actions">
@@ -48,7 +35,7 @@ function attachStatusLogic(root) {
     let data
     try {
       // Hidden test search: the UI never shows the query string.
-      const url = `${API_BASE}/api/check?name=${encodeURIComponent('cocacola')}`
+      const url = `${API_BASE}/api/check?name=${encodeURIComponent('cocacola')}&debug=1`
       const res = await fetch(url)
       data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -60,21 +47,52 @@ function attachStatusLogic(root) {
       return
     }
 
-    const byService = new Map()
-    for (const r of data.results || []) {
-      if (r && r.service) byService.set(r.service, r.status || 'unknown')
+    const results = Array.isArray(data.results) ? data.results : []
+
+    const statusRank = (status) => {
+      switch (status) {
+        case 'available':
+          return 0
+        case 'taken':
+          return 1
+        case 'unknown':
+          return 2
+        case 'coming_soon':
+          return 3
+        default:
+          return 9
+      }
     }
 
-    const rows = Object.entries(STATUS_EXPECTATIONS)
-      .map(([service, expected]) => {
-        const actual = byService.get(service)
-        const ok = actual === expected
-        const label = ok ? 'ok' : 'broken'
-        const rowClass = ok ? 'result-available' : 'result-taken'
+    const rows = results
+      .map((r) => {
+        const service = r?.label || r?.service || 'service'
+        const status = r?.status || 'unknown'
+        const code = typeof r?.code === 'number' ? r.code : null
+
+        let display = status === 'coming_soon' ? 'coming soon' : status
+        let note = ''
+
+        if (status === 'unknown' && (code === 403 || code === 429)) {
+          display = 'Self-check only'
+          note = `HTTP ${code}`
+        } else if (status === 'unknown' && code) {
+          note = `HTTP ${code}`
+        }
+
+        return { serviceText: String(service), status, display, note, code }
+      })
+      .sort((a, b) => {
+        const byStatus = statusRank(a.status) - statusRank(b.status)
+        if (byStatus !== 0) return byStatus
+        return (a.serviceText || '').localeCompare(b.serviceText || '')
+      })
+      .map((row) => {
         return `
           <tr>
-            <td>${service}</td>
-            <td class="${rowClass}">${label}</td>
+            <td>${row.serviceText}</td>
+            <td class="result-${row.status}">${row.display}</td>
+            <td class="hint">${row.note || ''}</td>
           </tr>
         `
       })
@@ -86,6 +104,7 @@ function attachStatusLogic(root) {
           <tr>
             <th>Source</th>
             <th>Status</th>
+            <th>Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -94,12 +113,8 @@ function attachStatusLogic(root) {
       </table>
     `
 
-    const anyBroken = Object.entries(STATUS_EXPECTATIONS).some(([service, expected]) => {
-      const actual = byService.get(service)
-      return actual !== expected
-    })
-
-    summaryEl.textContent = anyBroken ? 'Some checks are currently broken.' : 'All checks are currently passing.'
+    const anyHardErrors = results.some((r) => r && (r.status === 'error' || r.status === 'unsupported'))
+    summaryEl.textContent = anyHardErrors ? 'Some checks are currently failing.' : 'Status page check completed.'
   }
 
   refreshBtn.addEventListener('click', () => {

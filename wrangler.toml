@@ -6,6 +6,9 @@ compatibility_date = "2024-01-01"
 AUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
 AUTH0_AUDIENCE = "https://nameo-api"
 ORCHESTRATOR_URL = "https://nameo-search-worker.benjamin-f-mcdaniel.workers.dev"
+# Parked-mode abuse/cost caps (see README)
+RATE_LIMIT_DAILY_GLOBAL = "5000"
+RATE_LIMIT_DAILY_IP = "5000"
 # ORCHESTRATOR_TOKEN is a secret and must be set via Wrangler/Cloudflare dashboard (do not commit it here)
 
 [[services]]

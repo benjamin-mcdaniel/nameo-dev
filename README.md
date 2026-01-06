@@ -52,6 +52,25 @@ This repo intentionally treats those cases as `unknown`.
 
 This is expected behavior and is why the project includes a debug mode + user-tunable signatures.
 
+## Abuse / cost protection (rate limiting)
+
+The public endpoints (`/api/check` and `/api/suggestions`) are intentionally accessible without login.
+To prevent unattended cost surprises, the Worker enforces simple D1-backed caps:
+
+- **Global daily cap** for `/api/check` and `/api/suggestions` (default: `5000`/day)
+- **Per-IP daily cap** for `/api/check` and `/api/suggestions` (default: `5000`/day)
+
+When a cap is exceeded, the Worker returns HTTP `429` with a `Retry-After` header.
+
+Knobs (Cloudflare Worker env vars):
+
+- `DAILY_CHECK_LIMIT` (or `RATE_LIMIT_DAILY_GLOBAL`)
+  - Sets the global daily cap.
+- `RATE_LIMIT_DAILY_IP`
+  - Sets the per-IP daily cap.
+
+Setting either value to `0` disables the endpoint (it will return `429`).
+
 ## Debug mode
 
 - Backend: `/api/check?name=<name>&debug=1` will include per-service debug fields.

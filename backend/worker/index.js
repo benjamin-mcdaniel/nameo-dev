@@ -4,6 +4,9 @@ import { createRemoteJWKSet, jwtVerify } from 'jose'
 let PROFANITY_READY = false
 let JWKS_CACHE = null
 
+const DEFAULT_DAILY_GLOBAL_LIMIT = 5000
+const DEFAULT_DAILY_IP_LIMIT = 5000
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
@@ -26,16 +29,12 @@ export default {
         return handleHealth(env)
       }
 
-      if (url.pathname === '/api/test-orchestrator' && request.method === 'GET') {
-        return handleTestOrchestrator(url, env)
-      }
-
       if (url.pathname === '/api/check' && request.method === 'GET') {
-        return handleCheck(url, env)
+        return handleCheck(request, url, env)
       }
 
       if (url.pathname === '/api/suggestions' && request.method === 'GET') {
-        return handleSuggestions(url, env)
+        return handleSuggestions(request, url, env)
       }
 
       // Below this point, routes require a real Auth0 user. We verify the
@@ -52,6 +51,10 @@ export default {
 
       if (url.pathname === '/api/account' && request.method === 'DELETE') {
         return handleDeleteAccount(env, user.id)
+      }
+
+      if (url.pathname === '/api/test-orchestrator' && request.method === 'GET') {
+        return handleTestOrchestrator(url, env)
       }
 
       if (url.pathname === '/api/campaigns' && request.method === 'GET') {
@@ -107,7 +110,131 @@ export default {
   },
 }
 
-async function handleCheck(url, env) {
+function getDailyGlobalLimit(env) {
+  const raw = Number(env.DAILY_CHECK_LIMIT || env.RATE_LIMIT_DAILY_GLOBAL || DEFAULT_DAILY_GLOBAL_LIMIT)
+  return Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : DEFAULT_DAILY_GLOBAL_LIMIT
+}
+
+function getDailyIpLimit(env) {
+  const raw = Number(env.RATE_LIMIT_DAILY_IP || DEFAULT_DAILY_IP_LIMIT)
+  return Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : DEFAULT_DAILY_IP_LIMIT
+}
+
+function utcDayKey(nowMs) {
+  try {
+    return new Date(nowMs).toISOString().slice(0, 10)
+  } catch {
+    return 'unknown-day'
+  }
+}
+
+function secondsUntilNextUtcDay(nowMs) {
+  try {
+    const d = new Date(nowMs)
+    const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0))
+    return Math.max(1, Math.floor((next.getTime() - nowMs) / 1000))
+  } catch {
+    return 3600
+  }
+}
+
+async function sha256Hex(input) {
+  const data = new TextEncoder().encode(String(input || ''))
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  const bytes = Array.from(new Uint8Array(hash))
+  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function getClientIp(request) {
+  const cf = request.headers.get('cf-connecting-ip')
+  if (cf) return cf
+  const xff = request.headers.get('x-forwarded-for')
+  if (xff) return xff.split(',')[0].trim()
+  return ''
+}
+
+async function incrementCounter(db, key, nowSeconds) {
+  // Prefer a single atomic upsert.
+  try {
+    const row = await db
+      .prepare(
+        'INSERT INTO rate_limits (key, count, updated_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at RETURNING count'
+      )
+      .bind(key, nowSeconds)
+      .first()
+    const count = row && typeof row.count === 'number' ? row.count : null
+    if (typeof count === 'number') return count
+  } catch {
+    // fall through
+  }
+
+  // Fallback: update then read. (Less ideal but still provides a safety valve.)
+  await db
+    .prepare(
+      'INSERT INTO rate_limits (key, count, updated_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1, updated_at = ?'
+    )
+    .bind(key, nowSeconds, nowSeconds)
+    .run()
+
+  const row = await db
+    .prepare('SELECT count FROM rate_limits WHERE key = ?')
+    .bind(key)
+    .first()
+  const count = row && typeof row.count === 'number' ? row.count : 0
+  return count
+}
+
+async function enforcePublicApiLimits(request, env, kind) {
+  const db = env.NAMEO_DB
+  if (!db) return { ok: true }
+
+  const nowMs = Date.now()
+  const nowSeconds = Math.floor(nowMs / 1000)
+  const day = utcDayKey(nowMs)
+  const globalLimit = getDailyGlobalLimit(env)
+  const ipLimit = getDailyIpLimit(env)
+
+  // Allow setting limits to 0 to hard-disable the endpoint without removing it.
+  if (globalLimit === 0 || ipLimit === 0) {
+    return { ok: false, reason: 'disabled', retryAfter: secondsUntilNextUtcDay(nowMs) }
+  }
+
+  const ip = getClientIp(request)
+  const ipHash = ip ? await sha256Hex(ip) : 'noip'
+
+  const globalKey = `rl:${kind}:global:${day}`
+  const ipKey = `rl:${kind}:ip:${day}:${ipHash}`
+
+  const globalCount = await incrementCounter(db, globalKey, nowSeconds)
+  if (globalCount > globalLimit) {
+    return { ok: false, reason: 'global_cap', retryAfter: secondsUntilNextUtcDay(nowMs) }
+  }
+
+  const ipCount = await incrementCounter(db, ipKey, nowSeconds)
+  if (ipCount > ipLimit) {
+    return { ok: false, reason: 'ip_cap', retryAfter: secondsUntilNextUtcDay(nowMs) }
+  }
+
+  return { ok: true }
+}
+
+async function handleCheck(request, url, env) {
+  const limit = await enforcePublicApiLimits(request, env, 'check')
+  if (!limit.ok) {
+    const retryAfter = limit.retryAfter || 3600
+    return json(
+      {
+        status: 'rate_limited',
+        reason: limit.reason || 'rate_limited',
+        message: 'Search is temporarily disabled to prevent abuse. Please try again later.',
+      },
+      429,
+      {
+        'Retry-After': String(retryAfter),
+      }
+    )
+  }
+
   const rawName = url.searchParams.get('name')?.trim() || ''
   const name = rawName.replace(/\s+/g, '')
   const safetyConfig = await loadSafetyConfig(env)
@@ -262,7 +389,23 @@ async function verifyTurnstile(env, token) {
   return !!data.success
 }
 
-async function handleSuggestions(url, env) {
+async function handleSuggestions(request, url, env) {
+  const limit = await enforcePublicApiLimits(request, env, 'suggestions')
+  if (!limit.ok) {
+    const retryAfter = limit.retryAfter || 3600
+    return json(
+      {
+        status: 'rate_limited',
+        reason: limit.reason || 'rate_limited',
+        message: 'Suggestions are temporarily disabled to prevent abuse. Please try again later.',
+      },
+      429,
+      {
+        'Retry-After': String(retryAfter),
+      }
+    )
+  }
+
   const name = url.searchParams.get('name')?.trim() || ''
   const safetyConfig = await loadSafetyConfig(env)
 
@@ -986,12 +1129,13 @@ async function verifyAuth0Token(request, env) {
   }
 }
 
-function json(body, status = 200) {
+function json(body, status = 200, extraHeaders = null) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'Content-Type': 'application/json',
       ...CORS_HEADERS,
+      ...(extraHeaders && typeof extraHeaders === 'object' ? extraHeaders : {}),
     },
   })
 }

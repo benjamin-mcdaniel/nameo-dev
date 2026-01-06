@@ -54,3 +54,13 @@ CREATE TABLE IF NOT EXISTS search_history (
 );
 
 CREATE INDEX IF NOT EXISTS idx_history_user_ts ON search_history(user_id, searched_at DESC);
+
+-- Simple counters used for safety valves (rate limiting / daily caps).
+-- Keys are free-form strings such as:
+--   rl:check:global:YYYY-MM-DD
+--   rl:check:ip:YYYY-MM-DD:<hash>
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
