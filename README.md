@@ -11,6 +11,12 @@
   - Executes `url_status` checks from `config/services.json` and returns a normalized `results` list.
   - In the future it will own "heavier" and more custom search logic; `nameo-worker` can call it via the `SEARCH_ORCHESTRATOR` binding.
 
+## Database (Cloudflare D1)
+
+- The main API Worker (`nameo-worker`) uses a Cloudflare D1 database bound as `NAMEO_DB`.
+- Schema lives in `backend/db/schema.sql`.
+- The schema includes the `rate_limits` table which backs the parked-mode daily caps.
+
 ## How availability checks work (current)
 
 Availability checks are **best-effort HTTP fetches** (no headless browser rendering) and are classified using string signatures.
@@ -64,7 +70,7 @@ When a cap is exceeded, the Worker returns HTTP `429` with a `Retry-After` heade
 
 Knobs (Cloudflare Worker env vars):
 
-- `DAILY_CHECK_LIMIT` (or `RATE_LIMIT_DAILY_GLOBAL`)
+- `RATE_LIMIT_DAILY_GLOBAL`
   - Sets the global daily cap.
 - `RATE_LIMIT_DAILY_IP`
   - Sets the per-IP daily cap.
@@ -82,6 +88,13 @@ Setting either value to `0` disables the endpoint (it will return `429`).
 
 ## Deploy
 
+D1 schema (required for rate limiting and other state):
+
+```bash
+# apply schema to remote D1 (creates tables if missing)
+wrangler d1 execute nameo-db --file backend/db/schema.sql --remote
+```
+
 Workers:
 
 ```bash
@@ -92,6 +105,12 @@ npx wrangler deploy
 # main API worker
 cd ../..
 npx wrangler deploy
+```
+
+If you prefer not to `cd`, you can also deploy the orchestrator from repo root:
+
+```bash
+wrangler deploy --config backend/search-worker/wrangler.toml
 ```
 
 Frontend:
