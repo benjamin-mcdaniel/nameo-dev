@@ -2,67 +2,72 @@ export function Pricing() {
   const el = document.createElement('section')
   el.className = 'page pricing container'
   el.innerHTML = `
-    <div class="pricing-hero">
-      <h1>Beta tiers</h1>
-      <p class="sub">Limited beta platform. There are no paid features yet. The tiers below are just a way to describe what is available today vs what is planned as the platform stabilizes.</p>
-      <div class="pricing-hero-actions">
-        <a class="btn btn-primary" href="#/search">Start with basic search</a>
-        <a class="btn" href="#/advanced">Try advanced search</a>
-      </div>
+    <div class="page-header">
+      <div class="eyebrow">Pricing</div>
+      <h1>Simple, transparent pricing</h1>
+      <p>Start free. Upgrade when you need deeper checks and team features.</p>
     </div>
 
     <div class="pricing-grid">
       <div class="pricing-card">
-        <h3>Core (beta)</h3>
-        <p class="hint">For anyone trying out quick name checks.</p>
+        <h3>Free</h3>
+        <div class="pricing-price">
+          <span class="pricing-price-amount">$0</span>
+          <span class="pricing-price-note">/ month</span>
+        </div>
         <ul class="pricing-list">
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Best-effort checks across core platforms</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Clear "self-check" guidance when platforms block automation</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Core platform checks (social availability signals)</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Local history + favorites in your browser</span></li>
+          <li><span class="pricing-check"></span>Quick name search</li>
+          <li><span class="pricing-check"></span>Social handle checks</li>
+          <li><span class="pricing-check"></span>1 active project</li>
+          <li><span class="pricing-check"></span>Search history</li>
         </ul>
         <div class="pricing-cta">
-          <a class="btn btn-primary" href="#/search">Use free search</a>
-          <div class="hint">Best for quick exploration.</div>
+          <a href="#/campaigns" class="btn" style="width:100%;justify-content:center">Get started free</a>
         </div>
       </div>
 
       <div class="pricing-card recommended">
-        <div class="pricing-badge">Recommended</div>
-        <h3>Builder (beta)</h3>
-        <p class="hint">In beta. This tier represents the experience we’re targeting as reliability improves.</p>
+        <span class="pricing-badge">Popular</span>
+        <h3>Pro</h3>
+        <div class="pricing-price">
+          <span class="pricing-price-amount">$19</span>
+          <span class="pricing-price-note">/ month</span>
+        </div>
         <ul class="pricing-list">
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Higher daily search limits</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Broader platform coverage as we add more destinations</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Smarter suggestions when a name is crowded (planned)</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Synced search history when logged in</span></li>
+          <li><span class="pricing-check"></span>Everything in Free</li>
+          <li><span class="pricing-check"></span>Domain availability checks</li>
+          <li><span class="pricing-check"></span>App Store &amp; Play Store signals</li>
+          <li><span class="pricing-check"></span>Unlimited projects</li>
+          <li><span class="pricing-check"></span>Exportable reports</li>
+          <li><span class="pricing-check"></span>Priority checks</li>
         </ul>
         <div class="pricing-cta">
-          <a class="btn btn-primary" href="#/search">Start building a shortlist</a>
-          <div class="hint">Most users will start here after beta.</div>
+          <a href="#/login" class="btn btn-primary" style="width:100%;justify-content:center">Start Pro</a>
         </div>
       </div>
 
       <div class="pricing-card">
-        <h3>Pro Search (beta)</h3>
-        <p class="hint">In beta. This tier represents deeper checks + unified reports once platform coverage is expanded.</p>
+        <h3>Team</h3>
+        <div class="pricing-price">
+          <span class="pricing-price-amount">$49</span>
+          <span class="pricing-price-note">/ month</span>
+        </div>
         <ul class="pricing-list">
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Pro Search checks (domains, marketplaces, and deeper destinations as they come online)</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Unified reports for teams and launches</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Handle-variation recommendations (official/real/app/platform)</span></li>
-          <li><span class="pricing-check" aria-hidden="true"></span><span>Exportable/shareable reports for teams and clients (planned)</span></li>
+          <li><span class="pricing-check"></span>Everything in Pro</li>
+          <li><span class="pricing-check"></span>Trademark signals (US + EU)</li>
+          <li><span class="pricing-check"></span>Up to 5 team members</li>
+          <li><span class="pricing-check"></span>Shared projects</li>
+          <li><span class="pricing-check"></span>Shareable report links</li>
         </ul>
         <div class="pricing-cta">
-          <a class="btn btn-primary" href="#/advanced">Run advanced search</a>
-          <div class="hint">Best for higher-stakes naming decisions.</div>
+          <a href="#/login" class="btn" style="width:100%;justify-content:center">Start Team</a>
         </div>
       </div>
     </div>
 
-    <div class="pricing-fineprint">
-      All tiers are beta tiers. Pricing is not enabled.
-      If you need something specific for a launch, email <a href="mailto:support@nameo.dev">support@nameo.dev</a>.
-    </div>
+    <p class="hint" style="margin-top:20px;text-align:center">
+      All plans include a 14-day free trial. No credit card required to start.
+    </p>
   `
   return el
 }

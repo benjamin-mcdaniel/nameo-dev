@@ -10,17 +10,16 @@ export function Header() {
   const nav = document.createElement('nav')
   nav.className = 'site-nav'
   nav.innerHTML = `
-    <a href="#/search" class="nav-search-primary">Search</a>
-    <a href="#/advanced">Advanced</a>
-    <a href="#/use-case">Use Case</a>
+    <a href="#/search">Search</a>
+    <a href="#/campaigns">Projects</a>
     <a href="#/pricing">Pricing</a>
-    <a href="#/help">Help</a>
+    <a href="#/help">Docs</a>
   `
 
   const userSlot = document.createElement('div')
   userSlot.className = 'user-slot'
   userSlot.innerHTML = `
-    <a href="#/login" class="btn btn-primary user-login-trigger" id="header-login-link">Login</a>
+    <a href="#/login" class="btn btn-primary btn-sm">Sign in</a>
   `
 
   header.appendChild(brand)
@@ -44,11 +43,9 @@ function attachUserMenu(container) {
         if (!authed) {
           const link = document.createElement('a')
           link.href = '#/login'
-          link.className = 'btn btn-primary user-login-trigger'
-          link.textContent = 'Login'
+          link.className = 'btn btn-primary btn-sm'
+          link.textContent = 'Sign in'
           link.addEventListener('click', async (e) => {
-            // Let the dedicated Login page drive the flow, but also
-            // support direct Auth0 login if needed later.
             e.preventDefault()
             await loginWithRedirect()
           })
@@ -83,7 +80,8 @@ function attachUserMenu(container) {
             <div class="user-menu-email">${email}</div>
           </div>
           <button type="button" class="user-menu-item" data-action="account">Account</button>
-          <button type="button" class="user-menu-item" data-action="logout">Logout</button>
+          <button type="button" class="user-menu-item" data-action="projects">My Projects</button>
+          <button type="button" class="user-menu-item" data-action="logout">Sign out</button>
         `
 
         function closeMenu() {
@@ -92,9 +90,7 @@ function attachUserMenu(container) {
         }
 
         function onDocClick(e) {
-          if (!wrapper.contains(e.target)) {
-            closeMenu()
-          }
+          if (!wrapper.contains(e.target)) closeMenu()
         }
 
         toggle.addEventListener('click', (e) => {
@@ -113,15 +109,14 @@ function attachUserMenu(container) {
           if (!(target instanceof HTMLElement)) return
           const action = target.getAttribute('data-action')
           if (!action) return
-
           if (action === 'account') {
             window.location.hash = '#/login'
+          } else if (action === 'projects') {
+            window.location.hash = '#/campaigns'
           } else if (action === 'logout') {
             await logout()
-            // After logout, re-render menu to show Login again
             await render()
           }
-
           closeMenu()
         })
 
@@ -133,6 +128,6 @@ function attachUserMenu(container) {
       render()
     })
     .catch(() => {
-      // On error, leave the static Login link in place.
+      // Leave static Sign in link on auth module error
     })
 }
