@@ -13,8 +13,8 @@ export function Home() {
           everything a founder needs to vet a product name before going all in.
         </p>
         <div class="home-hero-actions">
-          <a class="btn btn-primary btn-lg" href="#/sessions/new">Start a session</a>
-          <a class="btn btn-lg" href="#/search">Quick search</a>
+          <a class="btn btn-primary btn-lg" href="#/sessions/new">Create a Report</a>
+          <a class="btn btn-lg" href="#/sessions">My Sessions</a>
         </div>
         <p class="home-hero-note">Free to start &mdash; no credit card required</p>
       </div>

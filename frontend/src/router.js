@@ -12,13 +12,11 @@ import { Campaigns } from './pages/campaigns.js'
 import { Sessions } from './pages/sessions.js'
 import { NewSession } from './pages/new-session.js'
 import { Session } from './pages/session.js'
-import { Search } from './pages/search.js'
 import { Advanced } from './pages/advanced.js'
 import { AdvancedReport } from './pages/advanced_report.js'
 
 const routes = {
   '/': Home,
-  '/search': Search,
 
   // Session-based workflow (v1.0)
   '/sessions': Sessions,
@@ -41,6 +39,9 @@ const routes = {
   '/test': Test,
 }
 
+// Archived routes — redirect to home
+const archivedRoutes = new Set(['/search'])
+
 function getPath() {
   const hash = window.location.hash || '#/'
   const pathWithQuery = hash.slice(1)
@@ -57,6 +58,12 @@ export const router = {
   navigate() {
     if (!this.outlet) return
     const path = getPath()
+
+    if (archivedRoutes.has(path)) {
+      window.location.hash = '#/'
+      return
+    }
+
     const Page = routes[path] || NotFound
     this.outlet.innerHTML = ''
     this.outlet.appendChild(Page())
