@@ -10,9 +10,9 @@ export function Header() {
   const nav = document.createElement('nav')
   nav.className = 'site-nav'
   nav.innerHTML = `
-    <a href="#/sessions/new">Create a Report</a>
     <a href="#/pricing">Pricing</a>
     <a href="#/help">Docs</a>
+    <a href="#/sessions/new" class="btn btn-primary btn-sm nav-cta">+ Create a Report</a>
   `
 
   const userSlot = document.createElement('div')

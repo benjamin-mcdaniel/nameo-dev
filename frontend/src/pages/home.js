@@ -14,7 +14,7 @@ export function Home() {
         </p>
         <div class="home-hero-actions">
           <a class="btn btn-primary btn-lg" href="#/sessions/new">Create a Report</a>
-          <a class="btn btn-lg" href="#/sessions">My Sessions</a>
+          <a class="btn btn-lg" href="#how-it-works" data-scroll-to="how-it-works">How it works ↓</a>
         </div>
         <p class="home-hero-note">Free to start &mdash; no credit card required</p>
       </div>
@@ -113,7 +113,7 @@ export function Home() {
     </section>
 
     <!-- How it works -->
-    <section class="home-how">
+    <section class="home-how" id="how-it-works">
       <div class="container">
         <div class="home-how-header">
           <div class="eyebrow">How it works</div>
@@ -159,6 +159,14 @@ export function Home() {
       </div>
     </section>
   `
+
+  // Smooth-scroll "How it works" button — uses a data attr to avoid router
+  // treating the href as a hash route
+  el.querySelector('[data-scroll-to]')?.addEventListener('click', (e) => {
+    e.preventDefault()
+    const target = document.getElementById('how-it-works')
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 
   return el
 }
