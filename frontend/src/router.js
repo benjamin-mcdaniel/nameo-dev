@@ -9,6 +9,9 @@ import { Terms } from './pages/terms.js'
 import { NotFound } from './pages/notfound.js'
 import { Test } from './pages/test.js'
 import { Campaigns } from './pages/campaigns.js'
+import { Sessions } from './pages/sessions.js'
+import { NewSession } from './pages/new-session.js'
+import { Session } from './pages/session.js'
 import { Search } from './pages/search.js'
 import { Advanced } from './pages/advanced.js'
 import { AdvancedReport } from './pages/advanced_report.js'
@@ -16,8 +19,17 @@ import { AdvancedReport } from './pages/advanced_report.js'
 const routes = {
   '/': Home,
   '/search': Search,
+
+  // Session-based workflow (v1.0)
+  '/sessions': Sessions,
+  '/sessions/new': NewSession,
+  '/session': Session,
+
+  // Legacy / kept for backward compat
+  '/campaigns': Campaigns,
   '/advanced': Advanced,
   '/advanced-report': AdvancedReport,
+
   '/help': Help,
   '/login': Login,
   '/pricing': Pricing,
@@ -27,7 +39,6 @@ const routes = {
   '/privacy': Privacy,
   '/terms': Terms,
   '/test': Test,
-  '/campaigns': Campaigns,
 }
 
 function getPath() {

@@ -10,8 +10,8 @@ export function Header() {
   const nav = document.createElement('nav')
   nav.className = 'site-nav'
   nav.innerHTML = `
-    <a href="#/search">Search</a>
-    <a href="#/campaigns">Projects</a>
+    <a href="#/search">Quick Search</a>
+    <a href="#/sessions">Sessions</a>
     <a href="#/pricing">Pricing</a>
     <a href="#/help">Docs</a>
   `
@@ -80,7 +80,7 @@ function attachUserMenu(container) {
             <div class="user-menu-email">${email}</div>
           </div>
           <button type="button" class="user-menu-item" data-action="account">Account</button>
-          <button type="button" class="user-menu-item" data-action="projects">My Projects</button>
+          <button type="button" class="user-menu-item" data-action="projects">My Sessions</button>
           <button type="button" class="user-menu-item" data-action="logout">Sign out</button>
         `
 
@@ -112,7 +112,7 @@ function attachUserMenu(container) {
           if (action === 'account') {
             window.location.hash = '#/login'
           } else if (action === 'projects') {
-            window.location.hash = '#/campaigns'
+            window.location.hash = '#/sessions'
           } else if (action === 'logout') {
             await logout()
             await render()

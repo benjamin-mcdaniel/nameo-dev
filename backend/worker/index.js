@@ -103,6 +103,39 @@ export default {
         return handleCheckOption(env, user.id, optionId)
       }
 
+      // ── Sessions (v1 workflow) ────────────────────────────────────────────
+
+      if (url.pathname === '/api/sessions' && request.method === 'GET') {
+        return handleListSessions(env, user.id)
+      }
+
+      if (url.pathname === '/api/sessions' && request.method === 'POST') {
+        return handleCreateSession(request, env, user.id)
+      }
+
+      const sessionMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)$/)
+      if (sessionMatch) {
+        const sessionId = sessionMatch[1]
+        if (request.method === 'GET') return handleGetSession(env, user.id, sessionId)
+        if (request.method === 'DELETE') return handleDeleteSession(env, user.id, sessionId)
+      }
+
+      const sessionReportsMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/reports$/)
+      if (sessionReportsMatch) {
+        const sessionId = sessionReportsMatch[1]
+        if (request.method === 'GET') return handleListSessionReports(env, user.id, sessionId)
+        if (request.method === 'POST') return handleCreateSessionReport(request, env, user.id, sessionId)
+      }
+
+      const sessionReportMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/reports\/([^/]+)$/)
+      if (sessionReportMatch) {
+        const sessionId = sessionReportMatch[1]
+        const reportId = sessionReportMatch[2]
+        if (request.method === 'GET') return handleGetSessionReport(env, user.id, sessionId, reportId)
+      }
+
+      // ─────────────────────────────────────────────────────────────────────
+
       return json({ error: 'not_found' }, 404)
     }
 
@@ -884,258 +917,239 @@ async function loadAvailabilitySignatures(env) {
 
 async function evaluateNameSafety(name, safetyConfig) {
   if (!name) {
-    return { ok: false, reason: 'empty', message: 'Name is required.' }
-  }
+    return { ok: false, reason: 'empty', message: 'Nam
+// ─────────────────────────────────────────────────────────────────────────────
+// Sessions API (v1 startup workflow)
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const { minLength, maxLength, allowedPattern, bannedSubstrings } = safetyConfig
+async function handleListSessions(env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
 
-  if (name.length < minLength || name.length > maxLength) {
-    return { ok: false, reason: 'length', message: 'Name length is out of allowed range.' }
-  }
+  const result = await db
+    .prepare(`
+      SELECT s.id, s.name, s.session_type, s.status, s.metadata_json, s.created_at, s.updated_at,
+             COUNT(r.id) AS report_count
+      FROM sessions s
+      LEFT JOIN session_reports r ON r.session_id = s.id
+      WHERE s.user_id = ?
+      GROUP BY s.id
+      ORDER BY s.created_at DESC
+      LIMIT 50
+    `)
+    .bind(userId)
+    .all()
 
-  const re = new RegExp(allowedPattern)
-  if (!re.test(name)) {
-    return { ok: false, reason: 'pattern', message: 'Name contains invalid characters.' }
-  }
-
-  const lower = name.toLowerCase()
-  if (Array.isArray(bannedSubstrings)) {
-    for (const banned of bannedSubstrings) {
-      if (banned && lower.includes(banned)) {
-        return { ok: false, reason: 'banned_substring', message: 'Name contains disallowed language.' }
-      }
-    }
-  }
-
-  // Profanity check using leo-profanity in addition to simple substring rules.
-  if (!PROFANITY_READY) {
-    leoProfanity.loadDictionary()
-    PROFANITY_READY = true
-  }
-
-  if (leoProfanity.check(name)) {
-    return { ok: false, reason: 'profanity', message: 'Name contains profanity or inappropriate language.' }
-  }
-
-  return { ok: true }
+  const sessions = (result.results || []).map(rowToSession)
+  return json({ sessions })
 }
 
-async function checkServiceAvailability(service, name, debug = false) {
-  if (service.strategy === 'coming_soon') {
-    return { status: 'coming_soon' }
+async function handleCreateSession(request, env, userId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  let body = {}
+  try { body = await request.json() } catch { return json({ error: 'invalid_json' }, 400) }
+
+  const name = (body.name || '').trim()
+  if (!name) return json({ error: 'name_required' }, 400)
+
+  const sessionType = (body.session_type || '').trim()
+  const validTypes = ['brand_identity', 'name_generator']
+  if (!validTypes.includes(sessionType)) {
+    return json({ error: 'invalid_session_type', valid: validTypes }, 400)
   }
 
-  if (service.strategy === 'url_status') {
-    const signaturesConfig = await loadAvailabilitySignatures()
-    const perService =
-      signaturesConfig && signaturesConfig.services && signaturesConfig.services[service.id]
-        ? signaturesConfig.services[service.id]
-        : null
-
-    const url = service.urlTemplate.replace('{name}', encodeURIComponent(name))
-    const method = service.method || 'HEAD'
-
-    const res = await fetch(url, { method })
-    const finalUrl = (res && res.url) || url
-
-    if (res.status === 404) {
-      return debug
-        ? { status: 'available', code: res.status, debug: { finalUrl, matched: 'status:404', bodyFetched: false } }
-        : { status: 'available', code: res.status }
-    }
-
-    if (res.status === 401 || res.status === 403 || res.status === 429) {
-      return debug
-        ? { status: 'unknown', code: res.status, debug: { finalUrl, matched: `status:${res.status}`, bodyFetched: false } }
-        : { status: 'unknown', code: res.status }
-    }
-
-    const globalTaken =
-      signaturesConfig && signaturesConfig.global && Array.isArray(signaturesConfig.global.taken)
-        ? signaturesConfig.global.taken
-        : []
-    const availableNeedleList = perService && Array.isArray(perService.available) ? perService.available : []
-    const takenNeedleList = perService && Array.isArray(perService.taken) ? perService.taken : []
-    const unknownNeedleList = perService && Array.isArray(perService.unknown) ? perService.unknown : []
-
-    const needsBody =
-      availableNeedleList.length > 0 || takenNeedleList.length > 0 || unknownNeedleList.length > 0 ||
-      globalTaken.length > 0
-
-    let bodyText = ''
-    let bodyFinalUrl = finalUrl
-    let bodyFetched = false
-
-    if (needsBody) {
-      if (method === 'GET') {
-        bodyFinalUrl = finalUrl
-        bodyText = await res.text().catch(() => '')
-        bodyFetched = true
-      } else {
-        const res2 = await fetch(url, { method: 'GET' })
-        bodyFinalUrl = (res2 && res2.url) || finalUrl
-        bodyText = await res2.text().catch(() => '')
-        bodyFetched = true
-      }
-    }
-
-    const haystack = `${String(bodyFinalUrl || finalUrl)}\n${String(bodyText || '')}`.toLowerCase()
-    const nameLower = String(name || '').toLowerCase()
-
-    const matches = (needles) => {
-      for (const raw of needles) {
-        if (!raw) continue
-        const needle = String(raw).replaceAll('{name}', nameLower).toLowerCase()
-        if (needle && haystack.includes(needle)) return true
-      }
-      return false
-    }
-
-    const firstMatch = (needles) => {
-      for (const raw of needles) {
-        if (!raw) continue
-        const needle = String(raw).replaceAll('{name}', nameLower).toLowerCase()
-        if (needle && haystack.includes(needle)) return String(raw)
-      }
-      return null
-    }
-
-    // Precedence: available/taken should win over unknown to reduce false-unknown
-    // when generic strings like "login" or "verify" appear on otherwise valid pages.
-    const availableHit = firstMatch(availableNeedleList)
-    if (availableHit) {
-      return debug
-        ? { status: 'available', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `available:${availableHit}`, bodyFetched } }
-        : { status: 'available', code: res.status }
-    }
-
-    const takenHit = firstMatch(takenNeedleList) || firstMatch(globalTaken)
-    if (takenHit) {
-      return debug
-        ? { status: 'taken', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `taken:${takenHit}`, bodyFetched } }
-        : { status: 'taken', code: res.status }
-    }
-
-    const unknownHit = firstMatch(unknownNeedleList)
-    if (unknownHit) {
-      return debug
-        ? { status: 'unknown', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: `unknown:${unknownHit}`, bodyFetched } }
-        : { status: 'unknown', code: res.status }
-    }
-
-    return debug
-      ? { status: 'unknown', code: res.status, debug: { finalUrl: bodyFinalUrl, matched: 'no_match', bodyFetched } }
-      : { status: 'unknown', code: res.status }
-  }
-
-  return { status: 'unsupported' }
-}
-
-function generateSuggestions(name, safetyConfig) {
-  const prefixes = ['the', 'real', 'its']
-  const suffixes = ['app', 'hq', 'official']
-
-  const raw = []
-
-  for (const p of prefixes) {
-    raw.push(p + name)
-  }
-
-  raw.push(name + '_')
-  raw.push(name + '1')
-
-  for (const s of suffixes) {
-    raw.push(name + s)
-  }
-
-  const seen = new Set()
-  const allowed = []
-
-  for (const candidate of raw) {
-    if (seen.has(candidate)) continue
-    seen.add(candidate)
-
-    const evalResult = simpleSafetyCheck(candidate, safetyConfig)
-    if (evalResult.ok) {
-      allowed.push(candidate)
-    }
-  }
-
-  return allowed.slice(0, 20)
-}
-
-function simpleSafetyCheck(name, safetyConfig) {
-  const { minLength, maxLength, allowedPattern, bannedSubstrings } = safetyConfig
-
-  if (name.length < minLength || name.length > maxLength) {
-    return { ok: false }
-  }
-
-  const re = new RegExp(allowedPattern)
-  if (!re.test(name)) {
-    return { ok: false }
-  }
-
-  const lower = name.toLowerCase()
-  if (Array.isArray(bannedSubstrings)) {
-    for (const banned of bannedSubstrings) {
-      if (banned && lower.includes(banned)) {
-        return { ok: false }
-      }
-    }
-  }
-
-  return { ok: true }
-}
-
-async function verifyAuth0Token(request, env) {
-  const authHeader = request.headers.get('Authorization') || ''
-  const [scheme, token] = authHeader.split(' ')
-
-  if (!token || scheme !== 'Bearer') {
-    return { ok: false }
-  }
-
-  const domain = env.AUTH0_DOMAIN
-  const audience = env.AUTH0_AUDIENCE
-
-  if (!domain || !audience) {
-    return { ok: false }
-  }
+  const id = crypto.randomUUID()
+  const now = Math.floor(Date.now() / 1000)
+  const metadata = body.metadata && typeof body.metadata === 'object' ? body.metadata : {}
 
   try {
-    if (!JWKS_CACHE) {
-      const jwksUrl = new URL(`https://${domain}/.well-known/jwks.json`)
-      JWKS_CACHE = createRemoteJWKSet(jwksUrl)
-    }
-
-    const issuer = `https://${domain}/`
-
-    const { payload } = await jwtVerify(token, JWKS_CACHE, {
-      issuer,
-      audience,
-    })
-
-    const sub = payload.sub
-    if (!sub || typeof sub !== 'string') {
-      return { ok: false }
-    }
-
-    const email = typeof payload.email === 'string' ? payload.email : null
-
-    return { ok: true, sub, email }
+    await db
+      .prepare(
+        'INSERT INTO sessions (id, user_id, name, session_type, status, metadata_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      )
+      .bind(id, userId, name, sessionType, 'active', JSON.stringify(metadata), now, now)
+      .run()
   } catch (err) {
-    return { ok: false }
+    const message = err instanceof Error ? err.message : String(err)
+    return json({ error: 'db_insert_failed', message }, 500)
+  }
+
+  // If Brand Identity session, auto-create pending reports for each selected report type
+  if (sessionType === 'brand_identity' && Array.isArray(metadata.report_types)) {
+    const validReportTypes = ['domain_availability', 'trademark', 'products_for_sale', 'social_handles', 'app_store']
+    const reportTypes = metadata.report_types.filter((t) => validReportTypes.includes(t))
+    for (const reportType of reportTypes) {
+      const rid = crypto.randomUUID()
+      try {
+        await db
+          .prepare(
+            'INSERT INTO session_reports (id, session_id, report_type, status, input_json, result_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          )
+          .bind(rid, id, reportType, 'pending', JSON.stringify({ brand_names: metadata.brand_names || [] }), null, now, now)
+          .run()
+      } catch { /* non-fatal – reports can be re-created */ }
+    }
+  }
+
+  // If Name Generator session, auto-create questionnaire report
+  if (sessionType === 'name_generator') {
+    const rid = crypto.randomUUID()
+    try {
+      await db
+        .prepare(
+          'INSERT INTO session_reports (id, session_id, report_type, status, input_json, result_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        )
+        .bind(rid, id, 'questionnaire', 'pending', JSON.stringify(metadata), null, now, now)
+        .run()
+    } catch { /* non-fatal */ }
+  }
+
+  return json({ id, name, session_type: sessionType, status: 'active', created_at: now }, 201)
+}
+
+async function handleGetSession(env, userId, sessionId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  const row = await db
+    .prepare('SELECT id, name, session_type, status, metadata_json, created_at, updated_at FROM sessions WHERE id = ? AND user_id = ?')
+    .bind(sessionId, userId)
+    .first()
+
+  if (!row) return json({ error: 'not_found' }, 404)
+
+  const reportsResult = await db
+    .prepare('SELECT id, report_type, status, input_json, result_json, created_at, updated_at FROM session_reports WHERE session_id = ? ORDER BY created_at ASC')
+    .bind(sessionId)
+    .all()
+
+  const reports = (reportsResult.results || []).map(rowToReport)
+
+  return json({ session: rowToSession(row), reports })
+}
+
+async function handleDeleteSession(env, userId, sessionId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  const row = await db
+    .prepare('SELECT id FROM sessions WHERE id = ? AND user_id = ?')
+    .bind(sessionId, userId)
+    .first()
+
+  if (!row) return json({ error: 'not_found' }, 404)
+
+  await db.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run()
+  return json({ status: 'deleted' })
+}
+
+async function handleListSessionReports(env, userId, sessionId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  // Verify session belongs to user
+  const session = await db
+    .prepare('SELECT id FROM sessions WHERE id = ? AND user_id = ?')
+    .bind(sessionId, userId)
+    .first()
+  if (!session) return json({ error: 'not_found' }, 404)
+
+  const result = await db
+    .prepare('SELECT id, report_type, status, input_json, result_json, created_at, updated_at FROM session_reports WHERE session_id = ? ORDER BY created_at ASC')
+    .bind(sessionId)
+    .all()
+
+  return json({ reports: (result.results || []).map(rowToReport) })
+}
+
+async function handleCreateSessionReport(request, env, userId, sessionId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  const session = await db
+    .prepare('SELECT id, session_type FROM sessions WHERE id = ? AND user_id = ?')
+    .bind(sessionId, userId)
+    .first()
+  if (!session) return json({ error: 'not_found' }, 404)
+
+  let body = {}
+  try { body = await request.json() } catch { return json({ error: 'invalid_json' }, 400) }
+
+  const reportType = (body.report_type || '').trim()
+  const validReportTypes = ['domain_availability', 'trademark', 'products_for_sale', 'social_handles', 'app_store', 'questionnaire', 'name_candidates']
+  if (!validReportTypes.includes(reportType)) {
+    return json({ error: 'invalid_report_type', valid: validReportTypes }, 400)
+  }
+
+  const id = crypto.randomUUID()
+  const now = Math.floor(Date.now() / 1000)
+  const inputJson = body.input && typeof body.input === 'object' ? JSON.stringify(body.input) : null
+
+  try {
+    await db
+      .prepare(
+        'INSERT INTO session_reports (id, session_id, report_type, status, input_json, result_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      )
+      .bind(id, sessionId, reportType, 'pending', inputJson, null, now, now)
+      .run()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return json({ error: 'db_insert_failed', message }, 500)
+  }
+
+  return json({ id, session_id: sessionId, report_type: reportType, status: 'pending', created_at: now }, 201)
+}
+
+async function handleGetSessionReport(env, userId, sessionId, reportId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  const session = await db
+    .prepare('SELECT id FROM sessions WHERE id = ? AND user_id = ?')
+    .bind(sessionId, userId)
+    .first()
+  if (!session) return json({ error: 'not_found' }, 404)
+
+  const row = await db
+    .prepare('SELECT id, report_type, status, input_json, result_json, created_at, updated_at FROM session_reports WHERE id = ? AND session_id = ?')
+    .bind(reportId, sessionId)
+    .first()
+
+  if (!row) return json({ error: 'not_found' }, 404)
+  return json({ report: rowToReport(row) })
+}
+
+// ── Row serializers ────────────────────────────────────────────────────────
+
+function rowToSession(row) {
+  let metadata = null
+  try { metadata = JSON.parse(row.metadata_json || 'null') } catch { metadata = null }
+  return {
+    id: row.id,
+    name: row.name,
+    session_type: row.session_type,
+    status: row.status,
+    metadata: metadata || {},
+    report_count: typeof row.report_count === 'number' ? row.report_count : 0,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   }
 }
 
-function json(body, status = 200, extraHeaders = null) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...CORS_HEADERS,
-      ...(extraHeaders && typeof extraHeaders === 'object' ? extraHeaders : {}),
-    },
-  })
+function rowToReport(row) {
+  let input = null
+  let result = null
+  try { input = JSON.parse(row.input_json || 'null') } catch { input = null }
+  try { result = JSON.parse(row.result_json || 'null') } catch { result = null }
+  return {
+    id: row.id,
+    report_type: row.report_type,
+    status: row.status,
+    input: input || {},
+    result: result || null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }
 }
