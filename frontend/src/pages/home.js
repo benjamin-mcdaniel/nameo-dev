@@ -6,107 +6,133 @@ export function Home() {
     <!-- Hero -->
     <section class="home-hero">
       <div class="home-hero-inner container">
-        <div class="eyebrow">Brand Research for Startups</div>
-        <h1>Know if your name<br>is really available.</h1>
+        <div class="eyebrow">Naming companion for startups</div>
+        <h1>You need a name.<br>Not a degree.</h1>
         <p class="home-hero-sub">
-          Domains, trademarks, marketplace listings, app stores, and social handles —
-          everything a founder needs to vet a product name before going all in.
+          Most founders spend weeks stuck on naming — unsure if their idea is taken,
+          whether .com still matters, or if a dead social account blocks them.
+          Nameo gets you unstuck today, and stays useful as your product grows.
         </p>
         <div class="home-hero-actions">
-          <a class="btn btn-primary btn-lg" href="#/sessions/new">Create a Report</a>
-          <a class="btn btn-lg" href="#how-it-works" data-scroll-to="how-it-works">How it works ↓</a>
+          <a class="btn btn-primary btn-lg" href="#/sessions/new">Find my name</a>
+          <a class="btn btn-lg" href="#how-it-works" data-scroll-to="how-it-works">See how it works ↓</a>
         </div>
         <p class="home-hero-note">Free to start &mdash; no credit card required</p>
       </div>
     </section>
 
-    <!-- Platform coverage strip -->
-    <div class="home-platforms">
-      <div class="home-platforms-inner container">
-        <span class="home-platforms-label">Checks include</span>
-        <span class="platform-pill platform-pill--primary">Domains</span>
-        <span class="platform-pill platform-pill--primary">Trademarks</span>
-        <span class="platform-pill platform-pill--primary">Products for Sale</span>
-        <span class="platform-pill">App Store</span>
-        <span class="platform-pill">Social Handles</span>
-      </div>
-    </div>
-
-    <!-- Session types -->
-    <section class="home-session-types">
+    <!-- Where are you right now? -->
+    <section class="home-entry">
       <div class="container">
         <div class="home-features-header">
-          <div class="eyebrow">Two ways to work</div>
-          <h2>Research a name. Or generate one.</h2>
-          <p>Nameo gives startups two focused workflows depending on where you are in the naming process.</p>
+          <div class="eyebrow">Where are you right now?</div>
+          <h2>Start wherever you are.</h2>
+          <p>You don't need to have figured anything out first. Both paths work from zero.</p>
         </div>
         <div class="session-type-showcase">
           <div class="stshow-card">
+            <div class="stshow-icon">✨</div>
+            <h3>I need a name</h3>
+            <p>Start with a blank page. Tell us what your product does and how you want it to feel. We'll build a name profile from the conversation and generate original candidates — with availability already checked.</p>
+            <div class="stshow-reports">
+              <span class="report-type-chip">💬 Guided conversation</span>
+              <span class="report-type-chip">🗂 Word profile</span>
+              <span class="report-type-chip">✨ Name candidates</span>
+              <span class="report-type-chip">🌐 Availability included</span>
+            </div>
+            <a class="btn btn-primary" href="#/sessions/new">Generate name ideas →</a>
+          </div>
+          <div class="stshow-card">
             <div class="stshow-icon">🔍</div>
-            <h3>Brand Identity Report</h3>
-            <p>Have a name — or a shortlist? Run it through the full suite of checks: domains, US &amp; EU trademarks, marketplace listings, app stores, and social handles. Know every risk before you commit.</p>
+            <h3>I have a name to check</h3>
+            <p>Got a name you're already using — or a shortlist of options? Run it through the full suite: domains, trademarks, marketplace listings, app stores, and social handles. Know every risk before you commit.</p>
             <div class="stshow-reports">
               <span class="report-type-chip">🌐 Domains</span>
               <span class="report-type-chip">⚖️ Trademarks</span>
-              <span class="report-type-chip">🛒 Products for Sale</span>
-              <span class="report-type-chip">📦 App Store</span>
-              <span class="report-type-chip">📱 Social Handles</span>
+              <span class="report-type-chip">🛒 Marketplace listings</span>
+              <span class="report-type-chip">📱 Social handles</span>
             </div>
-            <a class="btn btn-primary" href="#/sessions/new">Start a Brand Identity Report →</a>
-          </div>
-          <div class="stshow-card">
-            <div class="stshow-icon">✨</div>
-            <h3>Name Generator</h3>
-            <p>Starting from scratch? Answer a short questionnaire about your product, brand personality, and preferences. Nameo builds a weighted profile and generates original name candidates tailored to you.</p>
-            <div class="stshow-reports">
-              <span class="report-type-chip">🎯 Preference questionnaire</span>
-              <span class="report-type-chip">⚖️ Weighted matrix</span>
-              <span class="report-type-chip">✨ Name candidates</span>
-            </div>
-            <a class="btn btn-primary" href="#/sessions/new">Generate name ideas →</a>
+            <a class="btn btn-primary" href="#/sessions/new">Check a name →</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Features -->
+    <!-- Why naming is hard -->
+    <section class="home-why">
+      <div class="container">
+        <div class="home-features-header">
+          <div class="eyebrow">Why naming is hard</div>
+          <h2>It's not just one question. It's ten.</h2>
+          <p>Every name you like probably raises five more questions you didn't know you had to answer.</p>
+        </div>
+        <div class="home-why-grid">
+          <div class="why-card">
+            <div class="why-q">"Is the domain taken?"</div>
+            <div class="why-a">And if it is, does <em>.io</em> or <em>.ai</em> work instead? What does your choice say about your brand?</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"The Twitter handle exists but no one's posted."</div>
+            <div class="why-a">Dormant accounts still own the handle. You have options — but you need to know them.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"There's a product on Amazon with a similar name."</div>
+            <div class="why-a">Is that a problem? It depends on your category and how close the names actually are.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"Should I lock down multiple domains?"</div>
+            <div class="why-a">Yes — at minimum your primary domain plus the <em>.com</em> if you chose something else. We'll tell you which ones matter.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"Is there a trademark conflict?"</div>
+            <div class="why-a">Maybe. Trademark issues depend on industry class, not just whether the name exists somewhere.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"What if we rename later?"</div>
+            <div class="why-a">Most companies do. Get a good-enough name out the door. Nameo helps you track better options as you grow.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What gets checked -->
     <section class="home-features">
       <div class="container">
         <div class="home-features-header">
           <div class="eyebrow">What gets checked</div>
-          <h2>The full picture, not half the story.</h2>
-          <p>Most name checkers only look at one thing. Nameo bundles every surface that matters for a product launch into a single, clear report.</p>
+          <h2>Every surface that matters for launch.</h2>
+          <p>Most name checkers only look at one thing. Nameo runs every check that's going to come up when you talk to a lawyer, a co-founder, or an investor.</p>
         </div>
         <div class="home-features-grid">
           <div class="feature-card">
             <div class="feature-icon">🌐</div>
             <h3>Domain availability</h3>
-            <p>Check .com, .io, .ai, .co, and more across all your candidates simultaneously. See exactly what's registerable before you fall in love with a name.</p>
+            <p>Check .com, .io, .ai, .co, and more. See which extensions are open, which are taken, and which ones you should register to protect your brand even if they're not your primary.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">⚖️</div>
             <h3>Trademark screening</h3>
-            <p>Basic US and EU trademark checks to surface potential conflicts early — before you've invested in branding, decks, or legal fees.</p>
+            <p>US and EU trademark checks to surface potential conflicts early — before you've spent money on a logo, a deck, or a legal filing. Results are a signal, not legal advice.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">🛒</div>
-            <h3>Products for sale</h3>
-            <p>Search Amazon, eBay, and major marketplaces for name collisions with existing products. Know who you're up against in the market.</p>
+            <h3>Marketplace listings</h3>
+            <p>Amazon, eBay, and major marketplaces. Know if consumers searching your name will find someone else's product first.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Social handles</h3>
+            <p>X, Instagram, LinkedIn, YouTube, GitHub — checked with common prefix and suffix variations so you know exactly what's available and what pattern to use across platforms.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">📦</div>
             <h3>App store signals</h3>
-            <p>Check for name collisions in the iOS App Store and Google Play so you're not launching into an already-crowded namespace.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">📱</div>
-            <h3>Social handle checks</h3>
-            <p>X, Instagram, LinkedIn, YouTube, GitHub — know if the handle is available across the platforms that matter most to your audience.</p>
+            <p>iOS App Store and Google Play. Catch name collisions before your app review, not after.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">📊</div>
-            <h3>Session-based reports</h3>
-            <p>Organise all your research into named sessions. Run multiple report types, compare candidates, and share findings with your co-founders.</p>
+            <h3>Sessions that save your work</h3>
+            <p>All your research is organized into sessions. Run checks across multiple candidates, compare them side by side, and pick up where you left off.</p>
           </div>
         </div>
       </div>
@@ -117,29 +143,29 @@ export function Home() {
       <div class="container">
         <div class="home-how-header">
           <div class="eyebrow">How it works</div>
-          <h2>From idea to decision in minutes</h2>
-          <p>A focused workflow built for founders who need to move fast without skipping the checks that protect you later.</p>
+          <h2>Get unstuck. Then stay ahead.</h2>
+          <p>Nameo is built for the whole naming journey — not just the first search.</p>
         </div>
         <div class="home-how-steps">
           <div class="how-step">
             <div class="how-step-num">1</div>
             <div class="how-step-body">
-              <h3>Start a session</h3>
-              <p>Choose a Brand Identity Report to vet existing names, or a Name Generator session to build fresh candidates from your brand preferences.</p>
+              <h3>Tell us what you're building</h3>
+              <p>Answer a few questions about your product, your market, and how you want the brand to feel. No jargon required — just describe it like you would to a friend.</p>
             </div>
           </div>
           <div class="how-step">
             <div class="how-step-num">2</div>
             <div class="how-step-body">
-              <h3>Configure your reports</h3>
-              <p>Pick which checks to run — domains, trademarks, marketplace listings, app stores, social handles — or answer the preference questionnaire.</p>
+              <h3>Get names with availability built in</h3>
+              <p>Nameo generates candidates and immediately checks domains, trademarks, and handles — so every option you see is one you can actually have.</p>
             </div>
           </div>
           <div class="how-step">
             <div class="how-step-num">3</div>
             <div class="how-step-body">
-              <h3>Review and decide</h3>
-              <p>Every report surfaces availability, conflicts, and signals in a single view so you can pick the name with the strongest position.</p>
+              <h3>Lock it down, then keep watching</h3>
+              <p>Register your name and the domains around it. Come back as your product evolves — Nameo tracks alternatives and flags when better options open up.</p>
             </div>
           </div>
         </div>
@@ -149,19 +175,18 @@ export function Home() {
     <!-- CTA -->
     <section class="home-cta">
       <div class="container">
-        <div class="eyebrow">Ready to start?</div>
-        <h2>Name your next product right.</h2>
-        <p>Join founders who use Nameo to make smarter naming decisions before they launch.</p>
+        <div class="eyebrow">Get out the door</div>
+        <h2>It doesn't have to be your forever name.</h2>
+        <p>Good enough and protected beats perfect and paralyzed. Start today — you can always evolve it.</p>
         <div class="actions">
-          <a class="btn btn-primary btn-lg" href="#/sessions/new">Start your first session</a>
+          <a class="btn btn-primary btn-lg" href="#/sessions/new">Start finding my name</a>
           <a class="btn btn-lg" href="#/pricing">See pricing</a>
         </div>
       </div>
     </section>
   `
 
-  // Smooth-scroll "How it works" button — uses a data attr to avoid router
-  // treating the href as a hash route
+  // Smooth-scroll "How it works" button
   el.querySelector('[data-scroll-to]')?.addEventListener('click', (e) => {
     e.preventDefault()
     const target = document.getElementById('how-it-works')

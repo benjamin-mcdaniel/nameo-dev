@@ -136,6 +136,41 @@ export function Help() {
           <!-- TODO: add link to account page and data export option when built -->
         </div>
 
+        <!-- ── Naming basics ─────────────────────────────────────────────── -->
+        <div class="help-section" id="doc-naming-basics">
+          <h2>Naming basics</h2>
+          <p>If you're not sure why any of this matters — start here. These are the questions most founders have but rarely ask out loud.</p>
+
+          <h3>Which domain extension should I pick?</h3>
+          <p><strong>.com</strong> is still the default signal of legitimacy, especially for B2B products. If you can get yourname.com, get it. If you can't, here's what the alternatives signal:</p>
+          <ul class="help-list">
+            <li><strong>.io</strong> — the accepted tech-startup alternative. Signals "we're a software product." Widely used by dev tools, SaaS, and API businesses.</li>
+            <li><strong>.ai</strong> — strong signal that AI is core to your product. Use it only if that's true — otherwise it reads as trend-chasing.</li>
+            <li><strong>.co</strong> — works well for consumer brands and feels clean. Less "default tech" than .io.</li>
+            <li><strong>.app / .dev</strong> — developer-forward. Good for products that are explicitly apps or developer tools.</li>
+            <li><strong>.xyz / .info / .biz</strong> — avoid for your primary domain. These extensions carry baggage from spam and low-credibility sites.</li>
+          </ul>
+
+          <h3>Do I need to register more than one domain?</h3>
+          <p>Yes. At minimum: your primary domain, plus the <strong>.com</strong> if you chose a different extension, plus one common misspelling. These are cheap (usually $10–15/year each) and protect you from squatters, redirect confusion, and email phishing after you get press.</p>
+          <p>Nameo's Brand Identity Report surfaces these squat candidates alongside your primary availability check.</p>
+
+          <h3>The Twitter/X handle exists but the account is dead. Can I have it?</h3>
+          <p>Not automatically. A dormant account still owns the handle. Your options:</p>
+          <ul class="help-list">
+            <li>Use a variation: <em>@YourNameHQ</em>, <em>@YourNameApp</em>, <em>@theYourName</em></li>
+            <li>Contact the account owner directly</li>
+            <li>File an inactive account report with the platform (X has a process; results vary)</li>
+          </ul>
+          <p>Pick one naming pattern and use it consistently across every platform. It's better to be <em>@yourbrandHQ</em> everywhere than to have a different variation on each platform.</p>
+
+          <h3>Is my name "too close" to an existing company?</h3>
+          <p>This depends on your market category. A trademark conflict is only a problem if both companies operate in the same industry class — "Stonewall" as a security product is very different from "Stonewall" as a landscaping company. That said, anything that sounds confusingly similar to a direct competitor is a risk regardless of trademark. Nameo surfaces potential conflicts — a trademark attorney can tell you whether they matter in your specific case.</p>
+
+          <h3>Does my name have to be my forever name?</h3>
+          <p>No. Most products rename at least once as they find product-market fit. The goal is to get a <em>good enough</em> name out the door — one that's protected, consistent, and not actively harmful to your brand. Nameo helps you track alternative options over time so you're not starting from scratch if you decide to evolve.</p>
+        </div>
+
         <!-- ── FAQ ───────────────────────────────────────────────────────── -->
         <div class="help-section" id="doc-faq">
           <h2>FAQ</h2>
@@ -157,6 +192,10 @@ export function Help() {
               <summary>How many name candidates can I include in one session?</summary>
               <p>Up to 5 candidates per Brand Identity Report session. The Name Generator produces its own candidate list based on your preferences.</p>
               <!-- TODO: update limits based on final pricing tiers -->
+            </details>
+            <details class="faq-item">
+              <summary>Why does .com cost more than .io or .ai?</summary>
+              <p>.com domains are managed by Verisign and pricing is set per the ICANN agreement — they're typically $10–15/year through most registrars. .io domains are managed by a country-code registry and cost more ($30–50/year) because of that structure, not because of quality. .ai domains (Anguilla's ccTLD) are similar. The extension cost doesn't indicate value — it reflects registry pricing.</p>
             </details>
             <details class="faq-item">
               <summary>What happens to my data if I delete my account?</summary>
@@ -183,6 +222,7 @@ export function Help() {
             <a href="#doc-brand-identity">Brand Identity Report</a>
             <a href="#doc-name-generator">Name Generator</a>
             <a href="#doc-results">Reading results</a>
+            <a href="#doc-naming-basics">Naming basics</a>
             <a href="#doc-account">Account &amp; privacy</a>
             <a href="#doc-faq">FAQ</a>
             <a href="#doc-contact">Contact</a>
