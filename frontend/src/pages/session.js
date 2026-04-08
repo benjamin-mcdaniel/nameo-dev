@@ -16,24 +16,32 @@ async function apiFetch(path, options = {}) {
 
 const REPORT_TYPE_META = {
   domain_availability: { label: 'Domain Availability', icon: '🌐', desc: 'Domain availability across TLDs' },
-  trademark: { label: 'Trademark Check', icon: '⚖️', desc: 'US & EU trademark screening' },
-  products_for_sale: { label: 'Products for Sale', icon: '🛒', desc: 'Marketplace listing conflicts' },
-  social_handles: { label: 'Social Handles', icon: '📱', desc: 'Handle availability on major platforms' },
-  app_store: { label: 'App Store', icon: '📦', desc: 'iOS & Google Play name check' },
-  questionnaire: { label: 'Brand Preferences', icon: '🎯', desc: 'Preference questionnaire responses' },
-  name_candidates: { label: 'Name Candidates', icon: '✨', desc: 'AI-generated name candidates' },
+  trademark:           { label: 'Trademark Check',     icon: '⚖️',  desc: 'US & EU trademark screening — coming soon' },
+  products_for_sale:   { label: 'Products for Sale',   icon: '🛒',  desc: 'Marketplace listing conflicts — coming soon' },
+  social_handles:      { label: 'Social Handles',      icon: '📱',  desc: 'Handle availability on major platforms' },
+  app_store:           { label: 'App Store',            icon: '📦',  desc: 'iOS & Google Play name check — coming soon' },
+  questionnaire:       { label: 'Brand Preferences',   icon: '🎯',  desc: 'Preference questionnaire responses' },
+  name_candidates:     { label: 'Name Candidates',     icon: '✨',  desc: 'AI-generated name candidates' },
 }
 
+// Report types the runner actually handles. Others stay pending and show "coming soon".
+const RUNNABLE_REPORT_TYPES = new Set(['domain_availability', 'social_handles'])
+
 const REPORT_STATUS_META = {
-  pending: { label: 'Pending', cls: 'badge-pending' },
-  running: { label: 'Running…', cls: 'badge-running' },
-  complete: { label: 'Complete', cls: 'badge-complete' },
-  error: { label: 'Error', cls: 'badge-error' },
+  pending: { label: 'Pending',    cls: 'badge-pending' },
+  running: { label: 'Running…',   cls: 'badge-running' },
+  complete: { label: 'Complete',  cls: 'badge-complete' },
+  error:    { label: 'Error',     cls: 'badge-error' },
 }
 
 const SESSION_TYPE_META = {
-  brand_identity: { label: 'Brand Identity Report', icon: '🔍' },
-  name_generator: { label: 'Name Generator', icon: '✨' },
+  brand_identity:  { label: 'Brand Identity Report', icon: '🔍' },
+  name_generator:  { label: 'Name Generator',         icon: '✨' },
+}
+
+const SOCIAL_LABELS = {
+  x: 'X', instagram: 'Instagram', youtube: 'YouTube', github: 'GitHub',
+  linkedin: 'LinkedIn', tiktok: 'TikTok', reddit: 'Reddit',
 }
 
 function formatDate(ts) {
@@ -56,6 +64,8 @@ function getSessionIdFromHash() {
   const queryStr = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : ''
   return new URLSearchParams(queryStr).get('id') || ''
 }
+
+// ── Page entry point ──────────────────────────────────────────────────────
 
 export function Session() {
   const el = document.createElement('section')
@@ -83,6 +93,38 @@ export function Session() {
   return el
 }
 
+// ── Polling state (per page mount) ────────────────────────────────────────
+
+let _pollTimer = null
+
+function startPolling(el, sessionId, intervalMs = 4000) {
+  stopPolling()
+  _pollTimer = setInterval(async () => {
+    const resp = await apiFetch(`/api/sessions/${sessionId}`)
+    if (!resp.ok) { stopPolling(); return }
+
+    const reports = resp.data.reports || []
+    const hasRunning = reports.some((r) => r.status === 'running' || r.status === 'pending')
+    const hasComplete = reports.some((r) => r.status === 'complete')
+
+    // If any report just completed, reload the full view
+    if (hasComplete) {
+      stopPolling()
+      const mainEl = el.querySelector('#session-main')
+      if (mainEl) renderSession(mainEl, resp.data.session, reports)
+      if (hasRunning) startPolling(el, sessionId)
+    }
+
+    if (!hasRunning) stopPolling()
+  }, intervalMs)
+}
+
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null }
+}
+
+// ── Data loading ──────────────────────────────────────────────────────────
+
 async function loadSession(root, sessionId) {
   const loadingEl = root.querySelector('#session-loading')
   const mainEl = root.querySelector('#session-main')
@@ -102,15 +144,23 @@ async function loadSession(root, sessionId) {
   if (loadingEl) loadingEl.style.display = 'none'
   if (mainEl) mainEl.style.display = ''
 
-  renderSession(mainEl, resp.data.session, resp.data.reports || [])
+  const session = resp.data.session
+  const reports = resp.data.reports || []
+
+  renderSession(mainEl, session, reports)
+
+  // Auto-poll if anything is still running or pending (runner fired async)
+  const needsPoll = reports.some((r) => r.status === 'running' || r.status === 'pending')
+  if (needsPoll) startPolling(root, sessionId)
 }
+
+// ── Session render ────────────────────────────────────────────────────────
 
 function renderSession(el, session, reports) {
   const typeMeta = SESSION_TYPE_META[session.session_type] || { label: session.session_type, icon: '📋' }
-  const meta = session.metadata || {}
 
   el.innerHTML = `
-    <!-- Session header -->
+    <!-- Breadcrumb + header -->
     <div class="session-detail-header">
       <div class="session-detail-breadcrumb">
         <a href="#/sessions">Sessions</a>
@@ -132,35 +182,45 @@ function renderSession(el, session, reports) {
     <!-- Session metadata summary -->
     ${renderSessionMeta(session)}
 
-    <!-- Reports section -->
+    <!-- Reports -->
     <div class="session-reports-section">
-      <div class="section-header section-header--with-action">
+      <div class="section-header">
         <h2>Reports</h2>
-        <button id="btn-add-report" class="btn btn-sm btn-primary">+ Add report</button>
       </div>
-
       <div id="reports-list">
         ${reports.length
-          ? `<div class="reports-grid">${reports.map(renderReportCard).join('')}</div>`
+          ? `<div class="reports-grid">${reports.map((r) => renderReportCard(r, session.id)).join('')}</div>`
           : renderEmptyReports(session)
         }
       </div>
     </div>
   `
 
-  // Add report button (stub — opens a modal or inline form later)
-  el.querySelector('#btn-add-report')?.addEventListener('click', () => {
-    showAddReportPlaceholder(el, session)
+  // Wire re-run buttons
+  el.querySelectorAll('[data-rerun-report]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const reportId = btn.dataset.rerunReport
+      btn.disabled = true
+      btn.textContent = 'Re-running…'
+      await apiFetch(`/api/sessions/${session.id}/reports/${reportId}/run`, { method: 'POST' })
+      // Brief delay then reload
+      setTimeout(() => loadSession(el.closest('.page') || el, session.id), 800)
+    })
   })
 
-  // Wire up report card clicks
-  el.querySelectorAll('.report-card[data-report-id]').forEach((card) => {
-    card.querySelector('.btn')?.addEventListener('click', (e) => {
-      e.stopPropagation()
-      // TODO: navigate to report detail page when built
+  // Wire expand/collapse on result panels
+  el.querySelectorAll('[data-toggle-results]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const panel = el.querySelector(`#results-${btn.dataset.toggleResults}`)
+      if (!panel) return
+      const isHidden = panel.style.display === 'none'
+      panel.style.display = isHidden ? '' : 'none'
+      btn.textContent = isHidden ? 'Hide results ↑' : 'View results ↓'
     })
   })
 }
+
+// ── Session metadata card ─────────────────────────────────────────────────
 
 function renderSessionMeta(session) {
   const meta = session.metadata || {}
@@ -205,12 +265,41 @@ function renderSessionMeta(session) {
   return ''
 }
 
-function renderReportCard(report) {
+// ── Report card ───────────────────────────────────────────────────────────
+
+function renderReportCard(report, sessionId) {
   const typeMeta = REPORT_TYPE_META[report.report_type] || { label: report.report_type, icon: '📄', desc: '' }
   const statusMeta = REPORT_STATUS_META[report.status] || { label: report.status, cls: 'badge-pending' }
+  const isComplete = report.status === 'complete'
+  const isError = report.status === 'error'
+  const isRunnable = RUNNABLE_REPORT_TYPES.has(report.report_type)
+  const isComingSoon = !isRunnable && report.status === 'pending'
+
+  let resultHtml = ''
+  if (isComplete && report.result) {
+    resultHtml = renderReportResults(report)
+  }
+
+  let actionHtml = ''
+  if (isComingSoon) {
+    actionHtml = `<span class="badge badge-pending" style="font-size:0.7rem">Coming soon</span>`
+  } else if (isError) {
+    actionHtml = `
+      <button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Re-run</button>
+    `
+  } else if (isComplete && resultHtml) {
+    actionHtml = `
+      <button class="btn btn-sm btn-primary" data-toggle-results="${escHtml(report.id)}">View results ↓</button>
+      <button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}" style="margin-left:8px">Re-run</button>
+    `
+  } else if (report.status === 'running') {
+    actionHtml = `<span class="badge badge-running">Running…</span>`
+  } else if (report.status === 'pending' && isRunnable) {
+    actionHtml = `<span class="badge badge-pending">Pending</span>`
+  }
 
   return `
-    <div class="report-card" data-report-id="${report.id}">
+    <div class="report-card" data-report-id="${escHtml(report.id)}">
       <div class="report-card-head">
         <div class="report-type-icon">${typeMeta.icon}</div>
         <span class="badge ${statusMeta.cls}">${statusMeta.label}</span>
@@ -218,14 +307,100 @@ function renderReportCard(report) {
       <div class="report-card-title">${typeMeta.label}</div>
       <div class="report-card-desc">${typeMeta.desc}</div>
       <div class="report-card-date">${formatDate(report.created_at)}</div>
-      <div class="report-card-actions">
-        <button class="btn btn-sm ${report.status === 'complete' ? 'btn-primary' : 'btn-ghost'}" ${report.status !== 'complete' ? 'disabled' : ''}>
-          ${report.status === 'complete' ? 'View report' : report.status === 'running' ? 'In progress…' : 'Pending'}
-        </button>
-      </div>
+      <div class="report-card-actions">${actionHtml}</div>
+      ${resultHtml ? `<div id="results-${escHtml(report.id)}" class="report-results-panel" style="display:none">${resultHtml}</div>` : ''}
     </div>
   `
 }
+
+// ── Result renderers ──────────────────────────────────────────────────────
+
+function renderReportResults(report) {
+  if (report.report_type === 'domain_availability') return renderDomainResults(report.result)
+  if (report.report_type === 'social_handles') return renderSocialResults(report.result)
+  return ''
+}
+
+function statusDot(status) {
+  if (status === 'available') return `<span class="avail-dot avail-dot--available" title="Available">✓</span>`
+  if (status === 'taken')     return `<span class="avail-dot avail-dot--taken" title="Taken">✕</span>`
+  return `<span class="avail-dot avail-dot--unknown" title="Unknown">?</span>`
+}
+
+function renderDomainResults(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return ''
+  const tlds = result.tlds || ['.com', '.io', '.ai', '.co', '.app', '.dev']
+
+  const headerCells = tlds.map((t) => `<th>${escHtml(t)}</th>`).join('')
+  const rows = result.names.map((nameRow) => {
+    const cells = tlds.map((tld) => {
+      const s = nameRow.tlds ? (nameRow.tlds[tld] || 'unknown') : 'unknown'
+      return `<td>${statusDot(s)}</td>`
+    }).join('')
+    return `<tr><td class="avail-name">${escHtml(nameRow.name)}</td>${cells}</tr>`
+  }).join('')
+
+  const checkedAt = result.checked_at
+    ? `<div class="report-checked-at">Checked ${formatDate(result.checked_at)}</div>`
+    : ''
+
+  return `
+    <div class="avail-table-wrap">
+      <table class="avail-table">
+        <thead><tr><th>Name</th>${headerCells}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="avail-legend">
+        <span class="avail-dot avail-dot--available">✓</span> Available &nbsp;
+        <span class="avail-dot avail-dot--taken">✕</span> Taken &nbsp;
+        <span class="avail-dot avail-dot--unknown">?</span> Unknown
+      </div>
+      ${checkedAt}
+    </div>
+  `
+}
+
+function renderSocialResults(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return ''
+
+  // Collect which platforms appeared in any result
+  const platforms = new Set()
+  for (const nameRow of result.names) {
+    for (const key of Object.keys(nameRow.handles || {})) platforms.add(key)
+  }
+  const platformList = [...platforms]
+
+  const headerCells = platformList.map((p) => `<th>${escHtml(SOCIAL_LABELS[p] || p)}</th>`).join('')
+  const rows = result.names.map((nameRow) => {
+    const cells = platformList.map((p) => {
+      const h = nameRow.handles ? nameRow.handles[p] : null
+      const s = h ? h.status : 'unknown'
+      return `<td>${statusDot(s)}</td>`
+    }).join('')
+    return `<tr><td class="avail-name">${escHtml(nameRow.name)}</td>${cells}</tr>`
+  }).join('')
+
+  const checkedAt = result.checked_at
+    ? `<div class="report-checked-at">Checked ${formatDate(result.checked_at)}</div>`
+    : ''
+
+  return `
+    <div class="avail-table-wrap">
+      <table class="avail-table">
+        <thead><tr><th>Name</th>${headerCells}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="avail-legend">
+        <span class="avail-dot avail-dot--available">✓</span> Available &nbsp;
+        <span class="avail-dot avail-dot--taken">✕</span> Taken &nbsp;
+        <span class="avail-dot avail-dot--unknown">?</span> Unknown
+      </div>
+      ${checkedAt}
+    </div>
+  `
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────
 
 function renderEmptyReports(session) {
   const isBrand = session.session_type === 'brand_identity'
@@ -233,30 +408,10 @@ function renderEmptyReports(session) {
     <div class="empty-state-lg">
       <div class="empty-state-icon">📋</div>
       <h3>No reports yet</h3>
-      <p>${isBrand ? 'Run your first report to check domain availability, trademarks, and more for your name candidates.' : 'Start with the brand preferences questionnaire to generate your name candidates.'}</p>
+      <p>${isBrand
+        ? 'Reports are generated automatically when you create a session. If nothing appeared, try refreshing.'
+        : 'Start with the brand preferences questionnaire to generate your name candidates.'
+      }</p>
     </div>
   `
-}
-
-function showAddReportPlaceholder(root, session) {
-  // Placeholder — full report creation UI will be built in a future sprint
-  const existing = root.querySelector('#add-report-notice')
-  if (existing) { existing.remove(); return }
-
-  const notice = document.createElement('div')
-  notice.id = 'add-report-notice'
-  notice.className = 'inline-status'
-  notice.style.cssText = 'margin: 16px 0; max-width: 560px'
-  notice.innerHTML = `
-    <strong>Report generation coming soon.</strong>
-    The report runner is being built — this session is set up and ready to run reports once the engine is live.
-    <button class="btn-text" style="margin-left:12px" id="dismiss-notice">Dismiss</button>
-  `
-
-  root.querySelector('.session-reports-section')?.insertBefore(
-    notice,
-    root.querySelector('#reports-list')
-  )
-
-  root.querySelector('#dismiss-notice')?.addEventListener('click', () => notice.remove())
 }

@@ -995,6 +995,131 @@ select:focus {
 }
 .btn-text:hover { color: var(--primary-hover); }
 
+/* ── Report result panels ─────────────────────────────────────────────── */
+
+.report-results-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.avail-table-wrap {
+  overflow-x: auto;
+}
+
+.avail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.avail-table th,
+.avail-table td {
+  padding: 8px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.avail-table th {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.avail-table td.avail-name {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.avail-table tbody tr:last-child td { border-bottom: none; }
+
+.avail-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.avail-dot--available {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.avail-dot--taken {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.avail-dot--unknown {
+  background: var(--bg-alt);
+  color: var(--text-muted);
+}
+
+.avail-legend {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.report-checked-at {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Reports grid (card list on session page) */
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* ── Home why-naming-is-hard section ─────────────────────────────────── */
+
+.home-why { padding: 56px 0; background: var(--bg-alt); }
+
+.home-why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.why-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.why-q {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.why-a {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ── Home entry (where-are-you) section ──────────────────────────────── */
+
+.home-entry { padding: 56px 0; }
+
 @media (max-width: 640px) {
   h1 { font-size: 1.75rem; }
   .actions { gap: 8px; }
@@ -1006,4 +1131,6 @@ select:focus {
   .wizard-stepper { gap: 0; }
   .wizard-step-label { display: none; }
   .page-header--with-action { flex-direction: column; }
+  .home-why-grid { grid-template-columns: 1fr; }
+  .reports-grid { grid-template-columns: 1fr; }
 }

@@ -110,7 +110,7 @@ export default {
       }
 
       if (url.pathname === '/api/sessions' && request.method === 'POST') {
-        return handleCreateSession(request, env, user.id)
+        return handleCreateSession(request, env, user.id, ctx)
       }
 
       const sessionMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)$/)
@@ -132,6 +132,13 @@ export default {
         const sessionId = sessionReportMatch[1]
         const reportId = sessionReportMatch[2]
         if (request.method === 'GET') return handleGetSessionReport(env, user.id, sessionId, reportId)
+      }
+
+      const reportRunMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/reports\/([^/]+)\/run$/)
+      if (reportRunMatch && request.method === 'POST') {
+        const sessionId = reportRunMatch[1]
+        const reportId = reportRunMatch[2]
+        return handleRunReport(env, ctx, user.id, sessionId, reportId)
       }
 
       // ─────────────────────────────────────────────────────────────────────
@@ -917,7 +924,47 @@ async function loadAvailabilitySignatures(env) {
 
 async function evaluateNameSafety(name, safetyConfig) {
   if (!name) {
-    return { ok: false, reason: 'empty', message: 'Nam
+    return { ok: false, reason: 'empty', message: 'Name is required.' }
+  }
+
+  const cfg = safetyConfig || {}
+  const minLen = cfg.minLength || 3
+  const maxLen = cfg.maxLength || 32
+  const pattern = cfg.allowedPattern ? new RegExp(cfg.allowedPattern) : null
+  const banned = Array.isArray(cfg.bannedSubstrings) ? cfg.bannedSubstrings : []
+
+  if (name.length < minLen) {
+    return { ok: false, reason: 'too_short', message: `Name must be at least ${minLen} characters.` }
+  }
+  if (name.length > maxLen) {
+    return { ok: false, reason: 'too_long', message: `Name must be ${maxLen} characters or fewer.` }
+  }
+  if (pattern && !pattern.test(name)) {
+    return { ok: false, reason: 'invalid_chars', message: 'Name contains invalid characters. Use letters, numbers, hyphens, underscores, and dots only.' }
+  }
+  const lower = name.toLowerCase()
+  for (const sub of banned) {
+    if (lower.includes(sub.toLowerCase())) {
+      return { ok: false, reason: 'banned', message: 'That name is not allowed.' }
+    }
+  }
+
+  // Profanity check via leo-profanity (module-level instance, initialized once)
+  try {
+    if (!PROFANITY_READY) {
+      leoProfanity.loadDictionary()
+      PROFANITY_READY = true
+    }
+    if (leoProfanity.check(lower)) {
+      return { ok: false, reason: 'profanity', message: 'That name is not allowed.' }
+    }
+  } catch {
+    // If profanity check fails, allow through rather than blocking legitimate names
+  }
+
+  return { ok: true }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sessions API (v1 startup workflow)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -944,7 +991,7 @@ async function handleListSessions(env, userId) {
   return json({ sessions })
 }
 
-async function handleCreateSession(request, env, userId) {
+async function handleCreateSession(request, env, userId, ctx) {
   const db = env.NAMEO_DB
   if (!db) return json({ error: 'db_not_configured' }, 500)
 
@@ -1004,6 +1051,11 @@ async function handleCreateSession(request, env, userId) {
         .bind(rid, id, 'questionnaire', 'pending', JSON.stringify(metadata), null, now, now)
         .run()
     } catch { /* non-fatal */ }
+  }
+
+  // Fire report runners asynchronously — respond immediately, checks run in background
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(executeAllPendingReports(env, id))
   }
 
   return json({ id, name, session_type: sessionType, status: 'active', created_at: now }, 201)
@@ -1119,6 +1171,172 @@ async function handleGetSessionReport(env, userId, sessionId, reportId) {
 
   if (!row) return json({ error: 'not_found' }, 404)
   return json({ report: rowToReport(row) })
+}
+
+// ── Report re-run endpoint ─────────────────────────────────────────────────
+
+async function handleRunReport(env, ctx, userId, sessionId, reportId) {
+  const db = env.NAMEO_DB
+  if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  // Verify session ownership
+  const session = await db
+    .prepare('SELECT id FROM sessions WHERE id = ? AND user_id = ?')
+    .bind(sessionId, userId)
+    .first()
+  if (!session) return json({ error: 'not_found' }, 404)
+
+  // Verify report belongs to session
+  const report = await db
+    .prepare('SELECT id, report_type, input_json FROM session_reports WHERE id = ? AND session_id = ?')
+    .bind(reportId, sessionId)
+    .first()
+  if (!report) return json({ error: 'not_found' }, 404)
+
+  let input = null
+  try { input = JSON.parse(report.input_json || 'null') } catch { input = null }
+
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(runSessionReport(env, report.id, report.report_type, input))
+  }
+
+  return json({ ok: true, report_id: reportId, status: 'running' })
+}
+
+// ── Report runner engine ───────────────────────────────────────────────────
+
+async function updateReportStatus(env, reportId, status, resultJson) {
+  const db = env.NAMEO_DB
+  if (!db) return
+  const now = Math.floor(Date.now() / 1000)
+  try {
+    await db
+      .prepare('UPDATE session_reports SET status = ?, result_json = ?, updated_at = ? WHERE id = ?')
+      .bind(status, resultJson != null ? JSON.stringify(resultJson) : null, now, reportId)
+      .run()
+  } catch { /* non-fatal */ }
+}
+
+async function executeAllPendingReports(env, sessionId) {
+  const db = env.NAMEO_DB
+  if (!db) return
+  try {
+    const reports = await db
+      .prepare('SELECT id, report_type, input_json FROM session_reports WHERE session_id = ? AND status = ?')
+      .bind(sessionId, 'pending')
+      .all()
+    for (const report of (reports.results || [])) {
+      let input = null
+      try { input = JSON.parse(report.input_json || 'null') } catch { input = null }
+      await runSessionReport(env, report.id, report.report_type, input)
+    }
+  } catch { /* non-fatal — session still created successfully */ }
+}
+
+async function runSessionReport(env, reportId, reportType, input) {
+  try {
+    await updateReportStatus(env, reportId, 'running', null)
+    if (reportType === 'domain_availability') {
+      await runDomainAvailabilityReport(env, reportId, input)
+    } else if (reportType === 'social_handles') {
+      await runSocialHandlesReport(env, reportId, input)
+    } else {
+      // Not yet implemented — leave as pending so user can see it's queued
+      await updateReportStatus(env, reportId, 'pending', null)
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    await updateReportStatus(env, reportId, 'error', { error: msg })
+  }
+}
+
+// ── Domain availability runner (Cloudflare DoH, no API key required) ───────
+
+const DOMAIN_TLDS = ['.com', '.io', '.ai', '.co', '.app', '.dev']
+
+async function checkDomainViaDoH(name, tld) {
+  const domain = `${name}${tld}`
+  const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=NS`
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'application/dns-json' },
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!res.ok) return 'unknown'
+    const data = await res.json()
+    // Status 3 = NXDOMAIN (domain not registered → available)
+    if (data.Status === 3) return 'available'
+    // Status 0 = NOERROR — domain resolves, almost certainly registered
+    if (data.Status === 0) return 'taken'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
+async function runDomainAvailabilityReport(env, reportId, input) {
+  const rawNames = (input && Array.isArray(input.brand_names) ? input.brand_names : [])
+  const brandNames = rawNames
+    .map((n) => String(n || '').trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9-]/g, ''))
+    .filter(Boolean)
+
+  if (!brandNames.length) {
+    await updateReportStatus(env, reportId, 'error', { error: 'no_brand_names' })
+    return
+  }
+
+  const results = await Promise.all(
+    brandNames.map(async (name) => {
+      const tldChecks = await Promise.allSettled(
+        DOMAIN_TLDS.map(async (tld) => ({ tld, status: await checkDomainViaDoH(name, tld) }))
+      )
+      const tlds = {}
+      for (const r of tldChecks) {
+        if (r.status === 'fulfilled') tlds[r.value.tld] = r.value.status
+      }
+      return { name, tlds }
+    })
+  )
+
+  await updateReportStatus(env, reportId, 'complete', {
+    names: results,
+    tlds: DOMAIN_TLDS,
+    checked_at: Math.floor(Date.now() / 1000),
+  })
+}
+
+// ── Social handles runner (reuses existing orchestrator/check pipeline) ─────
+
+const SOCIAL_SERVICE_IDS = ['x', 'instagram', 'youtube', 'github', 'linkedin', 'tiktok', 'reddit']
+
+async function runSocialHandlesReport(env, reportId, input) {
+  const rawNames = (input && Array.isArray(input.brand_names) ? input.brand_names : [])
+  const brandNames = rawNames
+    .map((n) => String(n || '').trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_-]/g, ''))
+    .filter(Boolean)
+
+  if (!brandNames.length) {
+    await updateReportStatus(env, reportId, 'error', { error: 'no_brand_names' })
+    return
+  }
+
+  const results = await Promise.all(
+    brandNames.map(async (name) => {
+      const checks = await runChecksForName(env, name, null)
+      const handles = {}
+      for (const check of (checks || [])) {
+        if (SOCIAL_SERVICE_IDS.includes(check.service)) {
+          handles[check.service] = { status: check.status, label: check.label }
+        }
+      }
+      return { name, handles }
+    })
+  )
+
+  await updateReportStatus(env, reportId, 'complete', {
+    names: results,
+    checked_at: Math.floor(Date.now() / 1000),
+  })
 }
 
 // ── Row serializers ────────────────────────────────────────────────────────
