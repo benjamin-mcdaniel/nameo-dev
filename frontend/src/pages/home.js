@@ -91,6 +91,22 @@ export function Home() {
             <div class="why-q">"What if we rename later?"</div>
             <div class="why-a">Most companies do. Get a good-enough name out the door. Nameo helps you track better options as you grow.</div>
           </div>
+          <div class="why-card">
+            <div class="why-q">"My name is taken on one platform but free everywhere else."</div>
+            <div class="why-a">Consistency matters — but it's not always a dealbreaker. We show you exactly what's taken and what's open so you can decide.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"Someone's squatting the domain and wants $4,000."</div>
+            <div class="why-a">Domain squatters are real. Sometimes the alt TLD is the smarter move — and sometimes it's worth paying. Context changes everything.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"My name is fine in English. What about other markets?"</div>
+            <div class="why-a">Words that are neutral in one language can mean something very different in another. Worth a check before you print anything.</div>
+          </div>
+          <div class="why-card">
+            <div class="why-q">"How do I know if the name is too close to a competitor?"</div>
+            <div class="why-a">Exact matches are obvious. Confusingly similar is harder — it depends on your category, geography, and how loud they are. Nameo surfaces the overlap.</div>
+          </div>
         </div>
       </div>
     </section>
