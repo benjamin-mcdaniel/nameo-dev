@@ -69,9 +69,13 @@ CREATE TABLE IF NOT EXISTS sessions (
   name TEXT NOT NULL,                          -- user-facing session name
   session_type TEXT NOT NULL,                  -- brand_identity | name_generator
   status TEXT NOT NULL DEFAULT 'active',       -- active | complete | archived
+  tier TEXT NOT NULL DEFAULT 'free',           -- tier at creation time: free | starter | pro | premium
+  tokens_budget INTEGER NOT NULL DEFAULT 15,   -- max tokens for this session
+  tokens_used INTEGER NOT NULL DEFAULT 0,      -- running total of tokens consumed
   metadata_json TEXT,                          -- flexible JSON: brand_names, report_types, vibe prefs, etc.
   created_at INTEGER NOT NULL,                 -- unix timestamp (seconds)
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  expires_at INTEGER                           -- unix timestamp, session expires 30 days after creation
 );
 
 -- Reports belong to a session. Each report_type has its own runner.
@@ -93,3 +97,37 @@ CREATE TABLE IF NOT EXISTS session_reports (
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_reports_session ON session_reports(session_id, created_at ASC);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Token-based pricing (session budgets)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Each session gets a token budget based on the user's tier at creation time.
+-- AI features consume tokens; domain/social checks are free with any paid session.
+-- tiers: free (15 tokens), starter (100), pro (300), premium (1500 across 10 sessions)
+
+-- Subscriptions track the user's current plan and session allowance
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id TEXT PRIMARY KEY,                          -- UUID
+  user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  tier TEXT NOT NULL DEFAULT 'free',            -- free | starter | pro | premium
+  sessions_remaining INTEGER NOT NULL DEFAULT 1,-- sessions left to create at this tier
+  stripe_customer_id TEXT,                      -- Stripe customer reference
+  stripe_subscription_id TEXT,                  -- Stripe subscription reference (null for one-time buys)
+  purchased_at INTEGER,                         -- unix timestamp of last purchase
+  expires_at INTEGER,                           -- unix timestamp, null for free tier
+  active INTEGER NOT NULL DEFAULT 1             -- 1 = active, 0 = cancelled/expired
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+
+-- Token transactions (audit trail for every token-consuming action)
+CREATE TABLE IF NOT EXISTS token_transactions (
+  id TEXT PRIMARY KEY,                          -- UUID
+  session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  action TEXT NOT NULL,                         -- name_generation_basic | name_generation_premium | trademark_check | marketplace_check | app_store_check | threat_summary
+  tokens_cost INTEGER NOT NULL,                 -- tokens consumed by this action
+  metadata_json TEXT,                           -- optional JSON: { model, batch_size, names_count, etc. }
+  created_at INTEGER NOT NULL                   -- unix timestamp
+);
+
+CREATE INDEX IF NOT EXISTS idx_token_txn_session ON token_transactions(session_id, created_at ASC);

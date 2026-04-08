@@ -550,7 +550,7 @@
 .pricing-grid {
   margin-top: 24px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
 }
@@ -586,10 +586,43 @@
   flex: 0 0 auto; margin-top: 2px;
 }
 .pricing-cta { margin-top: auto; }
+.pricing-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.pricing-limits {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 0.8rem; color: var(--text-muted);
+  padding: 8px 0; border-top: 1px solid var(--border);
+}
+.pricing-tokens-explainer {
+  margin-top: 56px; max-width: 680px; margin-left: auto; margin-right: auto;
+}
+.pricing-tokens-explainer h3 {
+  font-size: 1.1rem; margin-bottom: 10px;
+}
+.pricing-tokens-explainer > p {
+  font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;
+}
+.token-cost-grid {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+}
+.token-cost-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; font-size: 0.88rem;
+}
+.token-cost-item:nth-child(even) { background: var(--bg-secondary); }
+.token-cost-action { color: var(--text-secondary); }
+.token-cost-amount { font-weight: 600; color: var(--text); white-space: nowrap; }
 
 /* ─────────────────────────────────────────────
    Responsive
 ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 900px) {
   .home-features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-how-steps { grid-template-columns: minmax(0, 1fr); gap: 24px; }
