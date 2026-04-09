@@ -1,6 +1,7 @@
 import { Home } from './pages/home.js'
 import { Help } from './pages/help.js'
 import { Login } from './pages/login.js'
+import { Account } from './pages/account.js'
 import { Pricing } from './pages/pricing.js'
 import { Features } from './pages/features.js'
 import { Status } from './pages/status.js'
@@ -19,6 +20,7 @@ const routes = {
   '/': Home,
 
   // Session-based workflow (v1.0)
+  '/account': Account,
   '/sessions': Sessions,
   '/sessions/new': NewSession,
   '/session': Session,

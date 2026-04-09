@@ -56,6 +56,10 @@ export default {
         return json({ error: 'user_init_failed' }, 500)
       }
 
+      if (url.pathname === '/api/me' && request.method === 'GET') {
+        return handleGetMe(env, user)
+      }
+
       if (url.pathname === '/api/account' && request.method === 'DELETE') {
         return handleDeleteAccount(env, user.id)
       }
@@ -691,6 +695,25 @@ async function callOrchestrator(env, url, token, name, userIdOrNull) {
   }
 
   return data
+}
+
+async function handleGetMe(env, user) {
+  const db = env.NAMEO_DB
+  let sessionCount = 0
+  if (db) {
+    const row = await db
+      .prepare('SELECT COUNT(*) AS cnt FROM sessions WHERE user_id = ?')
+      .bind(user.id)
+      .first()
+    sessionCount = row?.cnt ?? 0
+  }
+  return json({
+    id: user.id,
+    email: user.email,
+    tier: user.tier || 'beta',
+    created_at: user.created_at,
+    session_count: sessionCount,
+  })
 }
 
 async function handleDeleteAccount(env, userId) {

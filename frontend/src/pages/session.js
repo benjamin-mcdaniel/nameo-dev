@@ -25,7 +25,7 @@ const REPORT_TYPE_META = {
 }
 
 // Report types the runner actually handles. Others stay pending and show "coming soon".
-const RUNNABLE_REPORT_TYPES = new Set(['domain_availability', 'social_handles', 'app_store', 'products_for_sale', 'trademark'])
+const RUNNABLE_REPORT_TYPES = new Set(['domain_availability', 'social_handles', 'app_store', 'products_for_sale', 'trademark', 'questionnaire', 'name_candidates'])
 
 const REPORT_STATUS_META = {
   pending: { label: 'Pending',    cls: 'badge-pending' },
@@ -275,18 +275,30 @@ function renderReportCard(report, sessionId) {
   const isRunnable = RUNNABLE_REPORT_TYPES.has(report.report_type)
   const isComingSoon = !isRunnable && report.status === 'pending'
 
+  // Questionnaire shows its content from input (it's always "complete" once submitted)
+  const isQuestionnaire = report.report_type === 'questionnaire'
+  const isNameCandidates = report.report_type === 'name_candidates'
+
   let resultHtml = ''
-  if (isComplete && report.result) {
+  if (isQuestionnaire) {
+    resultHtml = renderReportResults(report)
+  } else if (isComplete && report.result) {
     resultHtml = renderReportResults(report)
   }
 
   let actionHtml = ''
-  if (isComingSoon) {
+  if (isQuestionnaire) {
+    // Questionnaire answers always shown inline — no toggle needed
+    actionHtml = ''
+  } else if (isComingSoon) {
     actionHtml = `<span class="badge badge-pending" style="font-size:0.7rem">Coming soon</span>`
   } else if (isError) {
     actionHtml = `
       <button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Re-run</button>
     `
+  } else if (isNameCandidates && isComplete && resultHtml) {
+    // Name candidates: no toggle, results always visible
+    actionHtml = `<button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Regenerate</button>`
   } else if (isComplete && resultHtml) {
     actionHtml = `
       <button class="btn btn-sm btn-primary" data-toggle-results="${escHtml(report.id)}">View results ↓</button>
@@ -296,6 +308,14 @@ function renderReportCard(report, sessionId) {
     actionHtml = `<span class="badge badge-running">Running…</span>`
   } else if (report.status === 'pending' && isRunnable) {
     actionHtml = `<span class="badge badge-pending">Pending</span>`
+  }
+
+  // Pre-compute the result panel so the template stays readable
+  let resultPanelHtml = ''
+  if (resultHtml) {
+    const alwaysOpen = isQuestionnaire || isNameCandidates
+    const hiddenAttr = alwaysOpen ? '' : ' style="display:none"'
+    resultPanelHtml = `<div id="results-${escHtml(report.id)}" class="report-results-panel"${hiddenAttr}>${resultHtml}</div>`
   }
 
   return `
@@ -308,7 +328,7 @@ function renderReportCard(report, sessionId) {
       <div class="report-card-desc">${typeMeta.desc}</div>
       <div class="report-card-date">${formatDate(report.created_at)}</div>
       <div class="report-card-actions">${actionHtml}</div>
-      ${resultHtml ? `<div id="results-${escHtml(report.id)}" class="report-results-panel" style="display:none">${resultHtml}</div>` : ''}
+      ${resultPanelHtml}
     </div>
   `
 }
@@ -321,6 +341,8 @@ function renderReportResults(report) {
   if (report.report_type === 'app_store') return renderAppStoreResults(report.result)
   if (report.report_type === 'products_for_sale') return renderProductsResults(report.result)
   if (report.report_type === 'trademark') return renderTrademarkResults(report.result)
+  if (report.report_type === 'questionnaire') return renderQuestionnaireResults(report.result || report.input)
+  if (report.report_type === 'name_candidates') return renderNameCandidatesResults(report.result)
   return ''
 }
 
@@ -542,18 +564,139 @@ function renderTrademarkResults(result) {
   return `<div class="conflict-results-wrap">${rows}${checkedAt}</div>`
 }
 
+// ── Questionnaire result renderer ────────────────────────────────────────
+
+const VIBE_LABELS = {
+  technical: '⚙️ Technical', friendly: '😊 Friendly', premium: '💎 Premium',
+  playful: '🎉 Playful', minimal: '◻️ Minimal', bold: '🔥 Bold',
+}
+
+const LENGTH_LABELS = { short: 'Short (1–5 chars)', medium: 'Medium (6–9 chars)', any: 'No preference' }
+
+function renderQuestionnaireResults(data) {
+  // data may come from result_json or input_json depending on how it was stored
+  if (!data) return `<div class="conflict-empty">No questionnaire data found.</div>`
+
+  const rows = []
+
+  if (data.product_description) {
+    rows.push({ label: 'Product', value: escHtml(data.product_description) })
+  }
+  if (data.industry) {
+    rows.push({ label: 'Industry', value: escHtml(data.industry) })
+  }
+  if (data.vibes?.length) {
+    const vibeChips = data.vibes.map((v) =>
+      `<span class="report-type-chip">${escHtml(VIBE_LABELS[v] || v)}</span>`
+    ).join('')
+    rows.push({ label: 'Brand vibe', value: vibeChips, isHtml: true })
+  }
+  if (data.name_length) {
+    rows.push({ label: 'Name length', value: escHtml(LENGTH_LABELS[data.name_length] || data.name_length) })
+  }
+  if (data.start_letters) {
+    rows.push({ label: 'Starts with', value: escHtml(data.start_letters) })
+  }
+  if (data.avoid_words) {
+    rows.push({ label: 'Avoid', value: escHtml(data.avoid_words) })
+  }
+
+  if (!rows.length) return `<div class="conflict-empty">No preferences recorded.</div>`
+
+  const rowsHtml = rows.map(({ label, value }) => `
+    <div class="smc-row">
+      <span class="smc-label">${label}</span>
+      <span class="smc-value">${value}</span>
+    </div>
+  `).join('')
+
+  return `
+    <div class="questionnaire-results">
+      <div class="session-meta-card" style="margin:0">
+        ${rowsHtml}
+      </div>
+    </div>
+  `
+}
+
+// ── Name candidates result renderer ──────────────────────────────────────
+
+function candidateScoreDot(score) {
+  if (!score && score !== 0) return ''
+  const pct = Math.min(100, Math.max(0, score))
+  const cls = pct >= 75 ? 'score-high' : pct >= 50 ? 'score-mid' : 'score-low'
+  return `<span class="candidate-score ${cls}" title="Fit score">${pct}</span>`
+}
+
+function renderNameCandidatesResults(result) {
+  if (!result) {
+    return `
+      <div class="candidates-pending">
+        <div class="candidates-pending-icon">✨</div>
+        <p>Name candidates are being generated based on your brand preferences.</p>
+        <p class="text-muted" style="font-size:0.875rem">This may take a moment. The page will update automatically.</p>
+      </div>
+    `
+  }
+
+  const names = result.names || result.candidates || []
+  if (!names.length) {
+    return `<div class="conflict-empty">No name candidates were generated. Try regenerating.</div>`
+  }
+
+  const cardsHtml = names.map((c) => {
+    const name = c.name || c
+    const rationale = c.rationale || c.reason || ''
+    const score = typeof c.score === 'number' ? c.score : null
+    const tldHints = c.tlds || []
+
+    const tldPills = tldHints.slice(0, 3).map((t) => {
+      const s = t.status || 'unknown'
+      const dotCls = s === 'available' ? 'avail-dot--available' : s === 'taken' ? 'avail-dot--taken' : 'avail-dot--unknown'
+      return `<span class="avail-dot ${dotCls}" title="${escHtml(t.tld || '')} ${s}" style="font-size:0.7rem;margin-right:2px">${s === 'available' ? '✓' : s === 'taken' ? '✕' : '?'}</span><span style="font-size:0.75rem;color:var(--text-muted)">${escHtml(t.tld || '')}</span>`
+    }).join(' ')
+
+    const checkLink = `#/sessions/new?prefill=${encodeURIComponent(name)}`
+
+    return `
+      <div class="candidate-card">
+        <div class="candidate-card-top">
+          <span class="candidate-name">${escHtml(name)}</span>
+          ${candidateScoreDot(score)}
+        </div>
+        ${rationale ? `<p class="candidate-rationale">${escHtml(rationale)}</p>` : ''}
+        ${tldPills ? `<div class="candidate-tlds">${tldPills}</div>` : ''}
+        <div class="candidate-card-actions">
+          <a href="${checkLink}" class="btn btn-sm btn-primary">Check this name →</a>
+        </div>
+      </div>
+    `
+  }).join('')
+
+  const generatedAt = result.generated_at
+    ? `<div class="report-checked-at">Generated ${formatDate(result.generated_at)}</div>`
+    : ''
+
+  return `
+    <div class="candidates-results">
+      <div class="candidates-grid">${cardsHtml}</div>
+      ${generatedAt}
+    </div>
+  `
+}
+
 // ── Empty state ───────────────────────────────────────────────────────────
 
 function renderEmptyReports(session) {
   const isBrand = session.session_type === 'brand_identity'
-  return `
-    <div class="empty-state-lg">
-      <div class="empty-state-icon">📋</div>
-      <h3>No reports yet</h3>
-      <p>${isBrand
-        ? 'Reports are generated automatically when you create a session. If nothing appeared, try refreshing.'
-        : 'Start with the brand preferences questionnaire to generate your name candidates.'
-      }</p>
-    </div>
-  `
+  const msg = isBrand
+    ? 'Reports are generated automatically when you create a session. If nothing appeared, try refreshing.'
+    : 'Start with the brand preferences questionnaire to generate your name candidates.'
+  return (
+    '<div class="empty-state-lg">' +
+    '<div class="empty-state-icon">&#128203;</div>' +
+    '<h3>No reports yet</h3>' +
+    '<p>' + msg + '</p>' +
+    '</div>'
+  )
 }

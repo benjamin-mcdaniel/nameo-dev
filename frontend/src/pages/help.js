@@ -1,9 +1,3 @@
-// ─── DOCS UPDATE NOTE ────────────────────────────────────────────────────────
-// This help page is a living outline of what the documentation should cover.
-// Each section marked [TODO: update when live] needs real content once the
-// corresponding feature is shipped. See memory file: project_docs_plan.md
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function Help() {
   const el = document.createElement('section')
   el.className = 'page help container'
@@ -105,18 +99,12 @@ export function Help() {
           </ul>
 
           <h3>Name candidates</h3>
-          <p>Once the questionnaire is submitted, Nameo generates a ranked list of original name candidates based on your weighted profile. Each candidate includes availability signals so you can immediately shortlist the strongest options.</p>
-          <!-- TODO: update with scoring breakdown, candidate count, and re-generation options when live -->
-
-          <div class="help-note">
-            <strong>Coming soon.</strong> The name generation engine is in active development. Questionnaire responses are saved now so your preferences are ready when the generator launches.
-          </div>
+          <p>Once the questionnaire is submitted, Nameo generates a ranked list of original name candidates based on your weighted profile. Each candidate includes a fit score and rationale — click <strong>Check this name →</strong> on any candidate to immediately run a full Brand Identity Report on it.</p>
         </div>
 
         <!-- ── Reading results ────────────────────────────────────────────── -->
         <div class="help-section" id="doc-results">
           <h2>Reading your results</h2>
-          <!-- TODO: fill this section with annotated screenshots and result interpretation guide when report UI is live -->
           <p>Each report has a status chip:</p>
           <div class="help-status-chips">
             <span><span class="badge badge-pending">Pending</span> — the report is queued but hasn't run yet.</span>
@@ -124,16 +112,14 @@ export function Help() {
             <span><span class="badge badge-complete">Complete</span> — results are ready to view.</span>
             <span><span class="badge badge-error">Error</span> — something went wrong; you can re-run the report.</span>
           </div>
-          <p style="margin-top:16px">Click <strong>View report</strong> on any completed report card to see the full breakdown. Results are surfaced with traffic-light indicators: green means available or low risk, red means taken or a likely conflict, grey means inconclusive.</p>
-          <!-- TODO: update with exact indicator definitions and export/share instructions when live -->
+          <p style="margin-top:16px">Click <strong>View results</strong> on any completed report card to see the full breakdown. Results use traffic-light indicators: <span style="color:var(--success)">✓ green</span> means available or low risk, <span style="color:var(--error)">✕ red</span> means taken or a likely conflict, <span style="color:var(--text-muted)">? grey</span> means inconclusive or the check couldn't complete.</p>
         </div>
 
         <!-- ── Account & privacy ──────────────────────────────────────────── -->
         <div class="help-section" id="doc-account">
           <h2>Account &amp; privacy</h2>
           <p>Nameo uses Auth0 for secure sign-in. You can sign in with Google or email. Your sessions and reports are tied to your account and are never shared with other users.</p>
-          <p>To delete your account and all associated data, go to your account settings after signing in.</p>
-          <!-- TODO: add link to account page and data export option when built -->
+          <p>To manage your account or delete your account and all associated data, go to <a href="#/account">your account page</a> after signing in.</p>
         </div>
 
         <!-- ── Naming basics ─────────────────────────────────────────────── -->

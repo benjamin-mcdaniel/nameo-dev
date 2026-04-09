@@ -109,7 +109,7 @@ function attachUserMenu(container) {
           const action = target.getAttribute('data-action')
           if (!action) return
           if (action === 'account') {
-            window.location.hash = '#/login'
+            window.location.hash = '#/account'
           } else if (action === 'projects') {
             window.location.hash = '#/sessions'
           } else if (action === 'logout') {
@@ -129,4 +129,5 @@ function attachUserMenu(container) {
     .catch(() => {
       // Leave static Sign in link on auth module error
     })
+}
 }
