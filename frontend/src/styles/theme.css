@@ -550,7 +550,7 @@
 .pricing-grid {
   margin-top: 24px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
 }
@@ -617,10 +617,31 @@
 .token-cost-action { color: var(--text-secondary); }
 .token-cost-amount { font-weight: 600; color: var(--text); white-space: nowrap; }
 
+/* Search depth + shareable links callouts */
+.pricing-depth-callout {
+  margin: 36px auto 0; max-width: 720px;
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  padding: 20px 24px; background: var(--bg-secondary);
+}
+.pricing-depth-inner {
+  display: flex; gap: 16px; align-items: flex-start;
+}
+.pricing-depth-icon { font-size: 1.4rem; flex: 0 0 auto; margin-top: 2px; }
+.pricing-depth-callout strong { display: block; margin-bottom: 6px; }
+.pricing-depth-callout p { font-size: 0.88rem; color: var(--text-secondary); margin: 0; line-height: 1.6; }
+
+.pricing-sharelinks-callout {
+  margin: 28px auto 0; max-width: 720px;
+  border: 1px solid var(--primary-light-border); border-radius: var(--radius-xl);
+  padding: 20px 24px; background: var(--primary-light);
+}
+.pricing-sharelinks-callout h3 { margin: 0 0 8px; font-size: 1rem; }
+.pricing-sharelinks-callout p { font-size: 0.88rem; color: var(--text-secondary); margin: 0; line-height: 1.6; }
+
 /* ─────────────────────────────────────────────
    Responsive
 ──────────────────────────────────────────── */
-@media (max-width: 1100px) {
+@media (max-width: 860px) {
   .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 900px) {
