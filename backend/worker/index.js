@@ -1247,6 +1247,12 @@ async function runSessionReport(env, reportId, reportType, input) {
       await runDomainAvailabilityReport(env, reportId, input)
     } else if (reportType === 'social_handles') {
       await runSocialHandlesReport(env, reportId, input)
+    } else if (reportType === 'app_store') {
+      await runAppStoreReport(env, reportId, input)
+    } else if (reportType === 'products_for_sale') {
+      await runProductsForSaleReport(env, reportId, input)
+    } else if (reportType === 'trademark') {
+      await runTrademarkReport(env, reportId, input)
     } else {
       // Not yet implemented — leave as pending so user can see it's queued
       await updateReportStatus(env, reportId, 'pending', null)
@@ -1337,6 +1343,187 @@ async function runSocialHandlesReport(env, reportId, input) {
         }
       }
       return { name, handles }
+    })
+  )
+
+  await updateReportStatus(env, reportId, 'complete', {
+    names: results,
+    checked_at: Math.floor(Date.now() / 1000),
+  })
+}
+
+// ── App Store runner (Apple iTunes Search API, free, no key) ──────────────
+
+async function searchAppStore(term) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=us&entity=software&limit=10`
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data.results || []).map((app) => ({
+      name: app.trackName || '',
+      developer: app.artistName || '',
+      url: app.trackViewUrl || '',
+      icon: app.artworkUrl60 || '',
+      rating: app.averageUserRating || null,
+      category: app.primaryGenreName || '',
+    }))
+  } catch {
+    return []
+  }
+}
+
+async function runAppStoreReport(env, reportId, input) {
+  const rawNames = (input && Array.isArray(input.brand_names) ? input.brand_names : [])
+  const brandNames = rawNames
+    .map((n) => String(n || '').trim().toLowerCase().replace(/[^a-z0-9 -]/g, ''))
+    .filter(Boolean)
+
+  if (!brandNames.length) {
+    await updateReportStatus(env, reportId, 'error', { error: 'no_brand_names' })
+    return
+  }
+
+  const results = await Promise.all(
+    brandNames.map(async (name) => {
+      const apps = await searchAppStore(name)
+      // Score relevance: exact match, starts-with, or contains
+      const scored = apps.map((app) => {
+        const appLower = app.name.toLowerCase()
+        const nameLower = name.toLowerCase()
+        let match = 'partial'
+        if (appLower === nameLower) match = 'exact'
+        else if (appLower.startsWith(nameLower + ' ') || appLower.startsWith(nameLower + ':')) match = 'strong'
+        else if (appLower.includes(nameLower)) match = 'contains'
+        return { ...app, match }
+      })
+      const hasConflict = scored.some((a) => a.match === 'exact' || a.match === 'strong')
+      return { name, apps: scored, status: hasConflict ? 'conflict' : (scored.length ? 'possible' : 'clear') }
+    })
+  )
+
+  await updateReportStatus(env, reportId, 'complete', {
+    names: results,
+    checked_at: Math.floor(Date.now() / 1000),
+  })
+}
+
+// ── Products for Sale runner (Amazon search via public autocomplete) ──────
+
+async function searchAmazonProducts(term) {
+  // Amazon's public search-suggestion endpoint — no API key needed
+  const url = `https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=aps&prefix=${encodeURIComponent(term)}`
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data.suggestions || []).map((s) => ({
+      value: s.value || '',
+    }))
+  } catch {
+    return []
+  }
+}
+
+async function runProductsForSaleReport(env, reportId, input) {
+  const rawNames = (input && Array.isArray(input.brand_names) ? input.brand_names : [])
+  const brandNames = rawNames
+    .map((n) => String(n || '').trim().toLowerCase().replace(/[^a-z0-9 -]/g, ''))
+    .filter(Boolean)
+
+  if (!brandNames.length) {
+    await updateReportStatus(env, reportId, 'error', { error: 'no_brand_names' })
+    return
+  }
+
+  const results = await Promise.all(
+    brandNames.map(async (name) => {
+      const suggestions = await searchAmazonProducts(name)
+      // Check if any suggestions match closely
+      const nameLower = name.toLowerCase()
+      const matches = suggestions.filter((s) => {
+        const val = s.value.toLowerCase()
+        return val === nameLower || val.startsWith(nameLower + ' ') || val.includes(nameLower)
+      })
+      const hasConflict = matches.some((m) => m.value.toLowerCase() === nameLower)
+      return {
+        name,
+        suggestions: matches.slice(0, 8).map((m) => m.value),
+        total_suggestions: suggestions.length,
+        status: hasConflict ? 'conflict' : (matches.length ? 'possible' : 'clear'),
+      }
+    })
+  )
+
+  await updateReportStatus(env, reportId, 'complete', {
+    names: results,
+    checked_at: Math.floor(Date.now() / 1000),
+  })
+}
+
+// ── Trademark runner (USPTO free text search) ─────────────────────────────
+
+async function searchUSPTOTrademarks(term) {
+  // USPTO's new Trademark Search system has a public JSON endpoint
+  const url = `https://tsdr.uspto.gov/documentretrieval?specialCharConvert=yes&sn=&rn=&in=&on=&mn=${encodeURIComponent(term)}&ms=&type=default`
+  try {
+    // Fallback: use the public search results page as a signal
+    // The cleanest free approach is checking the trademark search suggestions endpoint
+    const searchUrl = `https://efts.uspto.gov/WEBAPIS/efts/search/results?query=${encodeURIComponent(term)}&type=mark`
+    const res = await fetch(searchUrl, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(10000),
+    })
+    if (!res.ok) return { results: [], available: false, error: 'search_unavailable' }
+    const data = await res.json()
+    const hits = (data.hits || data.results || []).slice(0, 10)
+    return { results: hits, total: data.total || hits.length, available: true }
+  } catch {
+    // If the USPTO endpoint doesn't work, try a simpler fallback
+    return { results: [], available: false, error: 'search_unavailable' }
+  }
+}
+
+async function runTrademarkReport(env, reportId, input) {
+  const rawNames = (input && Array.isArray(input.brand_names) ? input.brand_names : [])
+  const brandNames = rawNames
+    .map((n) => String(n || '').trim().replace(/[^a-zA-Z0-9 -]/g, ''))
+    .filter(Boolean)
+
+  if (!brandNames.length) {
+    await updateReportStatus(env, reportId, 'error', { error: 'no_brand_names' })
+    return
+  }
+
+  const results = await Promise.all(
+    brandNames.map(async (name) => {
+      const search = await searchUSPTOTrademarks(name)
+      if (!search.available) {
+        return {
+          name,
+          status: 'unavailable',
+          message: 'Trademark search service could not be reached. Results may be available on retry.',
+          results: [],
+        }
+      }
+      const hasExact = search.results.some((r) => {
+        const markText = (r.markText || r.mark_text || r.wordmark || '').toLowerCase()
+        return markText === name.toLowerCase()
+      })
+      return {
+        name,
+        status: hasExact ? 'conflict' : (search.total > 0 ? 'possible' : 'clear'),
+        total_results: search.total,
+        top_results: search.results.slice(0, 5).map((r) => ({
+          mark: r.markText || r.mark_text || r.wordmark || '',
+          serial: r.serialNumber || r.serial_number || '',
+          status: r.status || '',
+          owner: r.owner || '',
+        })),
+      }
     })
   )
 

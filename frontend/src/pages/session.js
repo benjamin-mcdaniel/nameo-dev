@@ -16,16 +16,16 @@ async function apiFetch(path, options = {}) {
 
 const REPORT_TYPE_META = {
   domain_availability: { label: 'Domain Availability', icon: '🌐', desc: 'Domain availability across TLDs' },
-  trademark:           { label: 'Trademark Check',     icon: '⚖️',  desc: 'US & EU trademark screening — coming soon' },
-  products_for_sale:   { label: 'Products for Sale',   icon: '🛒',  desc: 'Marketplace listing conflicts — coming soon' },
+  trademark:           { label: 'Trademark Check',     icon: '⚖️',  desc: 'US trademark screening for potential conflicts' },
+  products_for_sale:   { label: 'Products for Sale',   icon: '🛒',  desc: 'Amazon marketplace listing conflicts' },
   social_handles:      { label: 'Social Handles',      icon: '📱',  desc: 'Handle availability on major platforms' },
-  app_store:           { label: 'App Store',            icon: '📦',  desc: 'iOS & Google Play name check — coming soon' },
+  app_store:           { label: 'App Store',            icon: '📦',  desc: 'iOS App Store name conflict check' },
   questionnaire:       { label: 'Brand Preferences',   icon: '🎯',  desc: 'Preference questionnaire responses' },
   name_candidates:     { label: 'Name Candidates',     icon: '✨',  desc: 'AI-generated name candidates' },
 }
 
 // Report types the runner actually handles. Others stay pending and show "coming soon".
-const RUNNABLE_REPORT_TYPES = new Set(['domain_availability', 'social_handles'])
+const RUNNABLE_REPORT_TYPES = new Set(['domain_availability', 'social_handles', 'app_store', 'products_for_sale', 'trademark'])
 
 const REPORT_STATUS_META = {
   pending: { label: 'Pending',    cls: 'badge-pending' },
@@ -318,6 +318,9 @@ function renderReportCard(report, sessionId) {
 function renderReportResults(report) {
   if (report.report_type === 'domain_availability') return renderDomainResults(report.result)
   if (report.report_type === 'social_handles') return renderSocialResults(report.result)
+  if (report.report_type === 'app_store') return renderAppStoreResults(report.result)
+  if (report.report_type === 'products_for_sale') return renderProductsResults(report.result)
+  if (report.report_type === 'trademark') return renderTrademarkResults(report.result)
   return ''
 }
 
@@ -398,6 +401,145 @@ function renderSocialResults(result) {
       ${checkedAt}
     </div>
   `
+}
+
+// ── App Store result renderer ─────────────────────────────────────────────
+
+function matchBadge(match) {
+  if (match === 'exact')    return `<span class="badge badge-error">Exact match</span>`
+  if (match === 'strong')   return `<span class="badge badge-warning">Strong match</span>`
+  if (match === 'contains') return `<span class="badge badge-pending">Contains name</span>`
+  return `<span class="badge badge-muted">Partial</span>`
+}
+
+function conflictStatusBadge(status) {
+  if (status === 'conflict') return `<span class="badge badge-error">Conflict found</span>`
+  if (status === 'possible') return `<span class="badge badge-warning">Possible conflicts</span>`
+  return `<span class="badge badge-complete">Clear</span>`
+}
+
+function renderAppStoreResults(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return ''
+
+  const rows = result.names.map((nameRow) => {
+    const apps = nameRow.apps || []
+    const appListHtml = apps.length
+      ? apps.slice(0, 5).map((app) => `
+          <div class="conflict-item">
+            <div class="conflict-item-main">
+              <strong>${escHtml(app.name)}</strong>
+              <span class="conflict-item-detail">${escHtml(app.developer)}${app.category ? ` · ${escHtml(app.category)}` : ''}</span>
+            </div>
+            ${matchBadge(app.match)}
+          </div>
+        `).join('')
+      : `<div class="conflict-empty">No apps found matching this name.</div>`
+
+    return `
+      <div class="conflict-name-group">
+        <div class="conflict-name-header">
+          <span class="avail-name">${escHtml(nameRow.name)}</span>
+          ${conflictStatusBadge(nameRow.status)}
+        </div>
+        <div class="conflict-items">${appListHtml}</div>
+      </div>
+    `
+  }).join('')
+
+  const checkedAt = result.checked_at
+    ? `<div class="report-checked-at">Checked ${formatDate(result.checked_at)}</div>`
+    : ''
+
+  return `<div class="conflict-results-wrap">${rows}${checkedAt}</div>`
+}
+
+// ── Products for Sale result renderer ─────────────────────────────────────
+
+function renderProductsResults(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return ''
+
+  const rows = result.names.map((nameRow) => {
+    const suggestions = nameRow.suggestions || []
+    const listHtml = suggestions.length
+      ? `<div class="conflict-items">
+          ${suggestions.map((s) => `
+            <div class="conflict-item">
+              <div class="conflict-item-main">${escHtml(s)}</div>
+            </div>
+          `).join('')}
+        </div>`
+      : `<div class="conflict-empty">No matching product listings found.</div>`
+
+    return `
+      <div class="conflict-name-group">
+        <div class="conflict-name-header">
+          <span class="avail-name">${escHtml(nameRow.name)}</span>
+          ${conflictStatusBadge(nameRow.status)}
+          <span class="badge badge-muted">${nameRow.total_suggestions} suggestion${nameRow.total_suggestions !== 1 ? 's' : ''}</span>
+        </div>
+        ${listHtml}
+      </div>
+    `
+  }).join('')
+
+  const checkedAt = result.checked_at
+    ? `<div class="report-checked-at">Checked ${formatDate(result.checked_at)}</div>`
+    : ''
+
+  return `<div class="conflict-results-wrap">${rows}${checkedAt}</div>`
+}
+
+// ── Trademark result renderer ─────────────────────────────────────────────
+
+function renderTrademarkResults(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return ''
+
+  const rows = result.names.map((nameRow) => {
+    if (nameRow.status === 'unavailable') {
+      return `
+        <div class="conflict-name-group">
+          <div class="conflict-name-header">
+            <span class="avail-name">${escHtml(nameRow.name)}</span>
+            <span class="badge badge-pending">Search unavailable</span>
+          </div>
+          <div class="conflict-empty">${escHtml(nameRow.message || 'Could not reach trademark search. Try again later.')}</div>
+        </div>
+      `
+    }
+
+    const topResults = nameRow.top_results || []
+    const listHtml = topResults.length
+      ? `<div class="conflict-items">
+          ${topResults.map((r) => `
+            <div class="conflict-item">
+              <div class="conflict-item-main">
+                <strong>${escHtml(r.mark)}</strong>
+                ${r.serial ? `<span class="conflict-item-detail">Serial: ${escHtml(r.serial)}</span>` : ''}
+                ${r.owner ? `<span class="conflict-item-detail">${escHtml(r.owner)}</span>` : ''}
+              </div>
+              ${r.status ? `<span class="badge badge-muted">${escHtml(r.status)}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>`
+      : `<div class="conflict-empty">No trademark records found for this name.</div>`
+
+    return `
+      <div class="conflict-name-group">
+        <div class="conflict-name-header">
+          <span class="avail-name">${escHtml(nameRow.name)}</span>
+          ${conflictStatusBadge(nameRow.status)}
+          ${nameRow.total_results ? `<span class="badge badge-muted">${nameRow.total_results} result${nameRow.total_results !== 1 ? 's' : ''}</span>` : ''}
+        </div>
+        ${listHtml}
+      </div>
+    `
+  }).join('')
+
+  const checkedAt = result.checked_at
+    ? `<div class="report-checked-at">Checked ${formatDate(result.checked_at)}</div>`
+    : ''
+
+  return `<div class="conflict-results-wrap">${rows}${checkedAt}</div>`
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────

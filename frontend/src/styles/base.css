@@ -448,6 +448,65 @@ select:focus {
 .badge-pending  { background: var(--bg-muted); color: var(--text-muted); }
 .badge-running  { background: #fef3c7; color: #d97706; }
 .badge-error    { background: var(--error-bg); color: var(--error); }
+.badge-warning  { background: #fef3c7; color: #d97706; }
+.badge-muted    { background: var(--bg-muted); color: var(--text-muted); font-weight: 400; }
+
+/* ─────────────────────────────────────────────
+   Conflict / match result cards (app store, marketplace, trademark)
+──────────────────────────────────────────── */
+.conflict-results-wrap {
+  padding: 4px 0;
+}
+.conflict-name-group {
+  margin-bottom: 20px;
+}
+.conflict-name-group:last-child { margin-bottom: 0; }
+.conflict-name-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.conflict-name-header .avail-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.conflict-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 2px;
+}
+.conflict-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bg-muted);
+  font-size: 0.85rem;
+}
+.conflict-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.conflict-item-main strong {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.conflict-item-detail {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.conflict-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 8px 0;
+}
 
 /* ─────────────────────────────────────────────
    Page header with action slot
