@@ -108,6 +108,16 @@ export function NewSession() {
   el.className = 'page new-session container'
 
   const state = createState()
+
+  // If the URL contains ?prefill=NAME (linked from name candidate "Check this name →"),
+  // jump straight to the brand identity flow with the name pre-populated.
+  const prefill = new URLSearchParams(window.location.search).get('prefill')?.trim()
+  if (prefill) {
+    state.sessionType = 'brand_identity'
+    state.brandNames = [prefill]
+    state.step = 2
+  }
+
   renderPage(el, state)
   return el
 }

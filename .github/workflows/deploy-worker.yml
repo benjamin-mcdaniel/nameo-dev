@@ -11,9 +11,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ── 1. Unit tests — must pass before anything deploys ──────────────────────
+  test-unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend/worker
+
+      - name: Run unit tests
+        run: npm test
+        working-directory: backend/worker
+
+  # ── 2. Deploy main worker ───────────────────────────────────────────────────
   deploy-main-worker:
     name: Deploy nameo-worker
     runs-on: ubuntu-latest
+    needs: test-unit
+    outputs:
+      worker_url: ${{ steps.get-url.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,10 +57,16 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
+      - name: Capture worker URL
+        id: get-url
+        run: |
+          echo "url=${{ vars.WORKER_URL }}" >> $GITHUB_OUTPUT
+
+  # ── 3. Deploy search worker ─────────────────────────────────────────────────
   deploy-search-worker:
     name: Deploy nameo-search-worker
     runs-on: ubuntu-latest
-    needs: deploy-main-worker
+    needs: test-unit
     steps:
       - uses: actions/checkout@v4
 
@@ -48,3 +79,36 @@ jobs:
         working-directory: backend/search-worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  # ── 4. QA tests against live worker ────────────────────────────────────────
+  test-qa:
+    name: QA tests (live API)
+    runs-on: ubuntu-latest
+    needs: deploy-main-worker
+    # QA tests are best-effort — a flaky upstream (USPTO, iTunes) shouldn't
+    # block the deploy. Set continue-on-error: false once you have a QA_API_TOKEN
+    # configured and the runners are reliable.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend/worker
+
+      - name: Run QA tests
+        run: npm run test:qa
+        working-directory: backend/worker
+        env:
+          # Set WORKER_URL in repo Settings → Variables → Actions
+          WORKER_URL: ${{ vars.WORKER_URL }}
+          # Set QA_API_TOKEN in repo Settings → Secrets → Actions
+          # This is a valid Auth0 token for a dedicated QA test account.
+          # Without it, only public endpoint tests run.
+          QA_API_TOKEN: ${{ secrets.QA_API_TOKEN }}
