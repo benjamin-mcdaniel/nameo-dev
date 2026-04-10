@@ -111,7 +111,9 @@ export function NewSession() {
 
   // If the URL contains ?prefill=NAME (linked from name candidate "Check this name →"),
   // jump straight to the brand identity flow with the name pre-populated.
-  const prefill = new URLSearchParams(window.location.search).get('prefill')?.trim()
+  // The app uses hash routing so the param lives inside the hash: #/sessions/new?prefill=NAME
+  const _hashQuery = window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?') + 1) : ''
+  const prefill = new URLSearchParams(_hashQuery).get('prefill')?.trim()
   if (prefill) {
     state.sessionType = 'brand_identity'
     state.brandNames = [prefill]
