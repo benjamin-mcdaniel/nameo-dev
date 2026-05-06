@@ -1,23 +1,16 @@
-// ── Products for Sale runner ──────────────────────────────────────────────────
+// Products for Sale runner
 //
-// Uses Amazon's public search-suggestion endpoint (no key required).
-// NOTE: This endpoint is undocumented and may become rate-limited or blocked
-// from Cloudflare Workers. If it starts returning empty results consistently,
-// swap to the eBay Finding API (free app ID at developer.ebay.com).
+// Checks major marketplace autocomplete APIs for existing products with this name.
+// Uses public autocomplete endpoints -- no API keys required, but undocumented.
 //
-// eBay fallback endpoint when ready:
-//   https://svcs.ebay.com/services/search/FindingService/v1
-//   ?OPERATION-NAME=findItemsByKeywords
-//   &SERVICE-VERSION=1.0.0
-//   &SECURITY-APPNAME={APP_ID}
-//   &RESPONSE-DATA-FORMAT=JSON
-//   &keywords={NAME}
-//   &paginationInput.entriesPerPage=10
+// Marketplaces:
+//   Amazon  - completion.amazon.com/api/2017/suggestions  (live)
+//   Walmart - search.walmart.com/api/typeahead            (stub)
 //
 // Match logic:
-//   conflict  — suggestion value exactly matches brand name
-//   possible  — suggestion value contains brand name (starts-with or anywhere)
-//   clear     — no matching suggestions
+//   conflict  -- suggestion exactly matches brand name
+//   possible  -- suggestion contains brand name
+//   clear     -- no matching suggestions
 
 import { updateReportStatus } from '../lib/report-status.js'
 
@@ -49,18 +42,32 @@ export async function runProductsForSaleReport(env, reportId, input) {
 
   const results = await Promise.all(
     brandNames.map(async (name) => {
-      const suggestions = await searchAmazonProducts(name)
-      const nameLower   = name.toLowerCase()
-      const matches = suggestions.filter((s) => {
+      const nameLower = name.toLowerCase()
+
+      // Amazon (live)
+      const amazonSuggestions = await searchAmazonProducts(name)
+      const amazonMatches = amazonSuggestions.filter((s) => {
         const val = s.value.toLowerCase()
         return val === nameLower || val.startsWith(nameLower + ' ') || val.includes(nameLower)
       })
-      const hasExactConflict = matches.some((m) => m.value.toLowerCase() === nameLower)
+      const amazonConflict = amazonMatches.some((m) => m.value.toLowerCase() === nameLower)
+
+      // Walmart (stub)
+      const walmart = { status: 'unknown', stub: true, note: 'Coming soon' }
+
+      const topStatus = amazonConflict ? 'conflict' : (amazonMatches.length ? 'possible' : 'clear')
+
       return {
         name,
-        suggestions: matches.slice(0, 8).map((m) => m.value),
-        total_suggestions: suggestions.length,
-        status: hasExactConflict ? 'conflict' : (matches.length ? 'possible' : 'clear'),
+        marketplaces: {
+          amazon: {
+            status: topStatus,
+            suggestions: amazonMatches.slice(0, 8).map((m) => m.value),
+            total_suggestions: amazonSuggestions.length,
+          },
+          walmart,
+        },
+        status: topStatus,
       }
     })
   )

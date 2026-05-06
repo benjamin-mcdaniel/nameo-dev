@@ -1,31 +1,35 @@
 // Social handles runner
 //
-// Strategy per platform:
-//   github   - api.github.com/users/{name}         -> 404=available, 200=taken  (no key)
-//   reddit   - reddit.com/user/{name}/about.json   -> 404=available             (no key)
-//   x        - api.twitter.com/2/users/by/username -> needs TWITTER_BEARER_TOKEN env var
+// Live checks (no API key needed):
+//   github   - api.github.com/users/{name}           404=available, 200=taken
+//   reddit   - reddit.com/user/{name}/about.json      404=available, 200=taken
 //
-// instagram, tiktok, linkedin, youtube, facebook - Worker IPs are blocked by
-// these platforms. Returned as status:'unknown' with a note so the UI is honest.
+// Live checks (API key required):
+//   x        - api.twitter.com/2/users/by/username/{name}  needs TWITTER_BEARER_TOKEN
+//
+// Stubbed (Worker IPs blocked, no reliable public API):
+//   instagram, tiktok, linkedin, youtube, facebook, telegram
+//
+// Always unknown (no public username system):
+//   whatsapp
 //
 // Status values: available | taken | unknown
 
 import { updateReportStatus } from '../lib/report-status.js'
 
+// --- Live checkers ---
+
 async function checkGitHub(name) {
   try {
     const res = await fetch(`https://api.github.com/users/${encodeURIComponent(name)}`, {
-      headers: {
-        'User-Agent': 'nameo-worker/1.0',
-        Accept: 'application/vnd.github.v3+json',
-      },
+      headers: { 'User-Agent': 'nameo-worker/1.0', Accept: 'application/vnd.github.v3+json' },
       signal: AbortSignal.timeout(7000),
     })
-    if (res.status === 404) return 'available'
-    if (res.status === 200) return 'taken'
-    return 'unknown'
+    if (res.status === 404) return { status: 'available' }
+    if (res.status === 200) return { status: 'taken' }
+    return { status: 'unknown' }
   } catch {
-    return 'unknown'
+    return { status: 'unknown' }
   }
 }
 
@@ -33,42 +37,43 @@ async function checkReddit(name) {
   try {
     const res = await fetch(
       `https://www.reddit.com/user/${encodeURIComponent(name)}/about.json`,
-      {
-        headers: { 'User-Agent': 'nameo-worker/1.0' },
-        signal: AbortSignal.timeout(7000),
-      }
+      { headers: { 'User-Agent': 'nameo-worker/1.0' }, signal: AbortSignal.timeout(7000) }
     )
-    if (res.status === 404) return 'available'
-    if (res.status === 200) return 'taken'
-    return 'unknown'
+    if (res.status === 404) return { status: 'available' }
+    if (res.status === 200) return { status: 'taken' }
+    return { status: 'unknown' }
   } catch {
-    return 'unknown'
+    return { status: 'unknown' }
   }
 }
 
-async function checkTwitter(name, env) {
-  const token = env?.TWITTER_BEARER_TOKEN
-  if (!token) return 'unknown'
+async function checkTwitter(name, token) {
+  if (!token) return { status: 'unknown', note: 'Requires API key' }
   try {
     const res = await fetch(
       `https://api.twitter.com/2/users/by/username/${encodeURIComponent(name)}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: AbortSignal.timeout(7000),
-      }
+      { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(7000) }
     )
-    if (res.status === 404) return 'available'
-    if (res.status === 200) return 'taken'
-    return 'unknown'
+    if (res.status === 404) return { status: 'available' }
+    if (res.status === 200) return { status: 'taken' }
+    return { status: 'unknown' }
   } catch {
-    return 'unknown'
+    return { status: 'unknown' }
   }
 }
+
+// --- Stub: platform IPs blocked from Cloudflare Workers ---
+const blocked = (platform) => ({
+  status: 'unknown',
+  note: `${platform} blocks server-side checks — verify manually`,
+})
+
+// --- Main runner ---
 
 export async function runSocialHandlesReport(env, reportId, input) {
   const rawNames = input?.brand_names ?? []
   const brandNames = rawNames
-    .map((n) => String(n || '').trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_-]/g, ''))
+    .map((n) => String(n || '').trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_.-]/g, ''))
     .filter(Boolean)
 
   if (!brandNames.length) {
@@ -78,26 +83,27 @@ export async function runSocialHandlesReport(env, reportId, input) {
 
   const results = await Promise.all(
     brandNames.map(async (name) => {
-      const [githubStatus, redditStatus, xStatus] = await Promise.all([
+      const [github, reddit, x] = await Promise.all([
         checkGitHub(name),
         checkReddit(name),
-        checkTwitter(name, env),
+        checkTwitter(name, env?.TWITTER_BEARER_TOKEN),
       ])
 
-      const handles = {
-        github: { status: githubStatus },
-        reddit: { status: redditStatus },
-        x: {
-          status: xStatus,
-          note: !env?.TWITTER_BEARER_TOKEN ? 'Requires API key' : null,
+      return {
+        name,
+        handles: {
+          github,
+          reddit,
+          x,
+          instagram:  blocked('Instagram'),
+          tiktok:     blocked('TikTok'),
+          linkedin:   blocked('LinkedIn'),
+          youtube:    blocked('YouTube'),
+          facebook:   blocked('Facebook'),
+          telegram:   blocked('Telegram'),
+          whatsapp:   { status: 'unknown', note: 'No public username system' },
         },
-        instagram: { status: 'unknown', note: 'Requires API key' },
-        tiktok:    { status: 'unknown', note: 'Requires API key' },
-        linkedin:  { status: 'unknown', note: 'Requires API key' },
-        youtube:   { status: 'unknown', note: 'Requires API key' },
       }
-
-      return { name, handles }
     })
   )
 
