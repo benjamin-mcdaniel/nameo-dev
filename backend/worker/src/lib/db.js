@@ -15,7 +15,9 @@ import { runNameGeneratorReport }      from '../runners/name-generator.js'
 
 export { updateReportStatus }
 
-export async function executeAllPendingReports(env, sessionId) {
+// Each report fires as its own independent ctx.waitUntil() so domain (fast)
+// and trademark (slow) run in parallel — neither can time out the other.
+export async function executeAllPendingReports(env, ctx, sessionId) {
   const db = env.NAMEO_DB
   if (!db) return
   try {
@@ -26,7 +28,12 @@ export async function executeAllPendingReports(env, sessionId) {
     for (const report of (reports.results || [])) {
       let input = null
       try { input = JSON.parse(report.input_json || 'null') } catch { input = null }
-      await runSessionReport(env, report.id, report.report_type, input)
+      if (ctx && typeof ctx.waitUntil === 'function') {
+        ctx.waitUntil(runSessionReport(env, report.id, report.report_type, input))
+      } else {
+        // Fallback: sequential (unit tests / no ctx)
+        await runSessionReport(env, report.id, report.report_type, input)
+      }
     }
   } catch { /* non-fatal — session still created successfully */ }
 }

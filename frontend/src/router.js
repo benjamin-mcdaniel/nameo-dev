@@ -9,12 +9,9 @@ import { Privacy } from './pages/privacy.js'
 import { Terms } from './pages/terms.js'
 import { NotFound } from './pages/notfound.js'
 import { Test } from './pages/test.js'
-import { Campaigns } from './pages/campaigns.js'
 import { Sessions } from './pages/sessions.js'
 import { NewSession } from './pages/new-session.js'
 import { Session } from './pages/session.js'
-import { Advanced } from './pages/advanced.js'
-import { AdvancedReport } from './pages/advanced_report.js'
 
 const routes = {
   '/': Home,
@@ -24,11 +21,6 @@ const routes = {
   '/sessions': Sessions,
   '/sessions/new': NewSession,
   '/session': Session,
-
-  // Legacy / kept for backward compat
-  '/campaigns': Campaigns,
-  '/advanced': Advanced,
-  '/advanced-report': AdvancedReport,
 
   '/help': Help,
   '/login': Login,
@@ -42,7 +34,7 @@ const routes = {
 }
 
 // Archived routes — redirect to home
-const archivedRoutes = new Set(['/search'])
+const archivedRoutes = new Set(['/search', '/advanced', '/advanced-report', '/campaigns'])
 
 function getPath() {
   const hash = window.location.hash || '#/'

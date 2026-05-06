@@ -1,3 +1,7 @@
+# DEPRECATED — this Python orchestrator is not deployed and not used.
+# The Cloudflare Worker handles all orchestration via ctx.waitUntil().
+# See: backend/worker/src/lib/db.js -> executeAllPendingReports()
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional

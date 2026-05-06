@@ -500,7 +500,7 @@ async function handleCreateSession(request, env, userId, ctx) {
   }
 
   if (ctx && typeof ctx.waitUntil === 'function') {
-    ctx.waitUntil(executeAllPendingReports(env, id))
+    ctx.waitUntil(executeAllPendingReports(env, ctx, id))
   }
 
   return json({ id, name, session_type: sessionType, status: 'active', created_at: now }, 201)

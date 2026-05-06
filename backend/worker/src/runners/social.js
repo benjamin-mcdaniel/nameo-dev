@@ -1,28 +1,72 @@
-// ── Social handles runner ─────────────────────────────────────────────────────
+// Social handles runner
 //
-// Checks username availability across social platforms using URL-status probing
-// defined in config/services.json + config/availability_signatures.json.
+// Strategy per platform:
+//   github   - api.github.com/users/{name}         -> 404=available, 200=taken  (no key)
+//   reddit   - reddit.com/user/{name}/about.json   -> 404=available             (no key)
+//   x        - api.twitter.com/2/users/by/username -> needs TWITTER_BEARER_TOKEN env var
 //
-// Status values: available | taken | unknown | coming_soon
+// instagram, tiktok, linkedin, youtube, facebook - Worker IPs are blocked by
+// these platforms. Returned as status:'unknown' with a note so the UI is honest.
 //
-// Platforms currently active (from services.json):
-//   X, Instagram, Facebook, YouTube, TikTok, Pinterest, GitHub,
-//   Reddit, Medium, Twitch, Product Hunt, Substack, Behance, Dribbble
-// LinkedIn is marked coming_soon and returns no result.
+// Status values: available | taken | unknown
 
 import { updateReportStatus } from '../lib/report-status.js'
-import { runChecksForName }   from '../lib/checks.js'
 
-// Only include platforms relevant to a brand social audit.
-// This list intentionally excludes the legacy services not shown in the UI.
-const SOCIAL_SERVICE_IDS = [
-  'x', 'instagram', 'facebook', 'youtube', 'linkedin',
-  'tiktok', 'pinterest', 'github', 'reddit',
-  'medium', 'twitch', 'producthunt', 'substack',
-]
+async function checkGitHub(name) {
+  try {
+    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(name)}`, {
+      headers: {
+        'User-Agent': 'nameo-worker/1.0',
+        Accept: 'application/vnd.github.v3+json',
+      },
+      signal: AbortSignal.timeout(7000),
+    })
+    if (res.status === 404) return 'available'
+    if (res.status === 200) return 'taken'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
+async function checkReddit(name) {
+  try {
+    const res = await fetch(
+      `https://www.reddit.com/user/${encodeURIComponent(name)}/about.json`,
+      {
+        headers: { 'User-Agent': 'nameo-worker/1.0' },
+        signal: AbortSignal.timeout(7000),
+      }
+    )
+    if (res.status === 404) return 'available'
+    if (res.status === 200) return 'taken'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
+async function checkTwitter(name, env) {
+  const token = env?.TWITTER_BEARER_TOKEN
+  if (!token) return 'unknown'
+  try {
+    const res = await fetch(
+      `https://api.twitter.com/2/users/by/username/${encodeURIComponent(name)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(7000),
+      }
+    )
+    if (res.status === 404) return 'available'
+    if (res.status === 200) return 'taken'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
 
 export async function runSocialHandlesReport(env, reportId, input) {
-  const rawNames   = input?.brand_names ?? []
+  const rawNames = input?.brand_names ?? []
   const brandNames = rawNames
     .map((n) => String(n || '').trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_-]/g, ''))
     .filter(Boolean)
@@ -34,13 +78,25 @@ export async function runSocialHandlesReport(env, reportId, input) {
 
   const results = await Promise.all(
     brandNames.map(async (name) => {
-      const checks  = await runChecksForName(env, name, null)
-      const handles = {}
-      for (const check of (checks || [])) {
-        if (SOCIAL_SERVICE_IDS.includes(check.service)) {
-          handles[check.service] = { status: check.status, label: check.label }
-        }
+      const [githubStatus, redditStatus, xStatus] = await Promise.all([
+        checkGitHub(name),
+        checkReddit(name),
+        checkTwitter(name, env),
+      ])
+
+      const handles = {
+        github: { status: githubStatus },
+        reddit: { status: redditStatus },
+        x: {
+          status: xStatus,
+          note: !env?.TWITTER_BEARER_TOKEN ? 'Requires API key' : null,
+        },
+        instagram: { status: 'unknown', note: 'Requires API key' },
+        tiktok:    { status: 'unknown', note: 'Requires API key' },
+        linkedin:  { status: 'unknown', note: 'Requires API key' },
+        youtube:   { status: 'unknown', note: 'Requires API key' },
       }
+
       return { name, handles }
     })
   )
