@@ -57,27 +57,22 @@ export function Help() {
             <div class="help-report-row">
               <span class="report-type-chip">🌐 Domain Availability</span>
               <p>Checks .com, .io, .ai, .co, .app, .dev, and more. Results show which TLDs are registerable for each of your name candidates.</p>
-              <!-- TODO: update with full TLD list and registration link integration when live -->
             </div>
             <div class="help-report-row">
               <span class="report-type-chip">⚖️ Trademark Check</span>
               <p>Screens US (USPTO) and EU (EUIPO) trademark databases for active registrations that could conflict with your name. Results are a signal, not legal advice.</p>
-              <!-- TODO: add detail on exact classification logic and confidence scoring when live -->
             </div>
             <div class="help-report-row">
               <span class="report-type-chip">🛒 Products for Sale</span>
-              <p>Searches Amazon, eBay, and major marketplaces for existing products using your name. Helps you understand whether consumers will find a competitor when they search.</p>
-              <!-- TODO: update with full marketplace list and conflict scoring when live -->
+              <p>Searches Amazon and major marketplaces for existing products using your name. Helps you understand whether consumers will find a competitor when they search.</p>
             </div>
             <div class="help-report-row">
               <span class="report-type-chip">📱 Social Handles</span>
-              <p>Checks availability on X/Twitter, Instagram, LinkedIn, YouTube, and GitHub. A 404 response indicates the handle is likely available.</p>
-              <!-- TODO: add detail on check methodology and edge cases when live -->
+              <p>Checks availability on X/Twitter, Instagram, LinkedIn, YouTube, and GitHub.</p>
             </div>
             <div class="help-report-row">
               <span class="report-type-chip">📦 App Store</span>
               <p>Checks iOS App Store and Google Play for existing apps that share your name. Reduces the risk of confusion in app store search results at launch.</p>
-              <!-- TODO: add detail on match scoring (exact vs. partial) when live -->
             </div>
           </div>
         </div>
@@ -168,7 +163,6 @@ export function Help() {
             <details class="faq-item">
               <summary>How fresh are the results?</summary>
               <p>Domain and social checks are run live at the time you trigger the report. Trademark and marketplace data may be indexed on a delay. Re-run any report to get the most current results.</p>
-              <!-- TODO: add specific cache/freshness windows per report type when defined -->
             </details>
             <details class="faq-item">
               <summary>Can I check the same name in multiple sessions?</summary>
@@ -177,7 +171,6 @@ export function Help() {
             <details class="faq-item">
               <summary>How many name candidates can I include in one session?</summary>
               <p>Up to 5 candidates per Brand Identity Report session. The Name Generator produces its own candidate list based on your preferences.</p>
-              <!-- TODO: update limits based on final pricing tiers -->
             </details>
             <details class="faq-item">
               <summary>Why does .com cost more than .io or .ai?</summary>

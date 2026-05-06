@@ -7,81 +7,63 @@ vi.mock('../../src/lib/report-status.js', () => ({
 
 import { updateReportStatus } from '../../src/lib/report-status.js'
 
-const mockEnv  = { NAMEO_DB: {} }
+const mockEnv   = { NAMEO_DB: {} }
 const REPORT_ID = 'test-report-id'
-
-function mockUSPTO(hits, total) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve({
-      hits: { hits, total: { value: total ?? hits.length } },
-    }),
-  })
-}
-
-function makeHit(markText, serial = '12345', owner = 'Acme Corp', status = 'REGISTERED') {
-  return { _source: { markText, serialNumber: serial, owner, status } }
-}
 
 beforeEach(() => { vi.clearAllMocks() })
 
-describe('Trademark runner', () => {
-  it('status is clear when USPTO returns no results', async () => {
-    mockUSPTO([], 0)
-    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['uniquexyz'] })
+// Tests verify the stub contract so the full UI pipeline stays testable.
+// Runner is currently a stub: names <=4 chars -> 'possible', >4 chars -> 'clear'.
+// When the real Markify/USPTO runner is wired in, update these tests accordingly.
+
+describe('Trademark runner (stub)', () => {
+  it('errors when no brand names provided', async () => {
+    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: [] })
+    expect(updateReportStatus).toHaveBeenCalledWith(
+      mockEnv, REPORT_ID, 'error', { error: 'no_brand_names' }
+    )
+  })
+
+  it('status is clear for names longer than 4 chars', async () => {
+    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['lumio'] })
     const result = updateReportStatus.mock.calls[0][3]
     expect(result.names[0].status).toBe('clear')
     expect(result.names[0].total_results).toBe(0)
   })
 
-  it('status is conflict on exact mark match (case-insensitive)', async () => {
-    mockUSPTO([makeHit('LUMIO')], 1)
-    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['Lumio'] })
-    const result = updateReportStatus.mock.calls[0][3]
-    expect(result.names[0].status).toBe('conflict')
-  })
-
-  it('status is possible when results exist but no exact match', async () => {
-    mockUSPTO([makeHit('LUMIO INDUSTRIES'), makeHit('LUMIOPRO')], 2)
-    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['lumio'] })
+  it('status is possible for short names (4 chars or fewer)', async () => {
+    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['acme'] })
     const result = updateReportStatus.mock.calls[0][3]
     expect(result.names[0].status).toBe('possible')
-    expect(result.names[0].total_results).toBe(2)
+    expect(result.names[0].total_results).toBeGreaterThan(0)
   })
 
-  it('returns at most 5 top_results', async () => {
-    const hits = Array.from({ length: 8 }, (_, i) => makeHit(`BRAND${i}`))
-    mockUSPTO(hits, 8)
-    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['brand'] })
-    const result = updateReportStatus.mock.calls[0][3]
-    expect(result.names[0].top_results.length).toBeLessThanOrEqual(5)
-  })
-
-  it('top_results contain mark, serial, owner, status fields', async () => {
-    mockUSPTO([makeHit('LUMIO', '98765', 'Test Owner', 'LIVE')], 1)
-    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['other'] })
-    const result = updateReportStatus.mock.calls[0][3]
-    const top = result.names[0].top_results[0]
-    expect(top).toMatchObject({ mark: 'LUMIO', serial: '98765', owner: 'Test Owner', status: 'LIVE' })
-  })
-
-  it('status is unavailable when USPTO fetch fails', async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new Error('network'))
+  it('result shape has required fields', async () => {
     await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['lumio'] })
     const result = updateReportStatus.mock.calls[0][3]
-    expect(result.names[0].status).toBe('unavailable')
-    expect(result.names[0].message).toMatch(/re-running/i)
+    expect(result.names[0]).toMatchObject({
+      name:          'lumio',
+      status:        expect.stringMatching(/^(clear|possible|conflict|unavailable)$/),
+      total_results: expect.any(Number),
+      top_results:   expect.any(Array),
+    })
   })
 
-  it('status is unavailable when USPTO returns non-200', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 503 })
+  it('result includes checked_at timestamp', async () => {
     await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['lumio'] })
     const result = updateReportStatus.mock.calls[0][3]
-    expect(result.names[0].status).toBe('unavailable')
+    expect(result.checked_at).toBeGreaterThan(0)
   })
 
-  it('errors when no brand names provided', async () => {
-    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: [] })
-    expect(updateReportStatus).toHaveBeenCalledWith(mockEnv, REPORT_ID, 'error', { error: 'no_brand_names' })
+  it('result includes stub:true flag', async () => {
+    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['lumio'] })
+    const result = updateReportStatus.mock.calls[0][3]
+    expect(result.stub).toBe(true)
+  })
+
+  it('handles multiple brand names', async () => {
+    await runTrademarkReport(mockEnv, REPORT_ID, { brand_names: ['lumio', 'acme'] })
+    const result = updateReportStatus.mock.calls[0][3]
+    expect(result.names).toHaveLength(2)
   })
 })

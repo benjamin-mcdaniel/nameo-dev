@@ -11,7 +11,7 @@ export function Header() {
   nav.className = 'site-nav'
   nav.innerHTML = `
     <a href="#/help">Docs</a>
-    <a href="#/sessions/new" class="btn btn-primary btn-sm nav-cta">+ New Session</a>
+    <a href="#/sessions/new" class="btn btn-primary btn-sm nav-cta">Create a Report</a>
     <a href="#/pricing">Pricing</a>
   `
 

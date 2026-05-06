@@ -16,6 +16,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { json, CORS_HEADERS }            from './lib/json.js'
 import { runChecksForName }              from './lib/checks.js'
 import { executeAllPendingReports, runSessionReport } from './lib/db.js'
+import { sendNtfyAlert }                 from './lib/notify.js'
 
 let PROFANITY_READY = false
 let JWKS_CACHE      = null
@@ -30,9 +31,17 @@ export default {
     try {
       return await handleRequest(request, env, ctx)
     } catch (err) {
-      console.error('Unhandled worker error:', err?.message ?? err)
+      const msg = err?.message ?? String(err)
+      console.error('Unhandled worker error:', msg)
+      // Fire-and-forget — don't await so the 500 response isn't delayed
+      ctx.waitUntil(sendNtfyAlert(
+        env,
+        'Worker crash',
+        `Unhandled error on ${new URL(request.url).pathname}\n${msg}`,
+        'urgent',
+      ))
       return new Response(
-        JSON.stringify({ error: 'internal_server_error', message: err?.message ?? 'Unknown error' }),
+        JSON.stringify({ error: 'internal_server_error', message: msg }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
       )
     }
@@ -188,6 +197,43 @@ async function incrementCounter(db, key, nowSeconds) {
   return row && typeof row.count === 'number' ? row.count : 0
 }
 
+// Per-user authenticated rate limits
+// Defaults: 20 sessions/day, 100 report runs/day — override via wrangler vars.
+
+function getUserSessionLimit(env) {
+  const raw = Number(env.RATE_LIMIT_USER_SESSIONS || 20)
+  return Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 20
+}
+
+function getUserReportLimit(env) {
+  const raw = Number(env.RATE_LIMIT_USER_REPORTS || 100)
+  return Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 100
+}
+
+async function enforceUserSessionLimit(userId, env) {
+  const db = env.NAMEO_DB
+  if (!db) return { ok: true }
+  const nowMs  = Date.now()
+  const day    = utcDayKey(nowMs)
+  const key    = `rl:user_sessions:${day}:${userId}`
+  const limit  = getUserSessionLimit(env)
+  const count  = await incrementCounter(db, key, Math.floor(nowMs / 1000))
+  if (count > limit) return { ok: false, retryAfter: secondsUntilNextUtcDay(nowMs) }
+  return { ok: true }
+}
+
+async function enforceUserReportLimit(userId, env) {
+  const db = env.NAMEO_DB
+  if (!db) return { ok: true }
+  const nowMs  = Date.now()
+  const day    = utcDayKey(nowMs)
+  const key    = `rl:user_reports:${day}:${userId}`
+  const limit  = getUserReportLimit(env)
+  const count  = await incrementCounter(db, key, Math.floor(nowMs / 1000))
+  if (count > limit) return { ok: false, retryAfter: secondsUntilNextUtcDay(nowMs) }
+  return { ok: true }
+}
+
 async function enforcePublicApiLimits(request, env, kind) {
   const db = env.NAMEO_DB
   if (!db) return { ok: true }
@@ -211,7 +257,14 @@ async function enforcePublicApiLimits(request, env, kind) {
   if (globalCount > globalLimit) return { ok: false, reason: 'global_cap', retryAfter: secondsUntilNextUtcDay(nowMs) }
 
   const ipCount = await incrementCounter(db, ipKey, nowSeconds)
-  if (ipCount > ipLimit) return { ok: false, reason: 'ip_cap', retryAfter: secondsUntilNextUtcDay(nowMs) }
+  if (ipCount > ipLimit) {
+    // Alert on first breach (count === limit + 1) to avoid spamming on repeat hits
+    if (ipCount === ipLimit + 1) {
+      // fire-and-forget — we don't have ctx here so just don't await
+      sendNtfyAlert(env, 'Rate limit hit', `IP cap breached on /${kind} — possible bot\nIP hash: ${ipHash}\nDay: ${day}`, 'high').catch(() => {})
+    }
+    return { ok: false, reason: 'ip_cap', retryAfter: secondsUntilNextUtcDay(nowMs) }
+  }
 
   return { ok: true }
 }
@@ -393,6 +446,14 @@ async function handleListSessions(env, userId) {
 async function handleCreateSession(request, env, userId, ctx) {
   const db = env.NAMEO_DB
   if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  const sessionLimit = await enforceUserSessionLimit(userId, env)
+  if (!sessionLimit.ok) {
+    return json({ error: 'rate_limited', message: 'Session limit reached for today. Try again tomorrow.' }, 429, {
+      'Retry-After': String(sessionLimit.retryAfter || 3600),
+    })
+  }
+
   let body = {}
   try { body = await request.json() } catch { return json({ error: 'invalid_json' }, 400) }
 
@@ -511,6 +572,14 @@ async function handleGetSessionReport(env, userId, sessionId, reportId) {
 async function handleRunReport(env, ctx, userId, sessionId, reportId) {
   const db = env.NAMEO_DB
   if (!db) return json({ error: 'db_not_configured' }, 500)
+
+  const reportLimit = await enforceUserReportLimit(userId, env)
+  if (!reportLimit.ok) {
+    return json({ error: 'rate_limited', message: 'Report run limit reached for today. Try again tomorrow.' }, 429, {
+      'Retry-After': String(reportLimit.retryAfter || 3600),
+    })
+  }
+
   const session = await db.prepare('SELECT id FROM sessions WHERE id = ? AND user_id = ?').bind(sessionId, userId).first()
   if (!session) return json({ error: 'not_found' }, 404)
   const report = await db.prepare('SELECT id, report_type, input_json FROM session_reports WHERE id = ? AND session_id = ?')

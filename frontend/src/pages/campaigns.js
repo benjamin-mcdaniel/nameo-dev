@@ -1,6 +1,6 @@
 import { getAccessToken } from '../auth/client.js'
 
-const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+import { API_BASE } from '../config.js'
 
 async function apiFetchWithAuth(path, options = {}) {
   const headers = new Headers(options.headers || {})

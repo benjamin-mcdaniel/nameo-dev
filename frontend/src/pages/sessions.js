@@ -1,6 +1,5 @@
 import { getAccessToken } from '../auth/client.js'
-
-const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+import { API_BASE } from '../config.js'
 
 async function apiFetch(path, options = {}) {
   const headers = new Headers(options.headers || {})
@@ -81,7 +80,13 @@ function attachSessionsLogic(root) {
     const token = await getAccessToken().catch(() => null)
     if (!token) {
       if (authNoticeEl) authNoticeEl.style.display = ''
-      if (contentEl) contentEl.innerHTML = ''
+      if (contentEl) contentEl.innerHTML = `
+        <div class="empty-state-lg">
+          <div class="empty-state-icon">🔒</div>
+          <h3>Sign in to view your sessions</h3>
+          <p>Your naming research is saved to your account. Sign in to access your sessions and create new ones.</p>
+        </div>
+      `
       return
     }
 

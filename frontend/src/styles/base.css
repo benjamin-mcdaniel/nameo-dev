@@ -866,6 +866,143 @@ select:focus {
 /* Field hints */
 .field-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
 .required { color: var(--error); margin-left: 2px; }
+.hint { color: var(--text-muted); font-weight: 400; }
+
+/* ── Toggle switch (Apple-style) ─────────────────────────────────────── */
+.report-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.report-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.report-toggle-row:last-child { border-bottom: none; }
+.report-toggle-row.is-on { background: var(--primary-light); }
+
+.report-toggle-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-toggle-icon { font-size: 1.2rem; line-height: 1; flex-shrink: 0; }
+
+.report-toggle-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.report-toggle-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 42px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border-strong);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.toggle-switch.is-on {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: transform 0.2s;
+}
+.toggle-switch.is-on .toggle-knob { transform: translateX(16px); }
+
+/* ── Vibe pills (inline horizontal) ─────────────────────────────────── */
+.vibe-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vibe-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+  white-space: nowrap;
+}
+.vibe-pill:hover { border-color: var(--primary); background: var(--primary-light); }
+.vibe-pill.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── Radio pills (name length) ───────────────────────────────────────── */
+.radio-pill-row {
+  display: flex;
+  gap: 8px;
+}
+
+.radio-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 9px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: border-color 0.12s, background 0.12s;
+  white-space: nowrap;
+}
+.radio-pill:hover { border-color: var(--border-strong); }
+.radio-pill.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+.radio-pill-desc { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
 
 /* Review card */
 .review-card {
@@ -959,22 +1096,78 @@ select:focus {
 
 .session-reports-section { margin-top: 8px; }
 
-.section-header--with-action {
+.section-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
-.section-header--with-action h2 { margin: 0; }
+.section-header h2 { margin: 0; }
 
-.reports-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+/* Polling indicator */
+.polling-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.polling-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: polling-pulse 1.2s ease-in-out infinite;
+}
+@keyframes polling-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
 }
 
+/* Report list (replaces grid — better for inline results) */
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-card--row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+.report-card-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.report-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-type-icon { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
+.report-card-title { font-weight: 600; font-size: 0.9375rem; }
+.report-card-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; }
+
+.report-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Legacy grid variant — keep for backward compat */
 .report-card {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -987,18 +1180,6 @@ select:focus {
   transition: box-shadow 0.15s;
 }
 .report-card:hover { box-shadow: var(--shadow-sm); }
-
-.report-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.report-type-icon { font-size: 1.75rem; line-height: 1; }
-.report-card-title { font-weight: 600; font-size: 0.95rem; }
-.report-card-desc { font-size: 0.8rem; color: var(--text-muted); flex: 1; }
-.report-card-date { font-size: 0.78rem; color: var(--text-muted); }
-.report-card-actions { margin-top: 4px; }
 
 /* ─────────────────────────────────────────────
    Home — session type showcase
@@ -1057,10 +1238,10 @@ select:focus {
 /* ── Report result panels ─────────────────────────────────────────────── */
 
 .report-results-panel {
-  margin-top: 12px;
-  padding-top: 12px;
+  padding: 0 18px 16px;
   border-top: 1px solid var(--border);
 }
+.report-results-panel > *:first-child { margin-top: 16px; }
 
 .avail-table-wrap {
   overflow-x: auto;
@@ -1136,6 +1317,15 @@ select:focus {
   margin-top: 6px;
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.avail-th--muted { color: var(--text-muted); opacity: 0.7; }
+.avail-key-note { font-size: 0.65rem; }
+.avail-key-note-legend {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* Reports grid (card list on session page) */

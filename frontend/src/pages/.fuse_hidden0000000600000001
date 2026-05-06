@@ -163,7 +163,4 @@ export function Pricing() {
         <summary>Is the trademark check legal advice?</summary>
         <p>No. Trademark results are informational signals. We surface potential conflicts so you can ask the right questions — always consult an attorney before filing or making major brand decisions.</p>
       </details>
-    </div>
-  `
-  return el
-}
+    <

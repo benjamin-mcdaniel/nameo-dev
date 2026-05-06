@@ -1,6 +1,5 @@
 import { getAccessToken, getUser, logout, isAuthenticated, loginWithRedirect } from '../auth/client.js'
-
-const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+import { API_BASE } from '../config.js'
 
 async function apiFetch(path, options = {}) {
   const headers = new Headers(options.headers || {})

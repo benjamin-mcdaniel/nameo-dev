@@ -1,4 +1,4 @@
-const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+import { API_BASE } from '../config.js'
 
 export function Status() {
   const el = document.createElement('section')

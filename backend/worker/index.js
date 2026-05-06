@@ -1083,9 +1083,10 @@ async function handleCreateSession(request, env, userId, ctx) {
     } catch { /* non-fatal */ }
   }
 
-  // Fire report runners asynchronously — respond immediately, checks run in background
+  // Fire each report runner independently — each gets its own waitUntil so
+  // a slow check (e.g. trademark) never blocks a fast one (e.g. domains).
   if (ctx && typeof ctx.waitUntil === 'function') {
-    ctx.waitUntil(executeAllPendingReports(env, id))
+    ctx.waitUntil(executeAllPendingReports(env, ctx, id))
   }
 
   return json({ id, name, session_type: sessionType, status: 'active', created_at: now }, 201)
@@ -1247,7 +1248,7 @@ async function updateReportStatus(env, reportId, status, resultJson) {
   } catch { /* non-fatal */ }
 }
 
-async function executeAllPendingReports(env, sessionId) {
+async function executeAllPendingReports(env, ctx, sessionId) {
   const db = env.NAMEO_DB
   if (!db) return
   try {
@@ -1255,10 +1256,19 @@ async function executeAllPendingReports(env, sessionId) {
       .prepare('SELECT id, report_type, input_json FROM session_reports WHERE session_id = ? AND status = ?')
       .bind(sessionId, 'pending')
       .all()
+
+    // Fire each report as its own independent async task.
+    // This means domain (fast) and trademark (slow) run in parallel rather
+    // than sequentially — and neither can time out the other.
     for (const report of (reports.results || [])) {
       let input = null
       try { input = JSON.parse(report.input_json || 'null') } catch { input = null }
-      await runSessionReport(env, report.id, report.report_type, input)
+      if (ctx && typeof ctx.waitUntil === 'function') {
+        ctx.waitUntil(runSessionReport(env, report.id, report.report_type, input))
+      } else {
+        // Fallback: run sequentially if no ctx (e.g. unit tests)
+        await runSessionReport(env, report.id, report.report_type, input)
+      }
     }
   } catch { /* non-fatal — session still created successfully */ }
 }
@@ -1341,9 +1351,52 @@ async function runDomainAvailabilityReport(env, reportId, input) {
   })
 }
 
-// ── Social handles runner (reuses existing orchestrator/check pipeline) ─────
+// ── Social handles runner ─────────────────────────────────────────────────
+//
+// Strategy per platform:
+//   github   — api.github.com/users/{name}  → 404=available, 200=taken  (no key, reliable)
+//   reddit   — reddit.com/user/{name}/about.json → 404=available         (no key, reliable)
+//   x        — requires Twitter API bearer token in env.TWITTER_BEARER_TOKEN
+//   instagram/tiktok/linkedin/youtube — blocked from Workers IPs without API keys
+//              → returned as 'unknown' with a note so the UI is honest
 
-const SOCIAL_SERVICE_IDS = ['x', 'instagram', 'youtube', 'github', 'linkedin', 'tiktok', 'reddit']
+async function checkGitHub(name) {
+  try {
+    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(name)}`, {
+      headers: { 'User-Agent': 'nameo-worker/1.0', Accept: 'application/vnd.github.v3+json' },
+      signal: AbortSignal.timeout(7000),
+    })
+    if (res.status === 404) return 'available'
+    if (res.status === 200) return 'taken'
+    return 'unknown'
+  } catch { return 'unknown' }
+}
+
+async function checkReddit(name) {
+  try {
+    const res = await fetch(`https://www.reddit.com/user/${encodeURIComponent(name)}/about.json`, {
+      headers: { 'User-Agent': 'nameo-worker/1.0' },
+      signal: AbortSignal.timeout(7000),
+    })
+    if (res.status === 404) return 'available'
+    if (res.status === 200) return 'taken'
+    return 'unknown'
+  } catch { return 'unknown' }
+}
+
+async function checkTwitter(name, env) {
+  const token = env && env.TWITTER_BEARER_TOKEN
+  if (!token) return 'unknown'
+  try {
+    const res = await fetch(
+      `https://api.twitter.com/2/users/by/username/${encodeURIComponent(name)}`,
+      { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(7000) }
+    )
+    if (res.status === 404) return 'available'
+    if (res.status === 200) return 'taken'
+    return 'unknown'
+  } catch { return 'unknown' }
+}
 
 async function runSocialHandlesReport(env, reportId, input) {
   const rawNames = (input && Array.isArray(input.brand_names) ? input.brand_names : [])
@@ -1358,13 +1411,23 @@ async function runSocialHandlesReport(env, reportId, input) {
 
   const results = await Promise.all(
     brandNames.map(async (name) => {
-      const checks = await runChecksForName(env, name, null)
-      const handles = {}
-      for (const check of (checks || [])) {
-        if (SOCIAL_SERVICE_IDS.includes(check.service)) {
-          handles[check.service] = { status: check.status, label: check.label }
-        }
+      // Run reliable checks in parallel
+      const [githubStatus, redditStatus, xStatus] = await Promise.all([
+        checkGitHub(name),
+        checkReddit(name),
+        checkTwitter(name, env),
+      ])
+
+      const handles = {
+        github:    { status: githubStatus },
+        reddit:    { status: redditStatus },
+        x:         { status: xStatus, note: xStatus === 'unknown' ? 'Requires API key' : null },
+        instagram: { status: 'unknown', note: 'Requires API key' },
+        tiktok:    { status: 'unknown', note: 'Requires API key' },
+        linkedin:  { status: 'unknown', note: 'Requires API key' },
+        youtube:   { status: 'unknown', note: 'Requires API key' },
       }
+
       return { name, handles }
     })
   )

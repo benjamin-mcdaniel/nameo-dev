@@ -1,7 +1,7 @@
 import { isAuthConfigured } from '../auth/config.js'
 import { loginWithRedirect, logout, isAuthenticated, getUser, getAccessToken } from '../auth/client.js'
 
-const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+import { API_BASE } from '../config.js'
 
 export function Login() {
   const el = document.createElement('section')

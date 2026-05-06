@@ -11,7 +11,7 @@ export function Home() {
         <p class="home-hero-sub">
           Most founders spend weeks stuck on naming — unsure if their idea is taken,
           whether .com still matters, or if a dead social account blocks them.
-          Nameo gets you unstuck today, and stays useful as your product grows.
+          Nameo checks everything at once so you can stop wondering and decide.
         </p>
         <div class="home-hero-actions">
           <a class="btn btn-primary btn-lg" href="#/sessions/new">Find my name</a>
@@ -40,7 +40,7 @@ export function Home() {
               <span class="report-type-chip">✨ Name candidates</span>
               <span class="report-type-chip">🌐 Availability included</span>
             </div>
-            <a class="btn btn-primary" href="#/sessions/new">Generate name ideas →</a>
+            <a class="btn btn-primary" href="#/sessions/new?type=name_generator">Generate name ideas →</a>
           </div>
           <div class="stshow-card">
             <div class="stshow-icon">🔍</div>
@@ -52,7 +52,7 @@ export function Home() {
               <span class="report-type-chip">🛒 Marketplace listings</span>
               <span class="report-type-chip">📱 Social handles</span>
             </div>
-            <a class="btn btn-primary" href="#/sessions/new">Check a name →</a>
+            <a class="btn btn-primary" href="#/sessions/new?type=brand_identity">Check a name →</a>
           </div>
         </div>
       </div>
@@ -180,8 +180,8 @@ export function Home() {
           <div class="how-step">
             <div class="how-step-num">3</div>
             <div class="how-step-body">
-              <h3>Lock it down, then keep watching</h3>
-              <p>Register your name and the domains around it. Come back as your product evolves — Nameo tracks alternatives and flags when better options open up.</p>
+              <h3>Lock it down</h3>
+              <p>Register your name and the domains around it. Your session stays saved — come back to run new checks or compare alternatives as you refine your shortlist.</p>
             </div>
           </div>
         </div>

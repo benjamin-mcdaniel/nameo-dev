@@ -5,6 +5,7 @@
 // runSessionReport         — dispatch to the correct runner by report type
 
 import { updateReportStatus }          from './report-status.js'
+import { sendNtfyAlert }               from './notify.js'
 import { runDomainAvailabilityReport } from '../runners/domains.js'
 import { runSocialHandlesReport }      from '../runners/social.js'
 import { runAppStoreReport }           from '../runners/app-store.js'
@@ -51,5 +52,11 @@ export async function runSessionReport(env, reportId, reportType, input) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     await updateReportStatus(env, reportId, 'error', { error: msg })
+    await sendNtfyAlert(
+      env,
+      `Runner error: ${reportType}`,
+      `Report ${reportId} failed\n${msg}`,
+      'high',
+    )
   }
 }

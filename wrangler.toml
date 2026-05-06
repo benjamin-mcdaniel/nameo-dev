@@ -6,10 +6,22 @@ compatibility_date = "2024-01-01"
 AUTH0_DOMAIN = "dev-17f30x2uvmivb8or.us.auth0.com"
 AUTH0_AUDIENCE = "https://nameo-api"
 ORCHESTRATOR_URL = "https://nameo-search-worker.benjamin-f-mcdaniel.workers.dev"
-# Parked-mode abuse/cost caps (see README)
+
+# ── Public (unauthenticated) rate limits ──────────────────────────────────────
+# Per-IP and global daily caps on /api/check and /api/suggestions
 RATE_LIMIT_DAILY_GLOBAL = "5000"
-RATE_LIMIT_DAILY_IP = "5000"
-# ORCHESTRATOR_TOKEN is a secret and must be set via Wrangler/Cloudflare dashboard (do not commit it here)
+RATE_LIMIT_DAILY_IP     = "100"
+
+# ── Authenticated user rate limits ────────────────────────────────────────────
+# Max sessions a single user can create per day
+RATE_LIMIT_USER_SESSIONS = "20"
+# Max report runs a single user can trigger per day
+RATE_LIMIT_USER_REPORTS  = "100"
+
+# ── Secrets (set via `wrangler secret put <NAME>`) ────────────────────────────
+# ORCHESTRATOR_TOKEN  — auth token for the search orchestrator
+# ANTHROPIC_API_KEY   — Claude API key for name generation
+# NTFY_TOPIC          — ntfy.sh topic for operator push alerts (nameo-prod-alerts-7x4k)
 
 [[services]]
 binding = "SEARCH_ORCHESTRATOR"

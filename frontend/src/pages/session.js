@@ -1,6 +1,5 @@
 import { getAccessToken } from '../auth/client.js'
-
-const API_BASE = 'https://nameo-worker.benjamin-f-mcdaniel.workers.dev'
+import { API_BASE } from '../config.js'
 
 async function apiFetch(path, options = {}) {
   const headers = new Headers(options.headers || {})
@@ -43,6 +42,9 @@ const SOCIAL_LABELS = {
   x: 'X', instagram: 'Instagram', youtube: 'YouTube', github: 'GitHub',
   linkedin: 'LinkedIn', tiktok: 'TikTok', reddit: 'Reddit',
 }
+
+// Platforms that can be checked without API keys
+const SOCIAL_LIVE_PLATFORMS = new Set(['github', 'reddit', 'x'])
 
 function formatDate(ts) {
   if (!ts) return ''
@@ -176,6 +178,9 @@ function renderSession(el, session, reports) {
           <h1 style="margin-top:8px;margin-bottom:4px">${escHtml(session.name)}</h1>
           <div class="session-detail-date">Created ${formatDate(session.created_at)}</div>
         </div>
+        ${session.session_type === 'brand_identity' && reports.every((r) => r.status === 'complete' || r.status === 'error')
+          ? `<button id="btn-export-pdf" class="btn btn-ghost" style="align-self:flex-start;margin-top:4px">↓ Download PDF</button>`
+          : ''}
       </div>
     </div>
 
@@ -186,10 +191,16 @@ function renderSession(el, session, reports) {
     <div class="session-reports-section">
       <div class="section-header">
         <h2>Reports</h2>
+        ${reports.some((r) => r.status === 'running' || r.status === 'pending')
+          ? `<span class="polling-indicator"><span class="polling-dot"></span> Checking…</span>`
+          : ''}
+        ${reports.some((r) => r.status === 'pending') && reports.some((r) => r.status !== 'running')
+          ? `<button id="btn-run-all" class="btn btn-sm btn-primary" style="margin-left:auto">Run all</button>`
+          : ''}
       </div>
       <div id="reports-list">
         ${reports.length
-          ? `<div class="reports-grid">${reports.map((r) => renderReportCard(r, session.id)).join('')}</div>`
+          ? `<div class="reports-list">${reports.map((r) => renderReportCard(r, session.id)).join('')}</div>`
           : renderEmptyReports(session)
         }
       </div>
@@ -203,21 +214,27 @@ function renderSession(el, session, reports) {
       btn.disabled = true
       btn.textContent = 'Re-running…'
       await apiFetch(`/api/sessions/${session.id}/reports/${reportId}/run`, { method: 'POST' })
-      // Brief delay then reload
       setTimeout(() => loadSession(el.closest('.page') || el, session.id), 800)
     })
   })
 
-  // Wire expand/collapse on result panels
-  el.querySelectorAll('[data-toggle-results]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const panel = el.querySelector(`#results-${btn.dataset.toggleResults}`)
-      if (!panel) return
-      const isHidden = panel.style.display === 'none'
-      panel.style.display = isHidden ? '' : 'none'
-      btn.textContent = isHidden ? 'Hide results ↑' : 'View results ↓'
-    })
+  // Wire Run all button
+  el.querySelector('#btn-run-all')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget
+    btn.disabled = true
+    btn.textContent = 'Starting…'
+    const pending = reports.filter((r) => r.status === 'pending')
+    await Promise.all(
+      pending.map((r) => apiFetch(`/api/sessions/${session.id}/reports/${r.id}/run`, { method: 'POST' }))
+    )
+    setTimeout(() => loadSession(el.closest('.page') || el, session.id), 600)
   })
+
+  // Wire PDF export button
+  const pdfBtn = el.querySelector('#btn-export-pdf')
+  if (pdfBtn) {
+    pdfBtn.addEventListener('click', () => openPdfWindow(session, reports))
+  }
 }
 
 // ── Session metadata card ─────────────────────────────────────────────────
@@ -287,47 +304,40 @@ function renderReportCard(report, sessionId) {
   }
 
   let actionHtml = ''
-  if (isQuestionnaire) {
-    // Questionnaire answers always shown inline — no toggle needed
-    actionHtml = ''
-  } else if (isComingSoon) {
+  if (isComingSoon) {
     actionHtml = `<span class="badge badge-pending" style="font-size:0.7rem">Coming soon</span>`
   } else if (isError) {
-    actionHtml = `
-      <button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Re-run</button>
-    `
-  } else if (isNameCandidates && isComplete && resultHtml) {
-    // Name candidates: no toggle, results always visible
+    actionHtml = `<button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Retry</button>`
+  } else if (isNameCandidates && isComplete) {
     actionHtml = `<button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Regenerate</button>`
-  } else if (isComplete && resultHtml) {
-    actionHtml = `
-      <button class="btn btn-sm btn-primary" data-toggle-results="${escHtml(report.id)}">View results ↓</button>
-      <button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}" style="margin-left:8px">Re-run</button>
-    `
+  } else if (isComplete && !isQuestionnaire) {
+    actionHtml = `<button class="btn btn-sm btn-ghost" data-rerun-report="${escHtml(report.id)}">Re-run</button>`
   } else if (report.status === 'running') {
     actionHtml = `<span class="badge badge-running">Running…</span>`
   } else if (report.status === 'pending' && isRunnable) {
     actionHtml = `<span class="badge badge-pending">Pending</span>`
   }
 
-  // Pre-compute the result panel so the template stays readable
-  let resultPanelHtml = ''
-  if (resultHtml) {
-    const alwaysOpen = isQuestionnaire || isNameCandidates
-    const hiddenAttr = alwaysOpen ? '' : ' style="display:none"'
-    resultPanelHtml = `<div id="results-${escHtml(report.id)}" class="report-results-panel"${hiddenAttr}>${resultHtml}</div>`
-  }
+  // Results are always shown inline — no toggle
+  const resultPanelHtml = resultHtml
+    ? `<div class="report-results-panel">${resultHtml}</div>`
+    : ''
 
   return `
-    <div class="report-card" data-report-id="${escHtml(report.id)}">
-      <div class="report-card-head">
-        <div class="report-type-icon">${typeMeta.icon}</div>
-        <span class="badge ${statusMeta.cls}">${statusMeta.label}</span>
+    <div class="report-card report-card--row" data-report-id="${escHtml(report.id)}">
+      <div class="report-card-head-row">
+        <div class="report-card-title-group">
+          <span class="report-type-icon">${typeMeta.icon}</span>
+          <div>
+            <div class="report-card-title">${typeMeta.label}</div>
+            <div class="report-card-desc">${typeMeta.desc}</div>
+          </div>
+        </div>
+        <div class="report-card-actions">
+          <span class="badge ${statusMeta.cls}">${statusMeta.label}</span>
+          ${actionHtml}
+        </div>
       </div>
-      <div class="report-card-title">${typeMeta.label}</div>
-      <div class="report-card-desc">${typeMeta.desc}</div>
-      <div class="report-card-date">${formatDate(report.created_at)}</div>
-      <div class="report-card-actions">${actionHtml}</div>
       ${resultPanelHtml}
     </div>
   `
@@ -388,14 +398,20 @@ function renderDomainResults(result) {
 function renderSocialResults(result) {
   if (!result || !Array.isArray(result.names) || !result.names.length) return ''
 
-  // Collect which platforms appeared in any result
-  const platforms = new Set()
+  // Collect platforms, live ones first, then api-key-required ones
+  const allPlatforms = new Set()
   for (const nameRow of result.names) {
-    for (const key of Object.keys(nameRow.handles || {})) platforms.add(key)
+    for (const key of Object.keys(nameRow.handles || {})) allPlatforms.add(key)
   }
-  const platformList = [...platforms]
+  const livePlatforms    = [...allPlatforms].filter((p) => SOCIAL_LIVE_PLATFORMS.has(p))
+  const blockedPlatforms = [...allPlatforms].filter((p) => !SOCIAL_LIVE_PLATFORMS.has(p))
+  const platformList     = [...livePlatforms, ...blockedPlatforms]
 
-  const headerCells = platformList.map((p) => `<th>${escHtml(SOCIAL_LABELS[p] || p)}</th>`).join('')
+  const headerCells = platformList.map((p) => {
+    const isBlocked = !SOCIAL_LIVE_PLATFORMS.has(p)
+    return `<th class="${isBlocked ? 'avail-th--muted' : ''}">${escHtml(SOCIAL_LABELS[p] || p)}${isBlocked ? ' <span class="avail-key-note">🔑</span>' : ''}</th>`
+  }).join('')
+
   const rows = result.names.map((nameRow) => {
     const cells = platformList.map((p) => {
       const h = nameRow.handles ? nameRow.handles[p] : null
@@ -409,6 +425,10 @@ function renderSocialResults(result) {
     ? `<div class="report-checked-at">Checked ${formatDate(result.checked_at)}</div>`
     : ''
 
+  const keyNote = blockedPlatforms.length
+    ? `<div class="avail-key-note-legend">🔑 These platforms require an API key to check. Results shown as unknown.</div>`
+    : ''
+
   return `
     <div class="avail-table-wrap">
       <table class="avail-table">
@@ -420,6 +440,7 @@ function renderSocialResults(result) {
         <span class="avail-dot avail-dot--taken">✕</span> Taken &nbsp;
         <span class="avail-dot avail-dot--unknown">?</span> Unknown
       </div>
+      ${keyNote}
       ${checkedAt}
     </div>
   `
@@ -699,4 +720,144 @@ function renderEmptyReports(session) {
     '<p>' + msg + '</p>' +
     '</div>'
   )
+}
+
+// ── PDF export ────────────────────────────────────────────────────────────
+//
+// Opens a print-ready HTML window then triggers window.print() so the user
+// can save it as a PDF via the browser's native dialog. No external libs.
+
+function pdfStatusSymbol(status) {
+  if (status === 'available') return '✓'
+  if (status === 'taken')     return '✗'
+  if (status === 'conflict')  return '✗'
+  if (status === 'possible')  return '~'
+  if (status === 'clear')     return '✓'
+  return '?'
+}
+
+function buildPdfDomainSection(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return '<p>No data.</p>'
+  const tlds = result.tlds || ['.com', '.io', '.ai', '.co', '.app', '.dev']
+  const headerCells = ['<th>Name</th>', ...tlds.map((t) => '<th>' + t + '</th>')].join('')
+  const rows = result.names.map((row) => {
+    const cells = tlds.map((tld) => {
+      const s = row.tlds ? (row.tlds[tld] || 'unknown') : 'unknown'
+      const sym = pdfStatusSymbol(s)
+      const cls = s === 'available' ? 'avail' : s === 'taken' ? 'taken' : 'unk'
+      return '<td class="' + cls + '">' + sym + '</td>'
+    }).join('')
+    return '<tr><td><strong>' + row.name + '</strong></td>' + cells + '</tr>'
+  }).join('')
+  return '<table><thead><tr>' + headerCells + '</tr></thead><tbody>' + rows + '</tbody></table>'
+}
+
+function buildPdfSocialSection(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return '<p>No data.</p>'
+  const platforms = new Set()
+  for (const r of result.names) for (const k of Object.keys(r.handles || {})) platforms.add(k)
+  const platformList = [...platforms]
+  const labels = {
+    x: 'X', instagram: 'Instagram', youtube: 'YouTube', github: 'GitHub',
+    linkedin: 'LinkedIn', tiktok: 'TikTok', reddit: 'Reddit', facebook: 'Facebook',
+    pinterest: 'Pinterest', medium: 'Medium', twitch: 'Twitch',
+    producthunt: 'Product Hunt', substack: 'Substack',
+  }
+  const headerCells = ['<th>Name</th>', ...platformList.map((p) => '<th>' + (labels[p] || p) + '</th>')].join('')
+  const rows = result.names.map((row) => {
+    const cells = platformList.map((p) => {
+      const s = row.handles && row.handles[p] ? row.handles[p].status : 'unknown'
+      const sym = pdfStatusSymbol(s)
+      const cls = s === 'available' ? 'avail' : s === 'taken' ? 'taken' : 'unk'
+      return '<td class="' + cls + '">' + sym + '</td>'
+    }).join('')
+    return '<tr><td><strong>' + row.name + '</strong></td>' + cells + '</tr>'
+  }).join('')
+  return '<table><thead><tr>' + headerCells + '</tr></thead><tbody>' + rows + '</tbody></table>'
+}
+
+function buildPdfSimpleStatusSection(result) {
+  if (!result || !Array.isArray(result.names) || !result.names.length) return '<p>No data.</p>'
+  const rows = result.names.map((row) => {
+    const sym = pdfStatusSymbol(row.status)
+    const cls = row.status === 'clear' ? 'avail' : row.status === 'conflict' ? 'taken' : 'unk'
+    return '<tr><td><strong>' + row.name + '</strong></td><td class="' + cls + '">' + sym + ' ' + (row.status || '') + '</td><td>' + (row.total_results || 0) + ' result(s)</td></tr>'
+  }).join('')
+  return '<table><thead><tr><th>Name</th><th>Status</th><th>Results</th></tr></thead><tbody>' + rows + '</tbody></table>'
+}
+
+function buildPdfReportSection(report) {
+  const meta = REPORT_TYPE_META[report.report_type] || { label: report.report_type, icon: '' }
+  let body = '<p>No results available.</p>'
+  if (report.status === 'complete' && report.result) {
+    if      (report.report_type === 'domain_availability')  body = buildPdfDomainSection(report.result)
+    else if (report.report_type === 'social_handles')       body = buildPdfSocialSection(report.result)
+    else if (report.report_type === 'app_store')            body = buildPdfSimpleStatusSection(report.result)
+    else if (report.report_type === 'products_for_sale')    body = buildPdfSimpleStatusSection(report.result)
+    else if (report.report_type === 'trademark')            body = buildPdfSimpleStatusSection(report.result)
+  } else if (report.status === 'error') {
+    body = '<p class="unk">This check encountered an error. Re-run the report to retry.</p>'
+  }
+  return '<section class="pdf-report"><h3>' + meta.icon + ' ' + meta.label + '</h3>' + body + '</section>'
+}
+
+function openPdfWindow(session, reports) {
+  const meta   = session.metadata || {}
+  const names  = (meta.brand_names || []).join(', ')
+  const date   = formatDate(session.created_at)
+  const today  = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+  const brandReports = reports.filter((r) =>
+    ['domain_availability', 'social_handles', 'app_store', 'products_for_sale', 'trademark'].includes(r.report_type)
+  )
+  const reportSections = brandReports.map(buildPdfReportSection).join('')
+
+  const css = [
+    '* { box-sizing: border-box; margin: 0; padding: 0; }',
+    'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 12px; color: #111; background: #fff; padding: 32px 40px; }',
+    '.pdf-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px; }',
+    '.pdf-brand { font-size: 20px; font-weight: 700; color: #6366f1; letter-spacing: -0.5px; }',
+    '.pdf-brand span { color: #111; }',
+    '.pdf-meta { text-align: right; color: #555; font-size: 11px; line-height: 1.6; }',
+    '.pdf-names { background: #f5f5ff; border-left: 3px solid #6366f1; padding: 10px 14px; margin-bottom: 24px; border-radius: 0 6px 6px 0; }',
+    '.pdf-names strong { font-size: 13px; display: block; margin-bottom: 4px; }',
+    '.pdf-report { margin-bottom: 24px; page-break-inside: avoid; }',
+    '.pdf-report h3 { font-size: 13px; font-weight: 600; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e5e5; color: #333; }',
+    'table { width: 100%; border-collapse: collapse; font-size: 11px; }',
+    'th { background: #f0f0f8; text-align: left; padding: 6px 8px; font-weight: 600; color: #444; border: 1px solid #e0e0e8; }',
+    'td { padding: 5px 8px; border: 1px solid #eee; }',
+    'tr:nth-child(even) td { background: #fafafa; }',
+    'td.avail { color: #16a34a; font-weight: 600; }',
+    'td.taken { color: #dc2626; font-weight: 600; }',
+    'td.unk   { color: #999; }',
+    '.pdf-footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #eee; font-size: 10px; color: #999; text-align: center; }',
+    '@media print { body { padding: 0; } .pdf-report { page-break-inside: avoid; } }',
+  ].join('\n')
+
+  const nameBlock = names
+    ? '<div class="pdf-names"><strong>Names researched</strong><span>' + names + '</span></div>'
+    : ''
+
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Nameo Report — '
+    + escHtml(session.name)
+    + '</title><style>' + css + '</style></head><body>'
+    + '<div class="pdf-header"><div>'
+    + '<div class="pdf-brand">nameo<span>.dev</span></div>'
+    + '<div style="font-size:15px;font-weight:600;margin-top:6px">' + escHtml(session.name) + '</div>'
+    + '<div style="color:#555;font-size:11px;margin-top:2px">Brand Identity Report</div>'
+    + '</div><div class="pdf-meta"><div>Generated ' + today + '</div><div>Session created ' + date + '</div></div></div>'
+    + nameBlock
+    + reportSections
+    + '<div class="pdf-footer">Generated by Nameo · nameo.dev · Data sourced from public registries. Not legal advice.</div>'
+    + '</body></html>'
+
+  const win = window.open('', '_blank', 'width=900,height=700')
+  if (!win) {
+    alert('Pop-up blocked — please allow pop-ups for nameo.dev to export PDFs.')
+    return
+  }
+  win.document.write(html)
+  win.document.close()
+  win.focus()
+  setTimeout(function() { win.print() }, 600)
 }
