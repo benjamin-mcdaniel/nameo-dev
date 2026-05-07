@@ -37,10 +37,10 @@
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
 
   /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
   --radius-full: 9999px;
 }
 
@@ -545,27 +545,52 @@ select:focus {
 /* ─────────────────────────────────────────────
    Sessions list page
 ──────────────────────────────────────────── */
-.sessions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+/* Sessions list — Gmail-style flat rows */
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.1s;
+}
+.session-row:last-child { border-bottom: none; }
+.session-row:hover { background: var(--bg-subtle); text-decoration: none; }
+
+.session-row-icon { font-size: 1rem; flex-shrink: 0; line-height: 1; color: var(--text-muted); }
+.session-row-main { flex: 1; min-width: 0; }
+.session-row-name { font-weight: 600; font-size: 0.9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session-row-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; }
+.session-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.session-row-date { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+
+/* Legacy card — kept for backward compat but no longer used on sessions list */
+.sessions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
 .session-card {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow 0.15s, border-color 0.15s;
+  border-radius: var(--radius-md);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.session-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-strong);
-}
+.session-card:hover { background: var(--bg-subtle); }
 
 .session-card-head {
   display: flex;
@@ -1054,9 +1079,9 @@ select:focus {
 .session-meta-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-  margin-bottom: 32px;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 24px;
 }
 .smc-row {
   display: flex;
@@ -1137,9 +1162,8 @@ select:focus {
 .report-card--row {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow-xs);
 }
 
 .report-card-head-row {
@@ -1171,48 +1195,48 @@ select:focus {
 .report-card {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-  box-shadow: var(--shadow-xs);
+  border-radius: var(--radius-md);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: box-shadow 0.15s;
 }
-.report-card:hover { box-shadow: var(--shadow-sm); }
 
 /* ─────────────────────────────────────────────
-   Home — session type showcase
+   Home — session type picker (flat rows)
 ──────────────────────────────────────────── */
-.home-session-types {
-  padding: 64px 0;
-  background: var(--bg-subtle);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.session-type-showcase {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+.home-picker {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   margin-top: 32px;
 }
 
-.stshow-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 28px;
-  box-shadow: var(--shadow-sm);
+.home-picker-row {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.1s;
 }
-.stshow-icon { font-size: 2.2rem; line-height: 1; }
-.stshow-card h3 { margin: 0; font-size: 1.2rem; }
-.stshow-card p { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
+.home-picker-row:last-child { border-bottom: none; }
+.home-picker-row:hover { background: var(--bg-subtle); text-decoration: none; }
+
+.hpr-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1; }
+.hpr-body { flex: 1; min-width: 0; }
+.hpr-title { font-weight: 600; font-size: 0.9375rem; }
+.hpr-desc { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+.hpr-arrow { color: var(--text-muted); font-size: 1rem; flex-shrink: 0; }
+
+/* Legacy stshow selectors — kept in case referenced elsewhere */
+.session-type-showcase { display: flex; flex-direction: column; gap: 0; margin-top: 32px; }
+.stshow-card { padding: 16px; border-bottom: 1px solid var(--border); }
+.stshow-icon { font-size: 1.2rem; }
 .stshow-reports { display: flex; flex-wrap: wrap; gap: 6px; }
-.stshow-card .btn { align-self: flex-start; margin-top: 4px; }
 
 /* Primary platform pills */
 .platform-pill--primary {
@@ -1335,39 +1359,50 @@ select:focus {
   gap: 16px;
 }
 
-/* ── Home why-naming-is-hard section ─────────────────────────────────── */
+/* ── Home sections ───────────────────────────────────────────────────── */
 
-.home-why { padding: 56px 0; background: var(--bg-alt); }
-
-.home-why-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 32px;
+.home-section {
+  padding: 48px 0;
+  border-top: 1px solid var(--border);
+}
+.home-section--muted { background: var(--bg-subtle); }
+.home-section h2 { margin-bottom: 4px; }
+.home-section-sub {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  margin-bottom: 28px;
 }
 
-.why-card {
-  background: var(--bg);
+/* Feature check list */
+.home-checks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
-
-.why-q {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 8px;
+.home-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
 }
+.home-check-row:last-child { border-bottom: none; }
+.home-check-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; line-height: 1; }
+.home-check-row div { flex: 1; }
+.home-check-row strong { font-size: 0.9375rem; font-weight: 600; display: block; margin-bottom: 2px; }
+.home-check-row p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
 
-.why-a {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
-/* ── Home entry (where-are-you) section ──────────────────────────────── */
-
-.home-entry { padding: 56px 0; }
+/* Legacy selectors — kept in case referenced elsewhere */
+.home-why { padding: 48px 0; }
+.home-why-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+.why-card { padding: 12px; border-bottom: 1px solid var(--border); }
+.why-q { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+.why-a { font-size: 0.85rem; color: var(--text-secondary); }
+.home-entry { padding: 48px 0; }
 
 @media (max-width: 640px) {
   h1 { font-size: 1.75rem; }
@@ -1520,17 +1555,14 @@ select:focus {
 .candidate-card {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 18px;
+  border-radius: var(--radius-md);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  transition: border-color 0.12s;
 }
-.candidate-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-light-border);
-}
+.candidate-card:hover { border-color: var(--primary-light-border); }
 .candidate-card-top {
   display: flex;
   align-items: center;

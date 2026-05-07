@@ -131,7 +131,6 @@ function renderPage(root, state) {
   const header = document.createElement('div')
   header.className = 'page-header'
   header.innerHTML = `
-    <div class="eyebrow">New Session</div>
     <h1>${
       state.step === 1
         ? 'What do you need?'

@@ -102,7 +102,6 @@ function renderAccount(root, el, auth0User, me) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div class="eyebrow">Account</div>
       <h1>Your account</h1>
     </div>
 

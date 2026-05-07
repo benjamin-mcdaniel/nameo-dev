@@ -4,7 +4,6 @@ export function Privacy() {
   el.innerHTML = `
     <div class="container-sm">
       <div class="page-header">
-        <div class="eyebrow">Legal</div>
         <h1>Privacy Policy</h1>
         <p>Last updated: April 2026</p>
       </div>

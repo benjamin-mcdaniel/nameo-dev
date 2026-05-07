@@ -49,11 +49,10 @@ export function Sessions() {
   el.innerHTML = `
     <div class="page-header page-header--with-action">
       <div>
-        <div class="eyebrow">Workspace</div>
-        <h1>My Sessions</h1>
-        <p>Each session is a naming research campaign. Run reports on existing names or generate new brand name candidates.</p>
+        <h1>Sessions</h1>
+        <p>Your naming research. Open a session to see report results or start a new one.</p>
       </div>
-      <a href="#/sessions/new" class="btn btn-primary">+ New Session</a>
+      <a href="#/sessions/new" class="btn btn-primary">New session</a>
     </div>
 
     <div id="sessions-auth-notice" style="display:none">
@@ -64,7 +63,7 @@ export function Sessions() {
     </div>
 
     <div id="sessions-content">
-      <div class="empty-state">Loading sessions…</div>
+      <div class="empty-state">Loading sessions...</div>
     </div>
   `
 
@@ -117,8 +116,8 @@ function attachSessionsLogic(root) {
 
     if (contentEl) {
       contentEl.innerHTML = `
-        <div class="sessions-grid">
-          ${sessions.map((s) => renderSessionCard(s)).join('')}
+        <div class="sessions-list">
+          ${sessions.map((s) => renderSessionRow(s)).join('')}
         </div>
       `
     }
@@ -127,7 +126,7 @@ function attachSessionsLogic(root) {
   load()
 }
 
-function renderSessionCard(s) {
+function renderSessionRow(s) {
   const typeLabel = SESSION_TYPE_LABELS[s.session_type] || s.session_type || 'Session'
   const typeIcon = SESSION_TYPE_ICONS[s.session_type] || '📋'
   const statusClass = SESSION_STATUS_CLASSES[s.status] || 'badge-active'
@@ -135,24 +134,18 @@ function renderSessionCard(s) {
   const reportCount = s.report_count ?? 0
 
   return `
-    <div class="session-card">
-      <div class="session-card-head">
-        <div class="session-type-badge">
-          <span class="session-type-icon">${typeIcon}</span>
-          <span class="session-type-label">${typeLabel}</span>
-        </div>
+    <a class="session-row" href="#/session?id=${escapeHtml(s.id)}">
+      <span class="session-row-icon">${typeIcon}</span>
+      <span class="session-row-main">
+        <span class="session-row-name">${escapeHtml(s.name)}</span>
+        <span class="session-row-meta">${typeLabel} &middot; ${reportCount} report${reportCount !== 1 ? 's' : ''}</span>
+      </span>
+      <span class="session-row-right">
         <span class="badge ${statusClass}">${s.status || 'active'}</span>
-      </div>
-      <h3 class="session-card-title">${escapeHtml(s.name)}</h3>
-      ${s.description ? `<p class="session-card-desc">${escapeHtml(s.description)}</p>` : ''}
-      <div class="session-card-meta">
-        <span>${reportCount} report${reportCount !== 1 ? 's' : ''}</span>
-        ${dateStr ? `<span>${dateStr}</span>` : ''}
-      </div>
-      <div class="session-card-actions">
-        <a href="#/session?id=${s.id}" class="btn btn-sm btn-primary">Open</a>
-      </div>
-    </div>
+        <span class="session-row-date">${dateStr}</span>
+        <span style="color:var(--text-muted);font-size:1rem">&rsaquo;</span>
+      </span>
+    </a>
   `
 }
 

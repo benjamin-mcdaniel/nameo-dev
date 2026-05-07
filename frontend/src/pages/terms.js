@@ -4,7 +4,6 @@ export function Terms() {
   el.innerHTML = `
     <div class="container-sm">
       <div class="page-header">
-        <div class="eyebrow">Legal</div>
         <h1>Terms of Service</h1>
         <p>Last updated: April 2026</p>
       </div>

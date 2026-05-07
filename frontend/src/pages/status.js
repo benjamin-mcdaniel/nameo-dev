@@ -6,7 +6,6 @@ export function Status() {
 
   el.innerHTML = `
     <div class="status-panel">
-      <div class="eyebrow">System Status</div>
       <h1>Service health</h1>
       <p class="hint" style="margin-bottom:20px">Live status of Nameo services.</p>
       <div id="status-content">

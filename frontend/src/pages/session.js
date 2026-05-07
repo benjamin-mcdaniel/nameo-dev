@@ -78,7 +78,6 @@ export function Session() {
   if (!sessionId) {
     el.innerHTML = `
       <div class="page-header">
-        <div class="eyebrow">Session</div>
         <h1>Session not found</h1>
       </div>
       <div class="inline-status is-error">No session ID provided. <a href="#/sessions">Back to sessions</a></div>

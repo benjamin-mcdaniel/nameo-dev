@@ -3,7 +3,6 @@ export function Features() {
   el.className = 'page usecase container'
   el.innerHTML = `
     <div class="page-header">
-      <div class="eyebrow">Use Cases</div>
       <h1>Built for product launches</h1>
       <p>Nameo is designed for the specific challenges of naming a new startup, app, or product line.</p>
     </div>

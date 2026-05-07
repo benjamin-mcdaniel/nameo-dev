@@ -3,7 +3,6 @@ export function Help() {
   el.className = 'page help container'
   el.innerHTML = `
     <div class="page-header">
-      <div class="eyebrow">Documentation</div>
       <h1>Nameo docs</h1>
       <p>How to research and generate product names with Nameo — built for startups.</p>
     </div>

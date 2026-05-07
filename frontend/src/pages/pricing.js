@@ -3,7 +3,6 @@ export function Pricing() {
   el.className = 'page pricing container'
   el.innerHTML = `
     <div class="page-header">
-      <div class="eyebrow">Pricing</div>
       <h1>Pay for what you use.</h1>
       <p>Every action in Nameo costs credits. Buy a pack, use them across any feature, and top up when you need more. No subscriptions. No monthly bills.</p>
     </div>
@@ -130,7 +129,6 @@ export function Pricing() {
     <!-- Shareable links callout -->
     <div class="pricing-sharelinks-callout">
       <div>
-        <div class="eyebrow" style="margin-bottom:6px">Pro feature</div>
         <h3>Shareable report links</h3>
         <p>Generate a permanent link to any report and share it with your team, investors, or co-founder — no account needed to view. Perfect for async review without setting up logins.</p>
       </div>
