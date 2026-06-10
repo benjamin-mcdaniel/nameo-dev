@@ -1,4 +1,4 @@
-# Nameo — Repo Rules
+# Nameo v2 — Repo Rules
 
 This file governs how code is organized and how AI tools (Claude, etc.) should
 work in this repo. Follow these rules on every change.
@@ -10,21 +10,34 @@ work in this repo. Follow these rules on every change.
 ```
 nameo-dev/
 ├── .github/workflows/    # CI/CD — deploy-frontend.yml, deploy-worker.yml
-├── frontend/             # Static SPA (Vite + vanilla JS) → Cloudflare Pages
+├── frontend/             # Static SPA (Vite + vanilla JS) → Cloudflare Pages (nameo-dev)
 ├── backend/
-│   ├── worker/           # Main API worker (auth, sessions, runners) → Cloudflare Workers
-│   └── search-worker/    # Product orchestrator worker → Cloudflare Workers
-├── wrangler.toml         # Wrangler config for nameo-worker (must stay at root)
-├── README.md             # Project overview
-├── CLAUDE.md             # This file — repo rules for AI tools
-└── DESIGN.md             # Product design doc — user workflow, feature stubs
+│   ├── worker/           # Main API worker → Cloudflare Workers (nameo-worker)
+│   └── search-worker/    # Legacy — leave alone, still deployed
+├── config/
+│   └── safety.json       # Profanity/length rules (still referenced by worker if needed)
+├── wrangler.toml         # Wrangler config for nameo-worker (at root)
+├── README.md
+├── CLAUDE.md             # This file
+└── DESIGN.md             # Product design doc — v2 spec
 ```
 
 **Hard rules:**
-- `frontend/` only — anything the browser loads: HTML, JS, CSS, images, public assets
-- `backend/` only — any server-side code: Cloudflare Workers, scripts, schemas
-- Root only — git config, direction files (README, CLAUDE.md, DESIGN.md), wrangler.toml
-- Nothing else belongs at the root. No `portal/`, no `config/`, no loose scripts, no scratch notes.
+- `frontend/` only — anything the browser loads
+- `backend/` only — server-side code
+- Root only — git config, direction files, wrangler.toml
+- Nothing else belongs at the root
+
+---
+
+## Product v2 — what it is
+
+**Product 1: "Find a name"** (launched)
+- User inputs seed words + email → Stripe Checkout ($25)
+- On payment: LLM director (Claude Haiku) → algorithmic name generator → domain checker (DoH→RDAP)
+- Results: available domains ranked by length, accessible at /sweep/:id URL
+
+Not built yet: Product 2 ("Watch my name" — subscription defense sweep).
 
 ---
 
@@ -32,79 +45,89 @@ nameo-dev/
 
 - Framework: Vite + vanilla JS. No React, no framework.
 - Entry: `frontend/index.html` → `frontend/src/main.js`
-- Router: hash-based (`#/route`). All routes in `frontend/src/router.js`.
-- Pages: `frontend/src/pages/<name>.js` — each exports a single function returning a DOM element.
-- Styles: `frontend/src/styles/` — `base.css`, `layout.css`, `theme.css`
+- Router: hash-based (`#/route`). Routes in `frontend/src/router.js`.
+- Pages: `frontend/src/pages/<name>.js` — each exports a function `Name({ params, query })` returning a DOM element.
+  - `home.js` — seed input form, Stripe CTA
+  - `sweep.js` — polling progress + results
+  - `notfound.js` — 404
+- Styles: `frontend/src/styles/` — base.css, layout.css, theme.css
 - API calls: always use `API_BASE` from `frontend/src/config.js`. Never hardcode worker URLs.
 - Deploy: GitHub Actions → Cloudflare Pages (`nameo-dev` project)
 
 **Page rules:**
-- Minimum pages and buttons. Think Apple: one action per screen.
-- No modals stacked on modals. No wizard steps that could be one screen.
-- New routes must be added to `router.js`. Unused routes go in `archivedRoutes`.
+- Minimum pages. One action per screen.
+- No auth, no modals stacked on modals.
 
 ---
 
 ## Backend — main worker (`backend/worker/`)
 
 - Entry: `backend/worker/src/index.js`
-- Handles: auth (Auth0 JWT), user CRUD, session CRUD, rate limiting, health endpoint
-- Runners: `backend/worker/src/runners/` — one file per report type
-  - Each runner is called by `executeAllPendingReports` via `ctx.waitUntil()` (parallel)
-  - Runners write results back via `updateReportStatus()` in `lib/report-status.js`
-- Schema: `backend/worker/schema.sql` — D1 database schema
-- Tests: `backend/worker/tests/unit/` — Vitest unit tests. Must pass before deploy.
-- Deploy: GitHub Actions → `wrangler deploy` (from repo root, uses root `wrangler.toml`)
-- Secrets (set via `wrangler secret put`): `ORCHESTRATOR_TOKEN`, `ANTHROPIC_API_KEY`, `NTFY_TOPIC`, `TWITTER_BEARER_TOKEN`
+- Routes:
+  - `GET  /api/health`
+  - `POST /api/sweep/init`         — create sweep + Stripe Checkout session
+  - `GET  /api/sweep/:id`          — poll sweep status/progress
+  - `GET  /api/sweep/:id/results`  — paginated domain results
+  - `POST /api/stripe/webhook`     — Stripe payment confirmation → kicks off pipeline
+- Libs: `backend/worker/src/lib/`
+  - `domain-checker.js`  — DoH→RDAP availability check
+  - `name-generator.js`  — algorithmic factory (generateCandidates, expandToDomainPairs)
+  - `llm-director.js`    — single Claude Haiku call → directions JSON
+  - `sweep-pipeline.js`  — async pipeline: director → generator → checker → D1 writes
+  - `stripe.js`          — Stripe Checkout creation + webhook verification
+  - `json.js`            — CORS headers + json() helper
+- Schema: `backend/worker/schema.sql` — D1 v2 schema (sweeps, sweep_results, rate_limits)
+- Tests: `backend/worker/tests/unit/` — Vitest. Must pass before deploy.
+- Deploy: GitHub Actions → `wrangler deploy` from repo root
 
-**Runner rules:**
-- Each runner must call `updateReportStatus(env, reportId, 'complete', result)` or `'error'`
-- Runners must never throw unhandled exceptions — always catch and call error status
-- Stub runners return `{ stub: true, checked_at }` — never fake availability data
-- Live runners return real data or `status: 'unknown'` — never guess
-
----
-
-## Backend — search worker (`backend/search-worker/`)
-
-- Purpose: product feature orchestrator — runs availability checks that are too slow
-  or resource-heavy for the main worker
-- Entry: `backend/search-worker/index.js`
-- Auth: requires `ORCHESTRATOR_TOKEN` Bearer header on all non-health requests
-- Deploy: same GitHub Actions pipeline as main worker
-- Secrets: `ORCHESTRATOR_TOKEN` (must match main worker's copy)
+**Pipeline rules:**
+- `sweep-pipeline.js` is called via `ctx.waitUntil()` — never awaited in the response path
+- Pipeline must never throw unhandled exceptions — always catch and write error status to D1
+- Domain checker: DoH first, RDAP fallback, 'unknown' when both inconclusive — never guesses
+- LLM director failure is non-fatal: pipeline continues with empty directions
 
 ---
 
-## Wrangler / Cloudflare
+## Cloudflare resources
 
-- `wrangler.toml` at repo root configures `nameo-worker`
-- `backend/search-worker/wrangler.toml` configures `nameo-search-worker`
-- D1 binding: `NAMEO_DB` → `nameo-db` (id: `4afe937a-4c9b-4cb1-bfad-64d8844ca26e`)
-- Service binding: `SEARCH_ORCHESTRATOR` → `nameo-search-worker`
-- Worker URL: `https://nameo-worker.benjamin-f-mcdaniel.workers.dev`
+- D1: `NAMEO_DB` → `nameo-db` (id: `4afe937a-4c9b-4cb1-bfad-64d8844ca26e`)
+- Worker: `nameo-worker` (deployed from root wrangler.toml)
+- Pages: `nameo-dev` project
+- Legacy search-worker: still deployed, leave alone
+
+**Wrangler secrets (set via `wrangler secret put`):**
+- `ANTHROPIC_API_KEY` — Claude Haiku API key
+- `STRIPE_SECRET_KEY` — Stripe secret (sk_live_... or sk_test_...)
+- `STRIPE_WEBHOOK_SECRET` — from Stripe dashboard webhook settings (whsec_...)
 
 ---
 
 ## GitHub Actions
 
-Two workflows in `.github/workflows/`:
-
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `deploy-worker.yml` | push to `main` touching `backend/**` or `wrangler.toml` | Run unit tests → deploy nameo-worker → deploy search-worker → QA tests |
-| `deploy-frontend.yml` | push to `main` touching `frontend/**` | Build Vite → deploy to Cloudflare Pages |
+| `deploy-worker.yml` | push to `main` touching `backend/worker/**` or `wrangler.toml` | Unit tests → deploy nameo-worker |
+| `deploy-frontend.yml` | push to `main` touching `frontend/**` | Unit tests → deploy to Cloudflare Pages |
 
 Required GitHub secrets: `CLOUDFLARE_API_TOKEN`
-Required GitHub variables: `WORKER_URL`
+
+---
+
+## D1 schema migrations
+
+After deploying for the first time (or on a clean reset):
+```
+wrangler d1 execute nameo-db --remote --file=backend/worker/schema.sql
+```
+This drops v1 tables and creates v2 tables. Safe to run on an empty DB.
 
 ---
 
 ## What NOT to do
 
-- Do not add files or directories at the repo root except the ones listed above
+- Do not add files or directories at the repo root except those listed above
 - Do not hardcode API URLs in frontend — use `config.js`
-- Do not add new npm packages at the root level (root has no package.json)
-- Do not implement features inside runners before the stub is validated end-to-end
-- Do not use the `backend/worker/index.js` file — it is a deprecated stub pointing to `src/index.js`
-- Do not reference archived routes (`/search`, `/advanced`, `/advanced-report`, `/campaigns`)
+- Do not implement Product 2 before Product 1 is validated
+- Do not add auth (Clerk) before Product 1 is live and subscription demand exists
+- Do not fake domain availability — return 'unknown' if both DoH and RDAP are inconclusive
+- Do not await the sweep pipeline in the request handler — always use `ctx.waitUntil()`

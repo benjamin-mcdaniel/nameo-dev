@@ -1,88 +1,58 @@
+import { API_BASE } from '../config.js'
+
 export function Home() {
-  const el = document.createElement('section')
-  el.className = 'page home'
+  const el = document.createElement('div')
+  el.className = 'page-home'
 
   el.innerHTML = `
-    <!-- Hero -->
-    <section class="home-hero">
-      <div class="home-hero-inner container">
-        <h1>Find a name that's actually available.</h1>
-        <p class="home-hero-sub">
-          Check domains, trademarks, social handles, and marketplace listings in one run.
-          No more toggling between ten tabs.
-        </p>
-        <div class="home-hero-actions">
-          <a class="btn btn-primary btn-lg" href="#/sessions/new?type=brand_identity">Check a name</a>
-          <a class="btn btn-lg" href="#/sessions/new?type=name_generator">or generate name ideas</a>
-        </div>
-        <p class="home-hero-note">Free to start &mdash; no credit card required</p>
+    <section class="hero">
+      <div class="container">
+        <h1>Find a name for your product.</h1>
+        <p class="hero-sub">Describe what you're building. We generate thousands of domain candidates and check availability — so you can pick a real name, fast.</p>
+        <p class="hero-price">$25 per sweep &nbsp;·&nbsp; ~6,000 domain checks &nbsp;·&nbsp; results in under a minute</p>
       </div>
     </section>
 
-    <!-- Session type picker -->
-    <section class="home-section">
-      <div class="container">
-        <h2>Where do you want to start?</h2>
-        <div class="home-picker">
-          <a class="home-picker-row" href="#/sessions/new?type=brand_identity">
-            <span class="hpr-icon">🔍</span>
-            <span class="hpr-body">
-              <span class="hpr-title">I have a name to check</span>
-              <span class="hpr-desc">Domains, trademarks, marketplace listings, app stores, social handles</span>
-            </span>
-            <span class="hpr-arrow">›</span>
-          </a>
-          <a class="home-picker-row" href="#/sessions/new?type=name_generator">
-            <span class="hpr-icon">✨</span>
-            <span class="hpr-body">
-              <span class="hpr-title">I need a name</span>
-              <span class="hpr-desc">Answer a few questions and get AI-generated candidates with availability already checked</span>
-            </span>
-            <span class="hpr-arrow">›</span>
-          </a>
+    <section class="form-section">
+      <div class="container form-card">
+        <div class="form-group">
+          <label for="seed">What are you building?</label>
+          <textarea id="seed" placeholder="e.g. a tool that helps remote teams run better async standups" rows="3"></textarea>
+          <p class="field-hint">One sentence or a few keywords. The more specific, the better the names.</p>
         </div>
+        <div class="form-group">
+          <label for="email">Your email</label>
+          <input id="email" type="email" placeholder="you@example.com" />
+          <p class="field-hint">We'll save your results at a private URL. No account needed.</p>
+        </div>
+        <div id="error-msg" class="error-msg hidden"></div>
+        <button id="start-btn" class="btn-primary">Find available names &nbsp;→</button>
       </div>
     </section>
 
-    <!-- What gets checked -->
-    <section class="home-section home-section--muted">
+    <section class="how-section">
       <div class="container">
-        <h2>What gets checked</h2>
-        <p class="home-section-sub">Every surface that matters before you commit to a name.</p>
-        <div class="home-checks-list">
-          <div class="home-check-row">
-            <span class="home-check-icon">🌐</span>
+        <h2>How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
             <div>
-              <strong>Domain availability</strong>
-              <p>.com, .io, .ai, .co, .app, .dev &mdash; see what's open and what's taken across all major TLDs.</p>
+              <strong>Describe your product</strong>
+              <p>We use AI to understand your space and generate targeted naming directions.</p>
             </div>
           </div>
-          <div class="home-check-row">
-            <span class="home-check-icon">⚖️</span>
+          <div class="step">
+            <div class="step-num">2</div>
             <div>
-              <strong>Trademark screening</strong>
-              <p>US trademark search to surface conflicts early, before you've spent money on a logo or legal filing.</p>
+              <strong>We sweep the namespace</strong>
+              <p>Thousands of domain candidates are checked against .com, .io, .ai, .co, .app, and .dev — all in under 60 seconds.</p>
             </div>
           </div>
-          <div class="home-check-row">
-            <span class="home-check-icon">📱</span>
+          <div class="step">
+            <div class="step-num">3</div>
             <div>
-              <strong>Social handles</strong>
-              <p>X, GitHub, Reddit, Instagram, LinkedIn, TikTok, YouTube &mdash; checked with common variations.</p>
-            </div>
-          </div>
-          <div class="home-check-row">
-            <span class="home-check-icon">🛒</span>
-            <div>
-              <strong>Marketplace listings</strong>
-              <p>Amazon and Walmart &mdash; know if consumers searching your name will find someone else's product first.</p>
-            </div>
-          </div>
-          <div class="home-check-row">
-            <span class="home-check-icon">📦</span>
-            <div>
-              <strong>App store signals</strong>
-              <p>iOS App Store name conflict check so you're not surprised during app review.</p>
+              <strong>Pick your name</strong>
+              <p>Available domains are ranked by length and quality. Copy the ones you like and register them.</p>
             </div>
           </div>
         </div>
@@ -90,5 +60,45 @@ export function Home() {
     </section>
   `
 
-  return el
-}
+  const seedEl   = el.querySelector('#seed')
+  const emailEl  = el.querySelector('#email')
+  const btn      = el.querySelector('#start-btn')
+  const errorEl  = el.querySelector('#error-msg')
+
+  function showError(msg) {
+    errorEl.textContent = msg
+    errorEl.classList.remove('hidden')
+  }
+  function clearError() {
+    errorEl.classList.add('hidden')
+  }
+
+  btn.addEventListener('click', async () => {
+    clearError()
+    const seed  = seedEl.value.trim()
+    const email = emailEl.value.trim()
+
+    if (!seed)  return showError('Please describe what you\'re building.')
+    if (!email) return showError('Email is required to save your results.')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.')
+
+    btn.disabled    = true
+    btn.textContent = 'Starting…'
+
+    try {
+      const res  = await fetch(`${API_BASE}/api/sweep/init`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ seed, email }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        showError(data.message || 'Something went wrong. Please try again.')
+        return
+      }
+
+      // Dev mode or Stripe checkout
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url
+      } else if
