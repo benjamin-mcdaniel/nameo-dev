@@ -101,4 +101,17 @@ export function Home() {
       // Dev mode or Stripe checkout
       if (data.checkout_url) {
         window.location.href = data.checkout_url
-      } else if
+      } else if (data.sweep_id) {
+        // Dev mode — no payment required
+        window.location.hash = `#/sweep/${data.sweep_id}`
+      }
+    } catch (err) {
+      showError('Network error. Please check your connection and try again.')
+    } finally {
+      btn.disabled    = false
+      btn.textContent = 'Find available names →'
+    }
+  })
+
+  return el
+}

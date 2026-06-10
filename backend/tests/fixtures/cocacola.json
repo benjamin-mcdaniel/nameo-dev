@@ -1,0 +1,15 @@
+{
+  "name": "cocacola",
+  "expectations": {
+    "x": "taken",
+    "instagram": "taken",
+    "facebook": "taken",
+    "youtube": "taken",
+    "tiktok": "taken",
+    "pinterest": "taken",
+    "linkedin": "taken",
+    "github": "taken",
+    "reddit": "taken",
+    "medium": "taken"
+  }
+}
