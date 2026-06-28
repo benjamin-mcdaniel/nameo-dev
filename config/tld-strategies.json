@@ -1,0 +1,16 @@
+{
+  ".com":    { "method": "doh",  "note": "Cloudflare DoH, NXDOMAIN=free" },
+  ".co":     { "method": "doh",  "note": "Cloudflare DoH, NXDOMAIN=free" },
+  ".dev":    { "method": "doh",  "note": "Google-operated, DoH reliable" },
+  ".app":    { "method": "doh",  "note": "Google-operated, DoH reliable" },
+  ".run":    { "method": "doh",  "note": "DoH reliable" },
+  ".tools":  { "method": "doh",  "note": "DoH reliable" },
+  ".studio": { "method": "doh",  "note": "DoH reliable" },
+  ".fyi":    { "method": "doh",  "note": "DoH reliable" },
+  ".io":     { "method": "rdap", "note": "Wildcard DNS — RDAP only" },
+  ".ai":     { "method": "rdap", "note": "RDAP more reliable than DoH" },
+  ".sh":     { "method": "rdap", "note": "RDAP more reliable than DoH" },
+  ".so":     { "method": "rdap", "note": "RDAP more reliable than DoH" },
+  ".xyz":    { "method": "rdap", "note": "RDAP more reliable than DoH" },
+  ".gg":     { "method": "rdap", "note": "RDAP more reliable than DoH" }
+}

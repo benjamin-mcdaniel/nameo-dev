@@ -1,0 +1,20 @@
+name = "nameo-collector"
+main = "collector/src/index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nameo-db"
+database_id = "4afe937a-4c9b-4cb1-bfad-64d8844ca26e"
+
+[[durable_objects.bindings]]
+name = "COLLECTOR"
+class_name = "NameCollector"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["NameCollector"]
+
+[triggers]
+crons = ["*/5 * * * *"]

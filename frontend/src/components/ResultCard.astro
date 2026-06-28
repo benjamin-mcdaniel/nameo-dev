@@ -1,0 +1,41 @@
+---
+// Server-side props not used — card is rendered client-side via JS template
+---
+<template id="result-card-tpl">
+  <article class="result-card">
+    <h2 class="word"></h2>
+    <ul class="tlds"></ul>
+    <div class="socials" hidden></div>
+    <div class="conflict" hidden></div>
+  </article>
+</template>
+
+<style is:global>
+  .result-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    background: var(--surface);
+  }
+  .result-card .word { font-size: 1.25rem; margin-bottom: 0.5rem; }
+  .tlds { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tlds li {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .tlds li.free    { background: #14532d; color: #86efac; }
+  .tlds li.taken   { background: var(--taken-tag); color: #fca5a5; }
+  .tlds li.unknown { background: var(--unknown-tag); color: var(--muted); }
+  .hidden-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+  .hidden-note a { color: var(--accent); }
+</style>

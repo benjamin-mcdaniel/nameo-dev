@@ -1,0 +1,52 @@
+---
+const { title = 'Nameo' } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} — Nameo</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --bg: #0e0e10;
+        --surface: #18181b;
+        --border: #27272a;
+        --text: #fafafa;
+        --muted: #71717a;
+        --accent: #a78bfa;
+        --free-tag: #3f3f46;
+        --taken-tag: #7f1d1d;
+        --unknown-tag: #3f3f46;
+      }
+      body { background: var(--bg); color: var(--text); font-family: ui-monospace, 'Cascadia Code', monospace; min-height: 100vh; }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      nav { display: flex; align-items: center; gap: 1.5rem; padding: 1rem 2rem; border-bottom: 1px solid var(--border); }
+      nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); }
+      nav .spacer { flex: 1; }
+      main { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <span class="logo">nameo</span>
+      <span class="spacer"></span>
+      <a href="/">search</a>
+      <a href="/history">history</a>
+      <div id="clerk-user"></div>
+    </nav>
+    <main>
+      <slot />
+    </main>
+    <script>
+      // Clerk loads async; mount user button once ready
+      window.addEventListener('load', () => {
+        if (window.Clerk) {
+          window.Clerk.mountUserButton(document.getElementById('clerk-user'));
+        }
+      });
+    </script>
+  </body>
+</html>

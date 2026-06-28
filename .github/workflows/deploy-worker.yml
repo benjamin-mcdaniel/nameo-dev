@@ -1,54 +1,76 @@
-name: Deploy Worker
+name: Deploy worker
 
 on:
   push:
     branches: [main]
     paths:
-      - 'backend/worker/**'
+      - 'worker/**'
       - 'wrangler.toml'
+      - 'config/**'
+      - 'schema.sql'
   workflow_dispatch:
 
 jobs:
-  # ── 1. Unit tests ─────────────────────────────────────────────────────────
-  test-unit:
-    name: Unit tests
+  test-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/worker/package-lock.json
+          node-version: 20
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: backend/worker
+        working-directory: worker
 
-      - name: Run unit tests
+      - name: Run tests
         run: npm test
-        working-directory: backend/worker
+        working-directory: worker
 
-  # ── 2. Deploy nameo-worker ────────────────────────────────────────────────
-  deploy-worker:
-    name: Deploy nameo-worker
-    runs-on: ubuntu-latest
-    needs: test-unit
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Deploy worker
+        uses: cloudflare/wrangler-action@v3
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/worker/package-lock.json
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy --config wrangler.toml
 
-      - name: Install worker dependencies
-        run: npm ci
-        working-directory: backend/worker
-
-      - name: Deploy nameo-worker
-        run: npx wrangler deploy
+      # Apply schema — idempotent (CREATE TABLE IF NOT EXISTS), safe to re-run.
+      - name: Apply D1 schema
+        working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          npx wrangler d1 execute nameo-db \
+            --remote \
+            --file ../schema.sql \
+            --config ../wrangler.toml
+
+      # Push secrets to the worker. Steps are skipped gracefully when a secret
+      # is not yet set in GitHub — add the secret and re-run to sync it.
+      - name: Sync worker secrets
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          _CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          _CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          _STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          _STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        run: |
+          sync_secret() {
+            local name="$1"
+            local value="$2"
+            if [ -n "$value" ]; then
+              echo "  → pushing $name"
+              printf '%s' "$value" | npx wrangler secret put "$name" --config ../wrangler.toml
+            else
+              echo "  ↷ skipping $name (not set in GitHub secrets)"
+            fi
+          }
+          echo "Syncing secrets to nameo-worker…"
+          sync_secret CLERK_SECRET_KEY       "$_CLERK_SECRET_KEY"
+          sync_secret CLERK_PUBLISHABLE_KEY  "$_CLERK_PUBLISHABLE_KEY"
+          sync_secret STRIPE_SECRET_KEY      "$_STRIPE_SECRET_KEY"
+          sync_secret STRIPE_WEBHOOK_SECRET  "$_STRIPE_WEBHOOK_SECRET"
+          echo "Done."

@@ -1,26 +1,23 @@
 name = "nameo-worker"
-main = "backend/worker/src/index.js"
-compatibility_date = "2024-01-01"
+main = "worker/src/index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
 
-# ── Public vars ───────────────────────────────────────────────────────────────
 [vars]
-# Your deployed frontend URL — used to build Stripe success/cancel redirect URLs.
 APP_URL = "https://nameo.dev"
 
-# Sweep price in cents (2500 = $25.00)
-SWEEP_PRICE_CENTS = "2500"
+# Secrets (set via `wrangler secret put <NAME>`):
+#   CLERK_SECRET_KEY        — Clerk backend secret key
+#   CLERK_PUBLISHABLE_KEY   — Clerk publishable key (used for JWKS issuer)
+#   STRIPE_SECRET_KEY       — Stripe secret key
+#   STRIPE_WEBHOOK_SECRET   — Stripe webhook signing secret
 
-# Per-IP daily limit on /api/sweep/init to prevent spam before payment
-RATE_LIMIT_DAILY_IP = "10"
-
-# ── Secrets (set via `wrangler secret put <NAME>`) ────────────────────────────
-# ANTHROPIC_API_KEY   — Claude Haiku for LLM director phase
-# STRIPE_SECRET_KEY   — Stripe API key (sk_live_... or sk_test_...)
-# STRIPE_WEBHOOK_SECRET — Stripe webhook signing secret (whsec_...)
-# NTFY_TOPIC          — optional: ntfy.sh topic for operator alerts
-
-# ── D1 database ───────────────────────────────────────────────────────────────
 [[d1_databases]]
-binding = "NAMEO_DB"
+binding = "DB"
 database_name = "nameo-db"
 database_id = "4afe937a-4c9b-4cb1-bfad-64d8844ca26e"
+
+[[durable_objects.bindings]]
+name = "COLLECTOR"
+class_name = "NameCollector"
+script_name = "nameo-collector"

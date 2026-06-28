@@ -1,0 +1,108 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="History">
+  <h1 style="margin-bottom:1.5rem;font-size:1.5rem">Search history</h1>
+  <div id="status" class="status">Loading…</div>
+  <div id="history-list"></div>
+</Layout>
+
+<style>
+  .status { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+  .history-entry {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  .history-entry summary {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--surface);
+    list-style: none;
+  }
+  .history-entry summary:hover { background: #1c1c1f; }
+  .entry-category { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 3px; background: var(--border); color: var(--muted); }
+  .entry-date { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+  .entry-body { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+  .entry-words { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .word-chip { font-size: 0.8rem; padding: 0.2rem 0.6rem; border: 1px solid var(--border); border-radius: 3px; }
+  .refresh-btn {
+    margin-top: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+</style>
+
+<script>
+  import { createApiClient } from '../lib/api.js';
+
+  async function getToken() {
+    return window.Clerk?.session?.getToken() ?? '';
+  }
+
+  const api = createApiClient(getToken);
+  const listEl = document.getElementById('history-list');
+  const statusEl = document.getElementById('status');
+
+  async function loadHistory() {
+    try {
+      const data = await api.history(100);
+      statusEl.hidden = true;
+
+      if (!data.results.length) {
+        listEl.innerHTML = '<p style="color:var(--muted);font-size:0.9rem">No searches yet. Go find some names.</p>';
+        return;
+      }
+
+      data.results.forEach(entry => {
+        const words = entry.results.map(r => r.word);
+        const date = new Date(entry.created_at).toLocaleString();
+
+        const details = document.createElement('details');
+        details.className = 'history-entry';
+        details.innerHTML = `
+          <summary>
+            <span class="entry-category">${entry.category}</span>
+            <span>${words.slice(0, 5).join(', ')}${words.length > 5 ? '…' : ''}</span>
+            <span class="entry-date">${date}</span>
+          </summary>
+          <div class="entry-body">
+            <div class="entry-words">
+              ${words.map(w => `<span class="word-chip">${w}</span>`).join('')}
+            </div>
+            <button class="refresh-btn" data-id="${entry.id}">Re-check availability (1 unit)</button>
+          </div>`;
+        listEl.appendChild(details);
+      });
+
+      listEl.querySelectorAll('.refresh-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.textContent = 'Refreshing…';
+          btn.disabled = true;
+          try {
+            await api.refresh(btn.dataset.id);
+            btn.textContent = 'Refresh started ✓';
+          } catch (err) {
+            btn.textContent = err.message ?? 'Failed';
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (err) {
+      statusEl.textContent = err.message ?? 'Failed to load history';
+    }
+  }
+
+  window.addEventListener('load', loadHistory);
+</script>

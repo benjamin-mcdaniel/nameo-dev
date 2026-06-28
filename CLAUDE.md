@@ -1,7 +1,4 @@
-# Nameo v2 — Repo Rules
-
-This file governs how code is organized and how AI tools (Claude, etc.) should
-work in this repo. Follow these rules on every change.
+# Nameo v3 — Repo Rules
 
 ---
 
@@ -9,125 +6,153 @@ work in this repo. Follow these rules on every change.
 
 ```
 nameo-dev/
-├── .github/workflows/    # CI/CD — deploy-frontend.yml, deploy-worker.yml
-├── frontend/             # Static SPA (Vite + vanilla JS) → Cloudflare Pages (nameo-dev)
-├── backend/
-│   ├── worker/           # Main API worker → Cloudflare Workers (nameo-worker)
-│   └── search-worker/    # Legacy — leave alone, still deployed
+├── .github/workflows/
+│   ├── deploy-worker.yml      # tests → deploy nameo-worker
+│   ├── deploy-collector.yml   # deploy nameo-collector (DO)
+│   └── deploy-frontend.yml    # build → deploy to CF Pages
+├── frontend/                  # Astro SSR → Cloudflare Pages (nameo-dev)
+├── worker/                    # Main API + MCP → Cloudflare Workers (nameo-worker)
+├── collector/                 # Background indexer → Cloudflare Workers (nameo-collector)
 ├── config/
-│   └── safety.json       # Profanity/length rules (still referenced by worker if needed)
-├── wrangler.toml         # Wrangler config for nameo-worker (at root)
-├── README.md
-├── CLAUDE.md             # This file
-└── DESIGN.md             # Product design doc — v2 spec
+│   └── tld-strategies.json   # Per-TLD check method (doh or rdap)
+├── schema.sql                 # D1 schema — run once on new DB
+├── wrangler.toml              # Config for nameo-worker
+├── wrangler.collector.toml    # Config for nameo-collector
+└── CLAUDE.md                  # This file
 ```
 
 **Hard rules:**
 - `frontend/` only — anything the browser loads
-- `backend/` only — server-side code
-- Root only — git config, direction files, wrangler.toml
+- `worker/` only — API + MCP server code
+- `collector/` only — background index builder
+- Root only — git config, CLAUDE.md, wrangler configs, schema, config/
 - Nothing else belongs at the root
 
 ---
 
-## Product v2 — what it is
+## Product — what it is
 
-**Product 1: "Find a name"** (launched)
-- User inputs seed words + email → Stripe Checkout ($25)
-- On payment: LLM director (Claude Haiku) → algorithmic name generator → domain checker (DoH→RDAP)
-- Results: available domains ranked by length, accessible at /sweep/:id URL
+Name finder for AI early adopter / pet projects. Two search modes:
 
-Not built yet: Product 2 ("Watch my name" — subscription defense sweep).
+- **Short**: randomly generated pronounceable strings ≤6 chars (≥1 vowel, no numbers, ≤2 consecutive same-type chars)
+- **Brandable**: real English words and blends from a curated wordlist
+
+Both modes draw from a pre-built index of domain-checked names. Results are delivered as snapshots saved to user history, not live queries.
+
+---
+
+## Worker (`worker/`)
+
+- Entry: `worker/src/index.js`
+- Routes:
+  - `GET  /api/health`             — no auth
+  - `POST /api/search`             — search index, save snapshot, burn 1 unit
+  - `GET  /api/history`            — get saved snapshots
+  - `GET  /api/name/:word`         — single name profile
+  - `POST /api/refresh/:id`        — re-check snapshot, burn 1 unit
+  - `POST /api/stripe/webhook`     — Stripe events → update user tier in D1
+  - `POST /mcp`                    — MCP Streamable HTTP (4 tools, auth required)
+- Lib: `worker/src/lib/`
+  - `db.js`             — D1 helpers
+  - `domainChecker.js`  — per-TLD check using tld-strategies.json
+  - `nameGenerator.js`  — short name generation + validation
+  - `resultFilter.js`   — tier-based filtering (free sees ceil(n/2), randomized)
+  - `socialChecker.js`  — stub (returns unknown for all)
+  - `conflictScorer.js` — stub (returns score 0)
+  - `json.js`           — CORS + json() helper
+- Tests: `worker/tests/unit/` — Vitest. Must pass before deploy.
+- Deploy: wrangler.toml (main = worker/src/index.js)
+
+---
+
+## Collector (`collector/`)
+
+- Entry: `collector/src/index.js`
+- Durable Object: `NameCollector` — single global instance (`idFromName('global')`)
+- State tracked in DO storage: `mode`, `cursor`, `wordlist_cursor`, `last_run`, `last_error`, `last_full_pass`
+- Routes (internal): `/run`, `/status`, `/reset`
+- Cron trigger: every 5 minutes
+- Alternates between `shorts` and `brandable` modes each batch
+- Only indexes words where ≥1 TLD is free
+- Wordlist: `collector/src/lib/wordlist.js` — extend via KV key `wordlist` for production scale
+- Deploy: wrangler.collector.toml
 
 ---
 
 ## Frontend (`frontend/`)
 
-- Framework: Vite + vanilla JS. No React, no framework.
-- Entry: `frontend/index.html` → `frontend/src/main.js`
-- Router: hash-based (`#/route`). Routes in `frontend/src/router.js`.
-- Pages: `frontend/src/pages/<name>.js` — each exports a function `Name({ params, query })` returning a DOM element.
-  - `home.js` — seed input form, Stripe CTA
-  - `sweep.js` — polling progress + results
-  - `notfound.js` — 404
-- Styles: `frontend/src/styles/` — base.css, layout.css, theme.css
-- API calls: always use `API_BASE` from `frontend/src/config.js`. Never hardcode worker URLs.
-- Deploy: GitHub Actions → Cloudflare Pages (`nameo-dev` project)
-
-**Page rules:**
-- Minimum pages. One action per screen.
-- No auth, no modals stacked on modals.
-
----
-
-## Backend — main worker (`backend/worker/`)
-
-- Entry: `backend/worker/src/index.js`
-- Routes:
-  - `GET  /api/health`
-  - `POST /api/sweep/init`         — create sweep + Stripe Checkout session
-  - `GET  /api/sweep/:id`          — poll sweep status/progress
-  - `GET  /api/sweep/:id/results`  — paginated domain results
-  - `POST /api/stripe/webhook`     — Stripe payment confirmation → kicks off pipeline
-- Libs: `backend/worker/src/lib/`
-  - `domain-checker.js`  — DoH→RDAP availability check
-  - `name-generator.js`  — algorithmic factory (generateCandidates, expandToDomainPairs)
-  - `llm-director.js`    — single Claude Haiku call → directions JSON
-  - `sweep-pipeline.js`  — async pipeline: director → generator → checker → D1 writes
-  - `stripe.js`          — Stripe Checkout creation + webhook verification
-  - `json.js`            — CORS headers + json() helper
-- Schema: `backend/worker/schema.sql` — D1 v2 schema (sweeps, sweep_results, rate_limits)
-- Tests: `backend/worker/tests/unit/` — Vitest. Must pass before deploy.
-- Deploy: GitHub Actions → `wrangler deploy` from repo root
-
-**Pipeline rules:**
-- `sweep-pipeline.js` is called via `ctx.waitUntil()` — never awaited in the response path
-- Pipeline must never throw unhandled exceptions — always catch and write error status to D1
-- Domain checker: DoH first, RDAP fallback, 'unknown' when both inconclusive — never guesses
-- LLM director failure is non-fatal: pipeline continues with empty directions
+- Framework: Astro 5 + minimal vanilla JS. No React.
+- Adapter: @astrojs/cloudflare (SSR mode)
+- Auth: @clerk/astro — all routes require sign-in (middleware.ts)
+- Entry pages:
+  - `src/pages/index.astro`   — search (Short / Brandable toggle, stacking results)
+  - `src/pages/history.astro` — saved snapshots, per-entry refresh button
+- API client: `src/lib/api.js` — always uses `API_BASE` from `src/lib/config.js`
+- Deploy: GitHub Actions → Cloudflare Pages (nameo-dev project)
 
 ---
 
 ## Cloudflare resources
 
-- D1: `NAMEO_DB` → `nameo-db` (id: `4afe937a-4c9b-4cb1-bfad-64d8844ca26e`)
-- Worker: `nameo-worker` (deployed from root wrangler.toml)
+- D1: `DB` → `nameo-db` (id: `4afe937a-4c9b-4cb1-bfad-64d8844ca26e`)
+- Worker: `nameo-worker` (wrangler.toml)
+- Worker: `nameo-collector` (wrangler.collector.toml)
 - Pages: `nameo-dev` project
-- Legacy search-worker: still deployed, leave alone
 
-**Wrangler secrets (set via `wrangler secret put`):**
-- `ANTHROPIC_API_KEY` — Claude Haiku API key
-- `STRIPE_SECRET_KEY` — Stripe secret (sk_live_... or sk_test_...)
-- `STRIPE_WEBHOOK_SECRET` — from Stripe dashboard webhook settings (whsec_...)
+**Secrets needed:**
 
----
-
-## GitHub Actions
-
-| Workflow | Trigger | What it does |
+| Secret | Where | Purpose |
 |---|---|---|
-| `deploy-worker.yml` | push to `main` touching `backend/worker/**` or `wrangler.toml` | Unit tests → deploy nameo-worker |
-| `deploy-frontend.yml` | push to `main` touching `frontend/**` | Unit tests → deploy to Cloudflare Pages |
+| `CLERK_SECRET_KEY` | nameo-worker | JWT verification |
+| `CLERK_PUBLISHABLE_KEY` | nameo-worker | Clerk client init |
+| `STRIPE_SECRET_KEY` | nameo-worker | Payments |
+| `STRIPE_WEBHOOK_SECRET` | nameo-worker | Webhook verification |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | GitHub → frontend build | Clerk frontend |
+| `CLOUDFLARE_API_TOKEN` | GitHub | Wrangler deploys |
 
-Required GitHub secrets: `CLOUDFLARE_API_TOKEN`
+**GitHub vars:**
+- `PUBLIC_API_BASE` — the deployed worker URL (e.g. `https://nameo-worker.your-account.workers.dev`)
 
 ---
 
-## D1 schema migrations
+## Tiers
 
-After deploying for the first time (or on a clean reset):
+| | Free | Paid |
+|---|---|---|
+| Daily limit | 20 | 150 |
+| Categories | short only | short + brandable |
+| Data shown | name + TLDs (ceil 50%, randomized) | full (all TLDs + socials + conflict) |
+| Refresh | 1 at a time, costs 1 unit | same |
+| History | last 100 snapshots | last 100 snapshots |
+
+---
+
+## MCP server
+
+Endpoint: `POST /mcp` — MCP Streamable HTTP transport (2024-11-05). Requires Clerk Bearer token.
+
+Four tools: `search_names`, `get_name_profile`, `get_history`, `refresh_result`.
+
+MCP client config example:
+```json
+{
+  "mcpServers": {
+    "nameo": {
+      "url": "https://nameo-worker.your-account.workers.dev/mcp",
+      "headers": { "Authorization": "Bearer <clerk-session-token>" }
+    }
+  }
+}
 ```
-wrangler d1 execute nameo-db --remote --file=backend/worker/schema.sql
-```
-This drops v1 tables and creates v2 tables. Safe to run on an empty DB.
 
 ---
 
 ## What NOT to do
 
-- Do not add files or directories at the repo root except those listed above
-- Do not hardcode API URLs in frontend — use `config.js`
-- Do not implement Product 2 before Product 1 is validated
-- Do not add auth (Clerk) before Product 1 is live and subscription demand exists
-- Do not fake domain availability — return 'unknown' if both DoH and RDAP are inconclusive
-- Do not await the sweep pipeline in the request handler — always use `ctx.waitUntil()`
+- Do not open MCP to the internet without auth — every /mcp call checks Clerk JWT
+- Do not hardcode the worker URL in frontend — use config.js API_BASE
+- Do not guess domain availability — return 'unknown' if check is inconclusive
+- Do not add TLD fallback chains — each TLD has one defined strategy in tld-strategies.json
+- Do not await the collector pipeline in the request path — always ctx.waitUntil()
+- Do not implement social checking or conflict scoring until stub is explicitly replaced
+- Do not add Product 2 (watch/defense sweep) until Product 1 is validated

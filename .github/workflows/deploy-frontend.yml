@@ -1,28 +1,22 @@
-name: Deploy Frontend
+name: Deploy frontend
 
 on:
   push:
     branches: [main]
     paths:
-      - 'frontend/src/**'
-      - 'frontend/public/**'
-      - 'frontend/index.html'
-      - 'frontend/vite.config.js'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
+      - 'frontend/**'
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    name: Build and deploy to Cloudflare Pages
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
@@ -32,6 +26,10 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+        env:
+          # PUBLIC_* vars are inlined at build time by Astro and sent to the browser.
+          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

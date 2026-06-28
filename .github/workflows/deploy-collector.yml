@@ -1,0 +1,42 @@
+name: Deploy collector
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'collector/**'
+      - 'wrangler.collector.toml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: collector/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: collector
+
+      - name: Deploy collector
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy --config wrangler.collector.toml
+
+      # Kick the collector to start its first alarm if it has no scheduled run yet.
+      # Uses the internal /run endpoint via wrangler tail is not enough — we call
+      # the DO directly via a one-off wrangler dispatch.
+      - name: Bootstrap collector alarm
+        working-directory: collector
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          echo "Collector deployed. First alarm fires on next cron tick (*/5 * * * *)."
+          echo "To trigger immediately: wrangler dev then POST /run to the collector."

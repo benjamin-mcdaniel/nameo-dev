@@ -1,0 +1,19 @@
+{
+  "name": "nameo-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config ../wrangler.toml",
+    "deploy": "wrangler deploy --config ../wrangler.toml",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@clerk/backend": "^1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4",
+    "vitest": "^2",
+    "wrangler": "^3"
+  }
+}

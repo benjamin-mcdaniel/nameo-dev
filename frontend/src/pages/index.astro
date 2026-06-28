@@ -1,0 +1,132 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../components/ResultCard.astro';
+const { userId } = Astro.locals.auth();
+---
+<Layout title="Search">
+  <h1 style="margin-bottom:1.5rem;font-size:1.5rem">Find a name</h1>
+
+  <div class="controls">
+    <button id="btn-short" class="btn active" data-cat="short">Short</button>
+    <button id="btn-brandable" class="btn" data-cat="brandable">Brandable</button>
+  </div>
+
+  <div id="status" class="status" hidden></div>
+  <div id="usage" class="usage-bar"></div>
+  <div id="results"></div>
+  <div id="hidden-note"></div>
+  <button id="btn-more" class="btn-more" hidden>Load more</button>
+</Layout>
+
+<style>
+  .controls { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .btn {
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .btn.active, .btn:hover { border-color: var(--accent); color: var(--text); }
+  .status { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+  .usage-bar { font-size: 0.75rem; color: var(--muted); margin-bottom: 1.25rem; }
+  .btn-more {
+    width: 100%; padding: 0.6rem; margin-top: 0.5rem;
+    border: 1px dashed var(--border); border-radius: 4px;
+    background: transparent; color: var(--muted); font-family: inherit;
+    font-size: 0.85rem; cursor: pointer;
+  }
+  .btn-more:hover { border-color: var(--accent); color: var(--text); }
+</style>
+
+<script>
+  import { createApiClient } from '../lib/api.js';
+
+  let category = 'short';
+  let lastResultId = null;
+
+  async function getToken() {
+    return window.Clerk?.session?.getToken() ?? '';
+  }
+
+  const api = createApiClient(getToken);
+
+  const resultsEl = document.getElementById('results');
+  const statusEl = document.getElementById('status');
+  const usageEl = document.getElementById('usage');
+  const hiddenNote = document.getElementById('hidden-note');
+  const btnMore = document.getElementById('btn-more');
+
+  document.querySelectorAll('.btn[data-cat]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn[data-cat]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      category = btn.dataset.cat;
+      doSearch(false);
+    });
+  });
+
+  btnMore.addEventListener('click', () => doSearch(true));
+
+  async function doSearch(append) {
+    statusEl.textContent = 'Searching…';
+    statusEl.hidden = false;
+    btnMore.hidden = true;
+    if (!append) {
+      resultsEl.innerHTML = '';
+      hiddenNote.innerHTML = '';
+    }
+
+    try {
+      const data = await api.search(category);
+      lastResultId = data.id;
+
+      data.results.forEach(r => renderCard(r, append));
+
+      if (data.hidden_count > 0) {
+        hiddenNote.innerHTML = `<div class="hidden-note">${data.hidden_count} result${data.hidden_count > 1 ? 's' : ''} hidden — <a href="#">upgrade to paid</a> to see all.</div>`;
+      } else {
+        hiddenNote.innerHTML = '';
+      }
+
+      usageEl.textContent = `${data.usage} / ${data.limit} searches today`;
+      statusEl.hidden = true;
+      btnMore.hidden = false;
+    } catch (err) {
+      statusEl.textContent = err.message ?? 'Search failed';
+    }
+  }
+
+  function renderCard(result, append) {
+    const tpl = document.getElementById('result-card-tpl');
+    const card = tpl.content.cloneNode(true).querySelector('.result-card');
+    card.querySelector('.word').textContent = result.word;
+
+    const tldList = card.querySelector('.tlds');
+    (result.tlds ?? []).forEach(t => {
+      const li = document.createElement('li');
+      li.className = t.status;
+      li.textContent = `${result.word}${t.tld}`;
+      tldList.appendChild(li);
+    });
+
+    if (result.socials?.length) {
+      const s = card.querySelector('.socials');
+      s.hidden = false;
+      s.textContent = result.socials.map(h => `@${h.handle} (${h.platform})`).join('  ');
+    }
+
+    if (append) {
+      resultsEl.appendChild(card);
+    } else {
+      resultsEl.appendChild(card);
+    }
+  }
+
+  // Auto-load on page ready
+  window.addEventListener('load', () => doSearch(false));
+</script>
